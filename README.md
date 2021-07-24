@@ -26,6 +26,7 @@ Contents:
 - `RUN-ALL.R` runs `data-clean.R`, `data-summarize.R`, and `data-file-organize.R` in sequence
 
 Team:  
+Barbara Wilson &#9677;  
 Benjamin Teresa &#9708;  
 Connor White &#9708;  
 Jacob Goldstein-Greenwood &#9677; (primary code author; [contact](mailto:jacobgg@virginia.edu) with questions)  
