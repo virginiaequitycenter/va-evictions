@@ -8,7 +8,7 @@ Contents:
     - cases.csv: a data file containing all cleaned cases from all years (with a `year_filed` variable delineating year)
     - cases_residential_only.csv: a data containing cleaned cases from all years excluding those cases tagged as having a non-residential primary defendant (`year_filed` again delineates year)
 
-- `data-non-residential-regex.R` contains the regex pattern used for identifying non-residential defendants in the case data; it is called as part of `data-clean.R`
+- `data-non-residential-regex.R` contains the regex pattern used for identifying non-residential defendants in the case data; it is called as part of `data-clean.R` (see `non_person_regex` [here](https://github.com/jacob-gg/manager) for more information and tests of the pattern)
 
 - `data-summarize.R` summarizes the cleaned data by VA court and by VA ZIP code; it exports:
     - Four _long_ CSVs where 1 row = 1 court/ZIP code for _one year_
