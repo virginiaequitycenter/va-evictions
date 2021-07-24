@@ -1,0 +1,51 @@
+---
+title: 'VA Evictions: Yearly Changes By Court'
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(stringi)
+library(DT)
+library(dplyr)
+```
+<style>
+table.display td { white-space: nowrap; }
+</style>
+
+Percent-change values above or below 50% are highlighted.<br>
+_Cases counts exclude cases that are part of chains of serial filings; see PUT-A-DOCUMENTATION-HYPERLINK-HERE._
+```{r, echo = F, eval = T}
+# Read files with percent-change calculated
+perc_change_files <- dir()[stri_detect(dir(), regex = '_wide')]
+for (i in 1:length(perc_change_files)) {
+  assign(stri_extract(perc_change_files[i], regex = '(^.*)(?=\\.csv$)'),
+         read.csv(paste0(perc_change_files[i])))
+}
+# Function for generating tables
+tabler <- function(x, quarters_present){
+  datatable(x,
+            rownames = F,
+            caption = paste0('Quarters reflected for each year: ', quarters_present)) %>% 
+    formatStyle(columns = 14:22,
+                background = styleInterval(c(-Inf, -50, 50, Inf),
+                                           c('lavenderblush', 'lavenderblush', 'white', 'lavenderblush', 'lavenderblush')))
+}
+# Identify quarters present in tables
+temp_cases <- read.csv('cases.csv')
+case_quarters <- temp_cases %>% group_by(filing_year) %>% summarize(qs = paste0(unique(quarter)[order(unique(quarter), decreasing = F)], collapse = ', '))
+case_quarters <- paste0(apply(case_quarters, 1, function(x) (paste0(x[1], ': ', paste0(x[2], collapse = ', ')))), collapse = ' | ')
+temp_cases_res_only <- read.csv('cases_residential_only.csv')
+case_quarters_res_only <- temp_cases_res_only %>% group_by(filing_year) %>% summarize(qs = paste0(unique(quarter)[order(unique(quarter), decreasing = F)], collapse = ', '))
+case_quarters_res_only <- paste0(apply(case_quarters_res_only, 1, function(x) (paste0(x[1], ': ', paste0(x[2], collapse = ', ')))), collapse = ' | ')
+```
+#### All cases
+```{r, echo = F, eval = T}
+tabler(by_court_wide, quarters_present = case_quarters)
+```
+#### Cases with residential defendants
+```{r, echo = F, eval = T}
+tabler(by_court_residential_only_wide, quarters_present = case_quarters_res_only)
+```
+```{r, echo = F, eval = T}
+remove(list = c('temp_cases', 'case_quarters', 'temp_cases_res_only', 'case_quarters_res_only'))
+```
