@@ -25,13 +25,13 @@ Contents:
 
 - `RUN-ALL.R` runs `data-clean.R`, `data-summarize.R`, and `data-file-organize.R` in sequence
 
-Team:
-Benjamin Teresa &#9708;
-Connor White &#9708;
-Jacob Goldstein-Greenwood &#9677; (primary code author; [contact](jacobgg@virginia.edu) with questions)
-Kathryn Howell &#9708;
-Michael Salgueiro &#9677;
-Michele Claibourn &#9677;
+Team:  
+Benjamin Teresa &#9708;  
+Connor White &#9708;  
+Jacob Goldstein-Greenwood &#9677; (primary code author; [contact](jacobgg@virginia.edu) with questions)  
+Kathryn Howell &#9708;  
+Michael Salgueiro &#9677;  
+Michele Claibourn &#9677;  
 
-&#9708; - [RVA Eviction Lab](https://rampages.us/rvaevictionlab/)
+&#9708; - [RVA Eviction Lab](https://rampages.us/rvaevictionlab/)  
 &#9677; - [UVa Equity Center](https://virginiaequitycenter.org/)
