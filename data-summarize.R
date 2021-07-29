@@ -1,4 +1,4 @@
-# Aggregating eviction data by ZIP code and locality
+# Aggregating eviction data by court and ZIP code
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn
 # Last revised: 07-29-2021
 
