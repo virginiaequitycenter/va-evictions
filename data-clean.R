@@ -1,6 +1,6 @@
 # Loading and cleaning Virginia eviction data from https://virginiacourtdata.org/
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn
-# Last revised: 07-28-2021
+# Last revised: 07-29-2021
 
 ###############################################################################
 ######### RUNNING ALL SCRIPTS AT ONCE WITH `RUN-ALL.R` IS RECOMMENDED #########
@@ -275,17 +275,20 @@ cases <- deserializer_outer(cases)
 
 # Identify non-residential defendants
 pattern <- source(file = 'data-non-residential-regex.R')$value
-non_residential_flagger <- function(x) {
+non_residential_flagger <- function(x, remove_cases) {
   if (any(is.na(x$def_1)) == T) {
     x$def_1 <- ifelse(is.na(x$def_1), '', x$def_1)
   }
   x$non_residential <- stri_detect(x$def_1, regex = pattern)
   cat('Number of cases with non-residential defendants identified and removed in cases_residential_only.csv:',
       sum(x$non_residential, na.rm = T), '\n')
-  x <- x[x$non_residential == F, ]
+  if (remove_cases == T) {
+    x <- x[x$non_residential == F, ]
+  }
   x
 }
-cases_residential_only <- non_residential_flagger(cases)
+cases <- non_residential_flagger(cases, remove_cases = F)
+cases_residential_only <- non_residential_flagger(cases, remove_cases = T)
 
 # Write cleaned and aggregated CVS containing all cases stacked
 write_csv(cases, file = 'cases.csv')
