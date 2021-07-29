@@ -1,6 +1,6 @@
 # Loading and cleaning Virginia eviction data from https://virginiacourtdata.org/
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn
-# Last revised: 07-23-2021
+# Last revised: 07-28-2021
 
 ###############################################################################
 ######### RUNNING ALL SCRIPTS AT ONCE WITH `RUN-ALL.R` IS RECOMMENDED #########
@@ -288,8 +288,8 @@ non_residential_flagger <- function(x) {
 cases_residential_only <- non_residential_flagger(cases)
 
 # Write cleaned and aggregated CVS containing all cases stacked
-write_csv(cases, path = 'cases.csv')
-write_csv(cases_residential_only, path = 'cases_residential_only.csv')
+write_csv(cases, file = 'cases.csv')
+write_csv(cases_residential_only, file = 'cases_residential_only.csv')
 
 # Close file with all output, read back in, clean as desired, and overwrite
 sink()

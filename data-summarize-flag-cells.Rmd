@@ -1,5 +1,5 @@
 ---
-title: 'VA Evictions: Yearly Changes By Court'
+title: 'Virginia Evictions: Yearly Changes By Court'
 output: html_document
 ---
 ```{r setup, include=FALSE}
@@ -7,45 +7,119 @@ knitr::opts_chunk$set(echo = TRUE)
 library(stringi)
 library(DT)
 library(dplyr)
+library(knitr)
 ```
+
 <style>
 table.display td { white-space: nowrap; }
 </style>
 
-Percent-change values above or below 50% are highlighted.<br>
-_Cases counts exclude cases that are part of chains of serial filings; see PUT-A-DOCUMENTATION-HYPERLINK-HERE._
-```{r, echo = F, eval = T}
-# Read files with percent-change calculated
+_Last revised: `r Sys.Date()`_<br>
+_Percent-change values of >=50% and <=-50% are highlighted._<br>
+_Cases counts exclude cases that are part of chains of serial filings; see PUT-A-DOCUMENTATION-HYPERLINK-HERE._<br>
+_These tables show percent changes for pairs of sequential years (e.g., 2018-->2019) for which all four quarters of data are present for both years._
+
+```{r prep-chunk, echo = F, eval = T}
+# Read in CSVs with percent-change calculated
 perc_change_files <- dir()[stri_detect(dir(), regex = '_wide')]
 for (i in 1:length(perc_change_files)) {
   assign(stri_extract(perc_change_files[i], regex = '(^.*)(?=\\.csv$)'),
          read.csv(paste0(perc_change_files[i])))
 }
+
+# Identify the year combos to display in the tables
+year_pair_IDer <- function(x) {
+  case_quarters <- x %>% group_by(filing_year) %>%
+    summarize(qs = paste0(unique(quarter)[order(unique(quarter), decreasing = F)], collapse = ', '))
+  full_years <- case_quarters$filing_year[case_quarters$qs == 'Q1, Q2, Q3, Q4']
+  full_years_combos <- c()
+  for (i in 2:length(full_years)) {
+    full_years_combos[i-1] <- paste0(full_years[i-1], '.', full_years[i])
+  }
+  full_years_combos <- full_years_combos[sapply(full_years_combos,
+                                                function(a) diff(as.numeric(unlist(stri_extract_all(a, regex = '\\d{4}'))))) == 1]
+  full_years_combos
+}
+temp_cases <- read.csv('cases.csv')
+full_years_combos_all <- year_pair_IDer(temp_cases)
+temp_cases_residential <- read.csv('cases_residential_only.csv')
+full_years_combos_residential <- year_pair_IDer(temp_cases_residential)
+
+# Subset the year-to-year data frames to display in the tables
+df_grabber <- function(year_combos, wide_df) {
+  df_list <- vector(mode = 'list', length = length(year_combos))
+  for (i in 1:length(year_combos)) {
+    yr1 <- paste0('_', stri_extract(year_combos[i], regex = '\\d+(?=\\.)'))
+    yr2 <- paste0('_', stri_extract(year_combos[i], regex = '(?<=\\.)\\d+'))
+    cols1 <- colnames(wide_df)[stri_detect(colnames(wide_df), regex = paste0(yr1, '$'))]
+    cols2 <- colnames(wide_df)[stri_detect(colnames(wide_df), regex = paste0(yr2, '$'))]
+    cols1.2 <- colnames(wide_df)[stri_detect(colnames(wide_df), regex = paste0(yr1, '\\.+'))]
+    df_subset <- wide_df[, c('court', cols1, cols2, cols1.2)]
+    df_list[[i]] <- df_subset
+  }
+  df_list
+}
+list_dfs_all <- df_grabber(full_years_combos_all, by_court_wide)
+list_dfs_residential <- df_grabber(full_years_combos_residential, by_court_residential_only_wide)
+
 # Function for generating tables
-tabler <- function(x, quarters_present){
-  datatable(x,
-            rownames = F,
-            caption = paste0('Quarters reflected for each year: ', quarters_present)) %>% 
-    formatStyle(columns = 14:22,
+tabler <- function(x) {
+  datatable(x, rownames = F,
+            caption = paste0('Source: Ben Schoenfeld, virginiacourtdata.org')) %>% 
+    formatStyle(columns = colnames(x)[stri_detect(colnames(x), fixed = 'percent')],
                 background = styleInterval(c(-Inf, -50, 50, Inf),
                                            c('lavenderblush', 'lavenderblush', 'white', 'lavenderblush', 'lavenderblush')))
 }
-# Identify quarters present in tables
-temp_cases <- read.csv('cases.csv')
-case_quarters <- temp_cases %>% group_by(filing_year) %>% summarize(qs = paste0(unique(quarter)[order(unique(quarter), decreasing = F)], collapse = ', '))
-case_quarters <- paste0(apply(case_quarters, 1, function(x) (paste0(x[1], ': ', paste0(x[2], collapse = ', ')))), collapse = ' | ')
-temp_cases_res_only <- read.csv('cases_residential_only.csv')
-case_quarters_res_only <- temp_cases_res_only %>% group_by(filing_year) %>% summarize(qs = paste0(unique(quarter)[order(unique(quarter), decreasing = F)], collapse = ', '))
-case_quarters_res_only <- paste0(apply(case_quarters_res_only, 1, function(x) (paste0(x[1], ': ', paste0(x[2], collapse = ', ')))), collapse = ' | ')
 ```
-#### All cases
-```{r, echo = F, eval = T}
-tabler(by_court_wide, quarters_present = case_quarters)
+
+```{r tab-chunk-1, echo = F, eval = T}
+# Dynamically generate tabs to display % changes for sequential years that have data for all four quarters (all cases)
+out_all <- lapply(seq_along(list_dfs_all), 
+              function(i) {
+                # tab headers
+                tab_headers <- knitr::knit_expand(text = sprintf("### %s\n", gsub('\\.', ' to ', full_years_combos_all)[i]))
+                # start r chunk
+                start_r_chunks <- knitr::knit_expand(text = "\n```{r, echo = F, eval = T}") 
+                # get tables by "writing" out `tabler(list_dfs_for_tabs[[1]]` etc. to be rendered later
+                table_calls_all <- knitr::knit_expand(text = sprintf("\ntabler(list_dfs_all[[%d]])", i))
+                # end r chunk
+                finish_r_chunks <- knitr::knit_expand(text = "\n```\n")
+                # collapse together all lines with newline separator
+                paste(tab_headers, start_r_chunks, table_calls_all, finish_r_chunks, collapse = '\n')
+                }
+              )
 ```
-#### Cases with residential defendants
-```{r, echo = F, eval = T}
-tabler(by_court_residential_only_wide, quarters_present = case_quarters_res_only)
+
+```{r tab-chunk-2, echo = F, eval = T}
+# Dynamically generate tabs to display % changes for sequential years that have data for all four quarters (residential cases)
+out_residential <- lapply(seq_along(list_dfs_residential),
+                          function(i) {
+                            # tab headers
+                            tab_headers <- knitr::knit_expand(text = sprintf("### %s\n", gsub('\\.', ' to ', full_years_combos_residential)[i]))
+                            # start r chunk
+                            start_r_chunks <- knitr::knit_expand(text = "\n```{r, echo = F, eval = T}") 
+                            # get tables by "writing" out `tabler(list_dfs_for_tabs[[1]]` etc. to be rendered later
+                            table_calls_residential <- knitr::knit_expand(text = sprintf("\ntabler(list_dfs_residential[[%d]])", i))
+                            # end r chunk
+                            finish_r_chunks <- knitr::knit_expand(text = "\n```\n")
+                            # collapse together all lines with newline separator
+                            paste(tab_headers, start_r_chunks, table_calls_residential, finish_r_chunks, collapse = '\n')
+                            }
+                          )
 ```
-```{r, echo = F, eval = T}
-remove(list = c('temp_cases', 'case_quarters', 'temp_cases_res_only', 'case_quarters_res_only'))
-```
+
+## All cases
+
+## {.tabset}
+
+`r paste(knitr::knit(text = paste(out_all, collapse = '\n')))`
+
+## {}
+
+## Residential cases only
+
+## {.tabset}
+
+`r paste(knitr::knit(text = paste(out_residential, collapse = '\n')))`
+
+## {}

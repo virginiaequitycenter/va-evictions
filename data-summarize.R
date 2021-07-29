@@ -1,6 +1,6 @@
 # Aggregating eviction data by ZIP code and locality
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn
-# Last revised: 07-21-2021
+# Last revised: 07-29-2021
 
 ###############################################################################
 ######### RUNNING ALL SCRIPTS AT ONCE WITH `RUN-ALL.R` IS RECOMMENDED #########
@@ -16,7 +16,7 @@
 #           by_zip_residential_only.csv, and by_court_residential_only.csv    #
 #       - Wide data, with years spread: by_court_wide.csv, and                #
 #           by_court_residential_only_wide.csv                                #
-#             - These wide files contain additional columns indicated         #
+#             - These wide files contain additional columns indicating        #
 #                 % change year-to-year in cases, plaintiff judgments,        #
 #                 and default judgments                                       #
 #   - Further, an HTML is exported containing interactive data tables         #
@@ -88,10 +88,10 @@ by_court_wide <- widen(by_court)
 by_court_residential_only_wide <- widen(by_court_residential_only)
 
 # %-change calculator
-first_year <- min(stri_extract(colnames(by_court_wide), regex = '(\\d{4})'), na.rm = T)
-last_year <- max(stri_extract(colnames(by_court_wide), regex = '(\\d{4})'), na.rm = T)
-perc_change <- function(x, first_yr = first_year, last_yr = last_year) {
-  yr_vec <- first_yr:last_yr
+perc_change <- function(x) {
+  yr_vec <- unique(stri_extract(colnames(x), regex = '\\d{4}')[stri_detect(colnames(x), regex = '\\d{4}')])
+  yr_vec <- sort(yr_vec, decreasing = F)
+
   for (i in 2:length(yr_vec)) {
     x[, paste0('cases_percent_change_', yr_vec[i-1], '.', yr_vec[i])] <-
       round(((x[, paste0('cases_', yr_vec[i])] - x[, paste0('cases_', yr_vec[i-1])]) /

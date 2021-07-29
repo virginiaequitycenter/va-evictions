@@ -1,6 +1,6 @@
 # Code for sequentially running eviction data cleaning and analysis scripts
-# Authors: Jacob Goldstein-Greenwood
-# Last revised: 07-23-2021
+# Authors: Jacob Goldstein-Greenwood, Michele Claibourn
+# Last revised: 07-28-2021
 
 ###############################################################################
 # Run all lines below to run all scripts for cleaning and summarizing         #

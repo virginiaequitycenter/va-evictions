@@ -1,6 +1,6 @@
 # Regex pattern for identifying commercial/non-residential names
 # Authors: Jacob Goldstein-Greenwood
-# Last revised: 07-23-021
+# Last revised: 07-28-2021
 
 pattern <- paste0('(?i)', paste0(c('(\\bacadem(y|ics?)\\b)',
                                    '(\\badvis(ers?|ors?|ing)\\b)',

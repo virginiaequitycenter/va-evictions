@@ -1,6 +1,6 @@
 # Reorganizing files with cleaned and summarized eviction data
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn
-# Last revised: 07-21-2021
+# Last revised: 07-29-2021
 
 ###############################################################################
 ######### RUNNING ALL SCRIPTS AT ONCE WITH `RUN-ALL.R` IS RECOMMENDED #########
@@ -44,5 +44,5 @@ summaries_mover <- function(x) {
 }
 
 # Move
-sapply(cleaned_cases, FUN = cases_mover)
-sapply(cleaned_summaries, FUN = summaries_mover)
+invisible(sapply(cleaned_cases, FUN = cases_mover))
+invisible(sapply(cleaned_summaries, FUN = summaries_mover))
