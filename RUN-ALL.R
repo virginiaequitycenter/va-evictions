@@ -1,6 +1,6 @@
 # Code for sequentially running eviction data cleaning and analysis scripts
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn
-# Last revised: 07-29-2021
+# Last revised: 08-01-2021
 
 ###############################################################################
 # Run all lines below to run all scripts for cleaning and summarizing         #
@@ -12,7 +12,7 @@
 ###############################################################################
 
 # Check for packages and install if necessary
-reqd <- c('stringi', 'tidyverse', 'readr', 'rvest', 'lubridate', 'DT')
+reqd <- c('stringi', 'tidyverse', 'readr', 'rvest', 'lubridate', 'DT', 'tigris')
 if (any(!reqd %in% installed.packages())) {
   to_install <- reqd[!reqd %in% installed.packages()]
   install.packages(to_install, character.only = T)
