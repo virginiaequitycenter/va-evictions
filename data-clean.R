@@ -1,6 +1,6 @@
 # Loading and cleaning Virginia eviction data from https://virginiacourtdata.org/
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn
-# Last revised: 08-01-2021
+# Last revised: 08-03-2021
 
 ###############################################################################
 ######### RUNNING ALL SCRIPTS AT ONCE WITH `RUN-ALL.R` IS RECOMMENDED #########
@@ -175,21 +175,14 @@ for (i in 1:length(cases_objects)) {
 #   - However: Convert def_1_zip to NA when it isn't a valid *Virginia* ZIP code
 #       so as not to disrupt VA by-ZIP case tabulation
 #       - For example: "Henrico, VA 00000," "Charlottesville, VA 99999," Ewing, NJ 12345"
-#################### OLD METHOD OF ID'ing VALID VA ZIPS ####################
-# Scrape Virginia ZIP codes
-# va_zips <- read_html('https://mcdc.missouri.edu/applications/zipcodes/?state=51&place=') %>% ##### IMPROVE/CONFIRM LIST OF VALID VA ZIP CODES #####
-#   html_element(xpath = '/html/body/div/main/div/table') %>%
-#   html_table() %>%
-#   .$`ZIP/ZCTA`
-#############################################################################
-va_zips <- zctas(state = 51, year = 2010)$ZCTA5CE10
+va_zips <- c(20100:20199, 22000:24699) # https://en.wikipedia.org/wiki/List_of_ZIP_Code_prefixes
 zip_cleaner <- function(x) {
   pre_na_zips <- x %>% group_by(filing_year) %>% summarize(pre_na = sum(is.na(def_1_zip)))
   x$def_1_zip <- ifelse(x$def_1_zip %in% va_zips, x$def_1_zip, NA)
   post_na_zips <- x %>% group_by(filing_year) %>% summarize(post_na = sum(is.na(def_1_zip)))
   merge(pre_na_zips, post_na_zips, by = 'filing_year') %>%
     mutate(na_gain = post_na - pre_na) %>%
-    apply(., 1, function(x) cat(paste0(x[1], ': ', x[length(x)], ' non-VA ZIPs identified (per 2010 Census ZIP data) and converted to NA', '\n')))
+    apply(., 1, function(x) cat(paste0(x[1], ': ', x[length(x)], ' non-VA ZIPs identified and converted to NA', '\n')))
   x
 }
 cases <- zip_cleaner(cases)
@@ -215,7 +208,7 @@ cases <- deduplicater(cases)
 #   multiple "groups" of serial filings for a given pla_1/def_1/def_1_zip combination)
 # Within each group of serial cases, we retain the *latest one* and use that for tabulation purposes; this is because
 #   we're concerned with the material effects of filings on tenants, and if there are three serial cases ending in
-#   (1) dismisssal, (2) dismissal, (3) eviction, our position is that that sequence of events constitutes an eviction,
+#   (1) dismissal, (2) dismissal, (3) eviction, our position is that that sequence of events constitutes an eviction,
 #   not a "final score" of 2-1
 # deserializer_inner() is applied via a wrapper function, deserializer_outer() (see below) to a
 #   tibble of cases grouped by pla_1, def_1, and def_1_zip (i.e., sets of rows where the same
@@ -283,12 +276,16 @@ non_residential_flagger <- function(x, remove_cases) {
   if (any(is.na(x$def_1)) == T) {
     x$def_1 <- ifelse(is.na(x$def_1), '', x$def_1)
   }
-  x$non_residential <- stri_detect(x$def_1, regex = pattern)
-  cat('Number of cases with non-residential defendants identified and removed in cases_residential_only.csv:',
-      sum(x$non_residential, na.rm = T), '\n')
+  # Convert instances of \\w\\.\\w into \\w\\w (e.g., "L.L.P." --> "LLP.")
+  x$def_1_periods_cleaned <- stri_replace_all(x$def_1, replacement = '', regex = '(?<=\\w)\\.(?=\\w)')
+  # Flag non-residential defendants
+  x$non_residential <- stri_detect(x$def_1_periods_cleaned, regex = pattern)
   if (remove_cases == T) {
+    cat('Number of cases with non-residential defendants identified and removed in cases_residential_only.csv:',
+        sum(x$non_residential, na.rm = T), '\n')
     x <- x[x$non_residential == F, ]
   }
+  x <- x[, -which(colnames(x) == 'def_1_periods_cleaned')]
   x
 }
 cases <- non_residential_flagger(cases, remove_cases = F)
