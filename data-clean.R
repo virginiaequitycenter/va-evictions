@@ -1,6 +1,6 @@
 # Loading and cleaning Virginia eviction data from https://virginiacourtdata.org/
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn
-# Last revised: 08-03-2021
+# Last revised: 08-06-2021
 
 ###############################################################################
 ######### RUNNING ALL SCRIPTS AT ONCE WITH `RUN-ALL.R` IS RECOMMENDED #########
@@ -219,6 +219,7 @@ cases <- deduplicater(cases)
 deserializer_inner <- function(z, ...) {
   # If there's only one case filed by the plaintiff against the defendant, simply keep that case
   if (nrow(z) == 1) {
+    z$serial_filings_by_pla_against_def <- FALSE
     return(z)
   }
   # If there's >1 case filed by the plaintiff against the defendant...
@@ -228,10 +229,12 @@ deserializer_inner <- function(z, ...) {
     # If the interval is *not* >1 year, simply keep the latest case (because all cases selected are considered serial with the first)
     if (cases_span_more_than_1_yr == F) {
       z <- z %>%filter(date_filed == max(date_filed)) %>% filter(id == max(id))
+      z$serial_filings_by_pla_against_def <- TRUE
       return(z)
     }
     # If the interval is >1 year...
     if (cases_span_more_than_1_yr == T) {
+      num_cases_pre <- nrow(z)
       for (i in 1:100) {
         # First determine the latest case filed that is not more than 12 months after the very first case (this is the
         #   latest in the first "group" of serial cases)
@@ -255,6 +258,8 @@ deserializer_inner <- function(z, ...) {
       dates_to_select <- sapply(paste0('latest_in_serial_group_', 1:i), function(x) eval(parse(text = x)))
       z <- z[z$date_filed %in% dates_to_select, ]
       z <- z %>% group_by(date_filed) %>% filter(id == max(id))
+      num_cases_post <- nrow(z)
+      z$serial_filings_by_pla_against_def <- ifelse(num_cases_post < num_cases_pre, TRUE, FALSE)
       z
     }
   }
