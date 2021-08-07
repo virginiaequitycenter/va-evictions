@@ -1,6 +1,6 @@
 # Loading and cleaning Virginia eviction data from https://virginiacourtdata.org/
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn
-# Last revised: 08-06-2021
+# Last revised: 08-07-2021
 
 ###############################################################################
 ######### RUNNING ALL SCRIPTS AT ONCE WITH `RUN-ALL.R` IS RECOMMENDED #########
@@ -168,6 +168,13 @@ for (i in 1:length(cases_objects)) {
   x <- eval(parse(text = cases_objects[i]))
   cases <- rbind(cases, x)
 }
+
+# Search for double-space (or >2-space) data-entry errors in pla_1 and def_1 and convert to single spaces ("  " --> " ")
+dedoublespacer <- function(x) {
+  x[, c('pla_1', 'def_1')] <- apply(x[, c('pla_1', 'def_1')], 2, function(q) gsub('\\s{2,}', ' ', q))
+  x
+}
+cases <- dedoublespacer(cases)
 
 # Clean ZIP codes
 #   - Current approach: Don't drop any cases, as all cases have an associated VA
