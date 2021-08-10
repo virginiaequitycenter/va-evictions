@@ -1,6 +1,6 @@
 # Loading and cleaning Virginia eviction data from https://virginiacourtdata.org/
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn
-# Last revised: 08-07-2021
+# Last revised: 08-10-2021
 
 ###############################################################################
 ######### RUNNING ALL SCRIPTS AT ONCE WITH `RUN-ALL.R` IS RECOMMENDED #########
@@ -176,6 +176,16 @@ dedoublespacer <- function(x) {
 }
 cases <- dedoublespacer(cases)
 
+# Clean periods sandwiched by letters from pla_1 and def_1 to ensure that later grouping on those vars captures all instances of a name (e.g., "L.L.C." --> "LLC.")
+interjecting_period_cleaner <- function(x) {
+  # Store unmodified versions of pla_1 and def_1 in the data frame
+  x$pla_1_unmodified <- x$pla_1
+  x$def_1_unmodified <- x$def_1
+  # Replace instances of \\w\\.\\w with \\w\\w, e.g., C.O. --> CO.
+  x$pla_1 <- stri_replace_all(x$pla_1, replacement = '', regex = '(?<=\\w)\\.(?=\\w)')
+  x$def_1 <- stri_replace_all(x$def_1, replacement = '', regex = '(?<=\\w)\\.(?=\\w)')
+}
+
 # Clean ZIP codes
 #   - Current approach: Don't drop any cases, as all cases have an associated VA
 #       court that can be used in by-court case tabulation
@@ -288,16 +298,13 @@ non_residential_flagger <- function(x, remove_cases) {
   if (any(is.na(x$def_1)) == T) {
     x$def_1 <- ifelse(is.na(x$def_1), '', x$def_1)
   }
-  # Convert instances of \\w\\.\\w into \\w\\w (e.g., "L.L.P." --> "LLP.")
-  x$def_1_periods_cleaned <- stri_replace_all(x$def_1, replacement = '', regex = '(?<=\\w)\\.(?=\\w)')
   # Flag non-residential defendants
-  x$non_residential <- stri_detect(x$def_1_periods_cleaned, regex = pattern)
+  x$non_residential <- stri_detect(x$def_1, regex = pattern)
   if (remove_cases == T) {
     cat('Number of cases with non-residential defendants identified and removed in cases_residential_only.csv:',
         sum(x$non_residential, na.rm = T), '\n')
     x <- x[x$non_residential == F, ]
   }
-  x <- x[, -which(colnames(x) == 'def_1_periods_cleaned')]
   x
 }
 cases <- non_residential_flagger(cases, remove_cases = F)

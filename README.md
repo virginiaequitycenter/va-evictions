@@ -1,4 +1,4 @@
-_Repo last updated: 08-07-2021_
+_Repo last updated: 08-10-2021_
 
 The code in this repository cleans and summarizes Virginia eviction data. The data are filings scraped from the [Virginia court system](www.courts.state.va.us) by [Ben Schoenfeld](https://github.com/bschoenfeld). Anonymized data are available through [virginiacourtdata.org](https://virginiacourtdata.org/). In our work, we use de-anonymized data, and accordingly, we do not currently include the data in this repository.
 
