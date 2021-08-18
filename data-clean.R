@@ -1,6 +1,6 @@
 # Loading and cleaning Virginia eviction data from https://virginiacourtdata.org/
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn
-# Last revised: 08-10-2021
+# Last revised: 08-18-2021
 
 ###############################################################################
 ######### RUNNING ALL SCRIPTS AT ONCE WITH `RUN-ALL.R` IS RECOMMENDED #########
@@ -169,22 +169,80 @@ for (i in 1:length(cases_objects)) {
   cases <- rbind(cases, x)
 }
 
-# Search for double-space (or >2-space) data-entry errors in pla_1 and def_1 and convert to single spaces ("  " --> " ")
-dedoublespacer <- function(x) {
-  x[, c('pla_1', 'def_1')] <- apply(x[, c('pla_1', 'def_1')], 2, function(q) gsub('\\s{2,}', ' ', q))
-  x
-}
-cases <- dedoublespacer(cases)
-
-# Clean periods sandwiched by letters from pla_1 and def_1 to ensure that later grouping on those vars captures all instances of a name (e.g., "L.L.C." --> "LLC.")
-interjecting_period_cleaner <- function(x) {
-  # Store unmodified versions of pla_1 and def_1 in the data frame
+##### Clean plaintiff and defendant names to improve quality of later grouping procedures
+store_orig_names <- function(x) {
   x$pla_1_unmodified <- x$pla_1
   x$def_1_unmodified <- x$def_1
-  # Replace instances of \\w\\.\\w with \\w\\w, e.g., C.O. --> CO.
-  x$pla_1 <- stri_replace_all(x$pla_1, replacement = '', regex = '(?<=\\w)\\.(?=\\w)')
-  x$def_1 <- stri_replace_all(x$def_1, replacement = '', regex = '(?<=\\w)\\.(?=\\w)')
+  x
 }
+cases <- store_orig_names(cases)
+
+pla_and_def_cleaner <- function(x) {
+  #################### Plaintiff names ####################
+  # Remove "Trading as..." and "Doing business as..." extraneous text
+  x$pla_1 <- ifelse(stri_detect(x$pla_1, regex = ',? T/?A\\b'), stri_extract(x$pla_1, regex = '(.*)(?=(,? T/?A\\b))'), x$pla_1)
+  x$pla_1 <- ifelse(stri_detect(x$pla_1, regex = ',? D/?B/?A\\b'), stri_extract(x$pla_1, regex = '(.*)(?=(,? D/?B/?A\\b))'), x$pla_1)
+  # Correct instances of comma misplacements (" ," --> ", ")
+  x$pla_1 <- gsub(' ,', ', ', x$pla_1)
+  # Replace dashes with spaces
+  x$pla_1 <- gsub('-', ' ', x$pla_1)
+  # Replace slashes with spaces
+  x$pla_1 <- gsub('/', ' ', x$pla_1)
+  x$pla_1 <- gsub('\\.', '', x$pla_1)
+  # Remove commas at ends of lines
+  x$pla_1 <- stri_replace(x$pla_1, regex = '(,|,\\s{1,})$', replacement = '')
+  # Remove double (or >double) spaces
+  x$pla_1 <- gsub('\\s{2,}', ' ', x$pla_1)
+  #################### Defendant names ####################
+  x$def_1 <- ifelse(stri_detect(x$def_1, regex = ',? T/?A\\b'), stri_extract(x$def_1, regex = '(.*)(?=(,? T/?A\\b))'), x$def_1)
+  x$def_1 <- ifelse(stri_detect(x$def_1, regex = ',? D/?B/?A\\b'), stri_extract(x$def_1, regex = '(.*)(?=(,? D/?B/?A\\b))'), x$def_1)
+  # Correct instances of comma misplacements (" ," --> ", ")
+  x$def_1 <- gsub(' ,', ', ', x$def_1)
+  # Replace dashes with spaces
+  x$def_1 <- gsub('-', ' ', x$def_1)
+  # Replace slashes with spaces
+  x$def_1 <- gsub('/', ' ', x$def_1)
+  x$def_1 <- gsub('\\.', '', x$def_1)
+  # Remove commas at ends of lines
+  x$def_1 <- stri_replace(x$def_1, regex = '(,|,\\s{1,})$', replacement = '')
+  # Remove double (or >double) spaces
+  x$def_1 <- gsub('\\s{2,}', ' ', x$def_1)
+  #################### Return corrected names ####################
+  x
+}
+cases <- pla_and_def_cleaner(cases)
+
+##### NOT PRESENTLY RUN #####
+# Address misspellings and alternative spellings specific to these data
+# bespoke_cleaner <- function(x) {
+#   # Alternative spellings and abbreviations
+#   # Misspellings
+#   x
+# }
+# cases <- bespoke_cleaner(cases)
+
+# Remove commas/semicolons in plaintiff and defendant names if they come before a business entity identifier
+#   (E.g., "Official Company, LLC" --> "Official Company LLC")
+#   This helps prevents differences in court data entry practices from disrupting our ability to accurately group a plaintiff's filings
+#   (E.g., "Virginia Housing, LP" and "Virginia Housing LP" should be treated as the same)
+selective_comma_remover <- function(x) {
+  #################### Plaintiff names ####################
+  x$pla_1 <- ifelse(stri_detect(x$pla_1, regex = ',|;'),
+                    ifelse(stri_detect(stri_extract_last(x$pla_1, regex = '(?<=(,|;))(.*)'), regex = '\\b(?i)(l(l)?c|l(l)?p|inc)\\b'),
+                           stri_replace_last(x$pla_1, regex = ',|;', replacement = ''),
+                           x$pla_1),
+                    x$pla_1)
+  #################### Defendant names ####################
+  x$def_1 <- ifelse(stri_detect(x$def_1, regex = ',|;'),
+                    ifelse(stri_detect(stri_extract_last(x$def_1, regex = '(?<=(,|;))(.*)'), regex = '\\b(?i)(l(l)?c|l(l)?p|inc)\\b'),
+                           stri_replace_last(x$def_1, regex = ',|;', replacement = ''),
+                           x$def_1),
+                    x$def_1)
+  #################### Return corrected names ####################
+  x
+}
+cases <- selective_comma_remover(cases)
+##### Fin plaintiff and defendant name cleaning process
 
 # Clean ZIP codes
 #   - Current approach: Don't drop any cases, as all cases have an associated VA
