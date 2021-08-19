@@ -1,6 +1,6 @@
 # Loading and cleaning Virginia eviction data from https://virginiacourtdata.org/
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn
-# Last revised: 08-18-2021
+# Last revised: 08-19-2021
 
 ###############################################################################
 ######### RUNNING ALL SCRIPTS AT ONCE WITH `RUN-ALL.R` IS RECOMMENDED #########
@@ -170,6 +170,7 @@ for (i in 1:length(cases_objects)) {
 }
 
 ##### Clean plaintiff and defendant names to improve quality of later grouping procedures
+# Store unmodified versions of pla_1 and def_1 in the data frame for safekeeping
 store_orig_names <- function(x) {
   x$pla_1_unmodified <- x$pla_1
   x$def_1_unmodified <- x$def_1
@@ -188,6 +189,7 @@ pla_and_def_cleaner <- function(x) {
   x$pla_1 <- gsub('-', ' ', x$pla_1)
   # Replace slashes with spaces
   x$pla_1 <- gsub('/', ' ', x$pla_1)
+  # Remove periods
   x$pla_1 <- gsub('\\.', '', x$pla_1)
   # Remove commas at ends of lines
   x$pla_1 <- stri_replace(x$pla_1, regex = '(,|,\\s{1,})$', replacement = '')
@@ -202,6 +204,7 @@ pla_and_def_cleaner <- function(x) {
   x$def_1 <- gsub('-', ' ', x$def_1)
   # Replace slashes with spaces
   x$def_1 <- gsub('/', ' ', x$def_1)
+  # Remove periods
   x$def_1 <- gsub('\\.', '', x$def_1)
   # Remove commas at ends of lines
   x$def_1 <- stri_replace(x$def_1, regex = '(,|,\\s{1,})$', replacement = '')
