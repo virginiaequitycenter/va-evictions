@@ -1,0 +1,414 @@
+---
+title: |
+  | Virginia Evictions
+  | Richmond & Charlottesville Regions
+  | 2018 - Q1 2021
+author: 'Housing Justice Atlas Team'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(stringi)
+library(DT)
+library(dplyr)
+library(knitr)
+library(tigris)
+library(sf)
+library(leaflet)
+library(tidyverse)
+library(kableExtra)
+```
+
+<style>
+table.display td { white-space: nowrap; }
+</style>
+
+<details><summary>Team members</summary><br/>
+
+- Barbara Wilson &#9677;  
+- Benjamin Teresa &#9708;  
+- Connor White &#9708;
+- Hannah Woehrle &#9708;
+- Jacob Goldstein-Greenwood &#9677; (primary code and document author; [contact](mailto:jacobgg@virginia.edu) with code questions)
+- Kathryn Howell &#9708;  
+- Michael Salgueiro &#9677;  
+- Michele Claibourn &#9677;  
+
+&#9708; - [RVA Eviction Lab](https://rampages.us/rvaevictionlab/)  
+&#9677; - [UVa Equity Center](https://virginiaequitycenter.org/)
+
+</details>
+<br>
+_Last revised: `r Sys.Date()`_<br>
+
+Below, we provide some preliminary representations of eviction filings and judgments in Virginia General District Courts for the Richmond and Charlottesville regions, alongside additional characteristics of the locality or ZIP Code in which the court filings occurred. Building off of the work of the RVA Eviction Lab, we are seeking to make a set of eviction and housing justice data readily available in online and interactive formats. This initial presentation is intended (1) to provide a sense of the currently available data and (2) to spark ideas about what information and data would be most useful to include---and in what forms (visual distributions, relations, tables, etc.) and with what capabilities (searching, sorting, selecting, etc.) that material should be presented.
+
+---
+
+The table and visualizations that follow reflect eviction (unlawful detainer) cases filed against residential defendants in the Richmond and Charlottesville regions between 2018 and Q1 2021. For the purposes of this document, the Richmond region comprises Chesterfield County, Henrico County, Hopewell City, Petersburg City, and Richmond City; the Charlottesville region comprises Albemarle County, Charlottesville City, Fluvanna County, Greene County, Louisa County, and Nelson County. (These regional compositions are not unchangeable.)
+
+We begin with raw case data scraped from general district court websites, and we apply a series of cleaning procedures to the data before analysis. Those procedures are described in detail in the drop-down at the bottom of this document. There are a few cleaning procedures that all people viewing these data should be aware of:
+
+- **Handling of ZIP Codes**: Publicly available unlawful detainer records on court websites do *not* indicate the exact address under dispute
+  - Records list a ZIP and city/county for each defendant and plaintiff in a case
+  - We treat the ZIP Code for the first-listed defendant in a given case as the primary ZIP for that case
+- **Handling of serial cases**: We define serial cases as multiple filings by a given plaintiff against a given defendant within a given ZIP Code within a 12-month period
+  - When we identify serial cases in the data, we retain the *latest* in each serial chain
+  - This is to emphasize the material outcomes of case filings on defendants: If a plaintiff files three times against a defendant within 12 months, and the first two cases are dismissed on procedural grounds but the third results in a plaintiff judgment, it may be misleading to count the score (from the defendant's perspective) as "2-1," given that, ultimately, the defendant was evicted
+  - Note: This approach can be adjusted/eliminated depending on the priorities of the advisory committee
+- **Identification of _residential_ defendants**: We apply an in-house name pattern to identify cases filed against *residential* (v. commercial, governmental, etc.) defendants 
+  - The table and visualizations below display case data for *residential* defendants
+  - Analyses can include all cases if desired
+
+---
+
+```{r COURTS-TABLE, echo = F, eval = T}
+# Read in CSV
+courts <- read.csv('/Users/jgg/Desktop/equity-center/eviction-project/civilcases/csvs-summaries/by_court_residential_only_wide.csv')
+
+# Regexes for selecting just RVA/Cville cases
+rva_areas <- c('Richmond\\-Civil', 'Chesterfield', 'Henrico', 'Petersburg', 'Hopewell')
+cville_areas <- c('Charlottesville', 'Greene', 'Albemarle', 'Nelson', 'Fluvanna', 'Louisa')
+rva_regex <- paste0('(?i)', paste0(rva_areas, collapse = '|'))
+cville_regex <- paste0('(?i)', paste0(cville_areas, collapse = '|'))
+combined_regex <- paste0('(?i)', paste0(c(rva_areas, cville_areas), collapse = '|'))
+# Subset just courts of interest
+courts <- courts[stri_detect(courts$court, regex = combined_regex), ]
+# Identify years to display in tables
+years <- stri_extract(colnames(courts)[stri_detect(colnames(courts), regex = 'cases_\\d{4}')], regex = '\\d{4}')
+# Create merge var to merge with ACS data
+courts$merge_var <- stri_extract(courts$court, regex = '\\w+(?=\\W)')
+
+# ACS data, locality-level
+acs_locality <- read.csv('/Users/jgg/Desktop/equity-center/va_acs_data_zcta_and_county/household_county_acsdata.csv')
+to_pull <- c('Richmond city, Virginia', 'Chesterfield County, Virginia', 'Henrico County, Virginia',
+             'Petersburg city, Virginia', 'Hopewell city, Virginia', 'Charlottesville city, Virginia',
+             'Greene County, Virginia', 'Albemarle County, Virginia', 'Nelson County, Virginia',
+             'Fluvanna County, Virginia', 'Louisa County, Virginia')
+acs_locality <- acs_locality[acs_locality$NAME %in% to_pull, ]
+# Create merge var to merge with court data
+acs_locality$merge_var <- stri_extract(acs_locality$NAME, regex = '\\w+(?=\\W)')
+rva_areas <- c('Richmond\\-Civil', 'Chesterfield', 'Henrico', 'Petersburg', 'Hopewell')
+cville_areas <- c('Charlottesville', 'Greene', 'Albemarle', 'Nelson', 'Fluvanna', 'Louisa')
+
+# Merge court and ACS data
+courts <- merge(courts, acs_locality, by = 'merge_var')
+
+# Create var for %-non-white
+courts$non_white_percent <- ((courts$tot_pop - courts$white_pop) / courts$tot_pop)*100
+
+# Select ACS variables to always include in court tabs
+acs_vars <- c('rent_prop', 'tot_rental', 'median_rent', 'median_hhinc', 'tot_pop', 'non_white_percent')
+
+# Identify which quarters are present in data
+cases_res <- read.csv('/Users/jgg/Desktop/equity-center/eviction-project/civilcases/csvs-cases/cases_residential_only.csv')
+years <- data.frame(years = years, quarters = cases_res %>% group_by(filing_year) %>% summarize(length(unique(quarter))) %>% select(-filing_year))
+
+# Create list containing yearly data frame with the eviction variables of interest
+df_grabber <- function(x) {
+  df_list <- vector(mode = 'list', length = length(nrow(x)))
+  for (i in 1:nrow(x)) {
+    get_cols <- colnames(courts)[stri_detect(colnames(courts), regex = paste0('_', x[i, 1], '$'))]
+    temp_df <- courts[, c('court', get_cols, acs_vars)]
+    temp_df$effective_eviction_rate <- temp_df[, paste0('plaintiff_judgments_', x[i, 1])] / temp_df$tot_rental
+    temp_df$court <- stri_extract(temp_df$court, regex = '\\w+(?=\\W)')
+    temp_df <- temp_df %>% select(court, effective_eviction_rate, everything())
+    df_list[[i]] <- temp_df
+  }
+  df_list
+}
+list_dfs_all <- df_grabber(years)
+
+# Function for generating tables
+tabler <- function(x) {
+  datatable(x, rownames = F,
+            caption = 'Sources: Ben Schoenfeld (virginiacourtdata.org) and American Community Survey 5-year Estimates, 2014-2019',
+            class = 'display nowrap',
+            options = list(pageLength = nrow(courts),
+                           searchHighlight = T,
+                           scrollX = T),
+            colnames = c('Court', 'Eviction Rate', 'Cases', 'Plaintiff Judgments', 'Default Judgments',
+                         'Rental Prop.', 'Rentals', 'Median Rent', 'Median HH Income',
+                         'Total Pop.', '% POC')) %>% 
+    formatRound(columns = c('effective_eviction_rate', 'rent_prop', 'non_white_percent'), digits = 3)
+}
+```
+
+```{r COURTS-TABLE-TABS, echo = F, eval = T}
+# Dynamically generate tabs to display evictions for each year (residential_cases)
+out_cases <- lapply(seq_along(years$years), 
+              function(i) {
+                # tab headers
+                tab_headers <- knitr::knit_expand(text = sprintf("### %s\n", ifelse(years[i, 1] != 2021, years[i, 1], paste0('Q1 2021')))) # was just years[i, 1]
+                # start r chunk
+                start_r_chunks <- knitr::knit_expand(text = "\n```{r, echo = F, eval = T}") 
+                # get tables by "writing" out `tabler(list_dfs_for_tabs[[1]]` etc. to be rendered later
+                table_calls_all <- knitr::knit_expand(text = sprintf("\ntabler(list_dfs_all[[%d]])", i))
+                # end r chunk
+                finish_r_chunks <- knitr::knit_expand(text = "\n```\n")
+                # collapse together all lines with newline separator
+                paste(tab_headers, start_r_chunks, table_calls_all, finish_r_chunks, collapse = '\n')
+                }
+              )
+```
+
+### Yearly Evictions and Eviction Rates by Court
+
+## {.tabset}
+
+`r paste(knitr::knit(text = paste(out_cases, collapse = '\n')))`
+
+### Data Dictionary
+
+- `Eviction Rate`: Annual eviction rate based on currently available data for each year, # plaintiff judgments / # renting households.
+- `Cases`: Number of unlawful detainer cases filed against residential defendants
+  - Note that only one record for duplicate cases or serial cases is included in the totals. 
+- `Plaintiff Judgments`: Number of cases ruled in favor of the plaintiff, resulting in an eviction
+- `Default Judgments`: Number of cases ruled in favor of the plaintiff, resulting in an eviction, after a defendant fails to appear
+- `Rental Prop.`: The proportion of households in a spatial unit that are renting (ACS Table B25003)
+- `Rentals`: The number of households in a spatial unit that are renting (ACS Table B25003)
+- `Median Rent`: Median gross rent paid among renting households in a spatial unit (ACS Table B25064)
+- `Median HH Income`: Median household income among all households in a spatial unit (ACS Table B19013)
+- `Total Pop.`: Total population within a spatial unit (ACS Table B02001)
+- `% POC`: Percent of population within a spatial unit who identify as people of color (Black or African American, Hispanic, Asian, American Indian or Alaskan Native, Native Hawaiian or Other Pacific Islander, Multiracial; ACS Table B02001)
+
+## {}
+
+---
+
+### Eviction Rates by Defendant ZIP Code by Year
+```{r ZIP-MAP, echo = F, eval = T, message = F, warning = F}
+# Read by-ZIP summary data
+zip_summaries <- read.csv('/Users/jgg/Desktop/equity-center/eviction-project/civilcases/csvs-summaries/by_zip_residential_only.csv')
+
+# Download SF file for mapping
+va_zctas <- zctas(state = 51, year = 2010, progress_bar = F)
+
+# Get locality map data to overlay regions of interest
+to_outline <- counties(state = 51, year = 2010, progress_bar = F)
+to_outline <- to_outline[to_outline$NAME10 %in% c('Richmond', 'Chesterfield', 'Henrico', 'Hopewell', 'Petersburg',
+                                                  'Charlottesville', 'Albemarle', 'Fluvanna', 'Greene', 'Louisa', 'Nelson'), ]
+to_outline <- to_outline[!(to_outline$NAMELSAD10 == 'Richmond County'), ] # drop Richmond County
+
+# Identify which ZIPs intersect with the Cville and RVA regions
+zip_intersects <- st_intersects(va_zctas, to_outline, s2_model = 'open')
+# Pull out the ZIPs to map based on the above
+to_map <- which(lapply((lapply(zip_intersects, function(x) x != 0)), any) == T)
+va_zctas <- va_zctas[to_map, ]
+
+# Identify locality centers
+centers <- st_centroid(to_outline)
+
+# Read in ZIP ACS data and merge with shape/eviction data
+acs_zip <- read.csv('/Users/jgg/Desktop/equity-center/va_acs_data_zcta_and_county/household_zcta_acsdata.csv')
+acs_zip$ZIP <- stri_extract(acs_zip$NAME, regex = '(?<=ZCTA5 )\\d{5}')
+
+# Generate list of yearly datasets
+zip_df_list <- vector(mode = 'list', length = nrow(years))
+for (i in 1:length(zip_df_list)) {
+  temp_df <- zip_summaries[zip_summaries$year == years[i, 1], ]
+  temp_df <- merge(va_zctas, temp_df, by.x = 'ZCTA5CE10', by.y = 'ZIP', all.x = T)
+  temp_df <- merge(temp_df, acs_zip, by.x = 'ZCTA5CE10', by.y = 'ZIP', all.x = T)
+  temp_df$effective_rate <- temp_df$plaintiff_judgments / temp_df$tot_rental
+  temp_df$effective_rate <- ifelse(is.infinite(temp_df$effective_rate), NA, temp_df$effective_rate)
+  temp_df$labs <- sprintf('<b>%s</b><br/>%g eviction rate<br>%g filings<br/>%g evictions<br/>%g defaults',
+                         temp_df$ZCTA5CE10, round(temp_df$effective_rate, digits = 3),
+                         temp_df$cases, temp_df$plaintiff_judgments, temp_df$default_judgments) %>%
+    lapply(function(x) htmltools::HTML(x))
+  zip_df_list[[i]] <- temp_df
+}
+
+#### TWO WAYS OF DOING THIS:
+# Select only ZIPs that intersect (literally) with the regions of interest
+#    or
+# Derive ZIPs to map from the full set of defendant ZIPs that show in cases filed in the courts of interest
+
+map_func <- function(x) {
+  yr <- unique(x$year)[1]
+  pal_temp <- colorNumeric('Reds', domain = x$effective_rate, na.color = '#E8E8E8')
+  assign(paste0('map_', yr),
+         leaflet() %>%
+           addProviderTiles(providers$CartoDB.PositronNoLabels) %>%
+           setView(lat = 37.65,
+                   lng = -78.35,
+                   zoom = 7.5) %>% 
+           addPolygons(data = x,
+                       weight = .6,
+                       label = ~labs,
+                       color = 'black',
+                       fillOpacity = .75,
+                       fillColor = ~pal_temp(x$effective_rate)) %>% 
+           addPolylines(data = to_outline,
+                        color = 'darkgreen',
+                        weight = 1.5,
+                        label = ~NAMELSAD10) %>% 
+           addCircleMarkers(data = centers, label = ~NAMELSAD10, color = 'darkgreen', radius = 5, weight = 2,
+                            labelOptions = labelOptions(interactive = T, noHide = F, direction = 'top', textOnly = TRUE)) %>% 
+           addControl(paste0('<small>Richmond and Charlottesville Regions<br>Eviction Rate By ZIP Code, ', yr,
+                             '<br>Sources: Ben Schoenfeld (virginiacourtdata.org) and<br>American Community Survey 5-year Estimates, 2014-2019</small>'),
+                      position = 'bottomleft') %>% 
+           addLegend(pal = pal_temp, values = x$effective_rate,
+                     title = '<small>Eviction Rate</small>', position = 'bottomleft'),
+         envir = .GlobalEnv
+  )
+}
+map_list <- lapply(zip_df_list, map_func)
+```
+
+```{r ZIP-MAP-TABS, echo = F, eval = T}
+# Dynamically generate tabs to display by-ZIP maps for each year (residential cases)
+out_maps <- lapply(seq_along(years$years), 
+              function(i) {
+                # tab headers
+                tab_headers <- knitr::knit_expand(text = sprintf("### %s\n", ifelse(years[i, 1] != 2021, years[i, 1], paste0('Q1 2021')))) # was just years[i, 1]
+                # start r chunk
+                start_r_chunks <- knitr::knit_expand(text = "\n```{r, echo = F, eval = T}") 
+                # get tables by "writing" out `tabler(list_dfs_for_tabs[[1]]` etc. to be rendered later
+                table_calls_all <- knitr::knit_expand(text = sprintf("\nmap_list[[%d]]", i))
+                # end r chunk
+                finish_r_chunks <- knitr::knit_expand(text = "\n```\n")
+                # collapse together all lines with newline separator
+                paste(tab_headers, start_r_chunks, table_calls_all, finish_r_chunks, collapse = '\n')
+                }
+              )
+```
+
+## {.tabset}
+
+`r paste(knitr::knit(text = paste(out_maps, collapse = '\n')))`
+
+## {}
+
+---
+
+### Data for Richmond and Charlottesville Regions Across Time
+
+#### Yearly Trends
+```{r YEARLY-TRENDS, echo = F, eval = T, message = F, warning = F, fig.width = 9}
+# Group by-court for localities of interest into regions and generate yearly summaries
+yearly_cases_res_by_court <- cases_res %>% group_by(court_name, filing_year) %>% 
+  summarize(case_count = n(),
+            plaintiff_judgments = sum(Judgment == 'Plaintiff'),
+            default_judgments = sum(latest_hearing_result == 'Default Judgment'))
+yearly_cases_res_by_court <- yearly_cases_res_by_court[stri_detect(yearly_cases_res_by_court$court_name, regex = combined_regex), ]
+yearly_cases_res_by_court$region <- ifelse(stri_detect(yearly_cases_res_by_court$court_name, regex = rva_regex), 'RVA', 'Cville')
+region_summaries_yearly <- yearly_cases_res_by_court %>% group_by(region, filing_year) %>%
+  summarize(case_count = sum(case_count),
+            plaintiff_judgments = sum(plaintiff_judgments),
+            default_judgments = sum(default_judgments))
+
+# Cville region yearly summary
+long_cville_yearly <- pivot_longer(region_summaries_yearly[region_summaries_yearly$region == 'Cville', ], cols = !c('region', 'filing_year'))
+cville_region_summary_yearly <- ggplot(long_cville_yearly, aes(x = filing_year, value, fill = name)) +
+  geom_point() + geom_line(aes(color = name)) +
+  labs(x = 'Filing Year', y = 'Count', title = 'Charlottesville Region',
+       subtitle = '2018 to Q1 of 2021\nAlbemarle, Charlottesville, Fluvanna, Greene, Louisa, and Nelson General District Courts',
+       caption = 'Interpret shaded area (2021 data) with caution: 2021 includes only Q1 data (through 03-2021)\nSource: Ben Schoenfeld | virginiacourtdata.org') +
+  scale_color_discrete(name = 'Measure', labels = c('Cases filed', 'Default judgments', 'Plaintiff judgments')) +
+  guides(shape = F, fill = F) +
+  annotate('rect', xmin = 2020.5, xmax = Inf, ymin = -Inf, ymax = Inf, alpha = .2) +
+  theme(legend.position = 'bottom')
+# RVA region yearly summary
+long_rva_yearly <- pivot_longer(region_summaries_yearly[region_summaries_yearly$region == 'RVA', ], cols = !c('region', 'filing_year'))
+rva_region_summary_yearly <- ggplot(long_rva_yearly, aes(x = filing_year, value, fill = name)) +
+  geom_point() + geom_line(aes(color = name)) +
+  labs(x = 'Filing Year', y = 'Count', title = 'Richmond Region',
+       subtitle = '2018 to Q1 of 2021\nRichmond, Chesterfield, Henrico, Hopewell, and Petersburg General District Courts',
+       caption = 'Interpret shaded area (2021 data) with caution: 2021 includes only Q1 data (through 03-2021)\nSource: Ben Schoenfeld | virginiacourtdata.org') +
+  scale_color_discrete(name = 'Measure', labels = c('Cases filed', 'Default judgments', 'Plaintiff judgments')) +
+  guides(shape = F, fill = F) +
+  annotate('rect', xmin = 2020.5, xmax = Inf, ymin = -Inf, ymax = Inf, alpha = .2) +
+  theme(legend.position = 'bottom')
+
+rva_region_summary_yearly
+cville_region_summary_yearly
+```
+
+#### Quarterly Trends
+```{r QUARTERLY-TRENDS, echo = F, eval = T, message = F, warning = F, fig.width = 9}
+quarterly_cases_res_by_court <- cases_res %>% group_by(court_name, filing_year, quarter) %>% 
+  summarize(case_count = n(),
+            plaintiff_judgments = sum(Judgment == 'Plaintiff'),
+            default_judgments = sum(latest_hearing_result == 'Default Judgment'))
+quarterly_cases_res_by_court <- quarterly_cases_res_by_court[stri_detect(quarterly_cases_res_by_court$court_name, regex = combined_regex), ]
+quarterly_cases_res_by_court$region <- ifelse(stri_detect(quarterly_cases_res_by_court$court_name, regex = rva_regex), 'RVA', 'Cville')
+region_summaries_quarterly <- quarterly_cases_res_by_court %>% group_by(region, filing_year, quarter) %>%
+  summarize(case_count = sum(case_count),
+            plaintiff_judgments = sum(plaintiff_judgments),
+            default_judgments = sum(default_judgments))
+# Charlottesville region quarterly summary
+long_cville_quarterly <- pivot_longer(region_summaries_quarterly[region_summaries_quarterly$region == 'Cville', ], cols = !c('region', 'filing_year', 'quarter'))
+long_cville_quarterly$year_quarter <- factor(paste0(long_cville_quarterly$filing_year, ', ', long_cville_quarterly$quarter),
+                                             levels = unique(paste0(long_cville_quarterly$filing_year, ', ', long_cville_quarterly$quarter)))
+cville_region_summary_quarterly <- ggplot(long_cville_quarterly, aes(x = year_quarter, y = value, group = name)) +
+  geom_point() + geom_line(aes(color = name)) +
+  labs(x = 'Quarter and Year Filed', y = 'Count', title = 'Charlottesville Region',
+       subtitle = '2018 to Q1 of 2021\nCharlottesville, Albemarle, Fluvanna, Greene, Louisa, and Nelson General District Courts',
+       caption = 'Source: Ben Schoenfeld | virginiacourtdata.org') +
+  scale_color_discrete(name = 'Measure', labels = c('Cases filed', 'Default judgments', 'Plaintiff judgments')) +
+  guides(shape = F, fill = F) +
+  theme(legend.position = 'bottom')
+# Richmond region quarterly summary
+long_rva_quarterly <- pivot_longer(region_summaries_quarterly[region_summaries_quarterly$region == 'RVA', ], cols = !c('region', 'filing_year', 'quarter'))
+long_rva_quarterly$year_quarter <- factor(paste0(long_rva_quarterly$filing_year, ', ', long_rva_quarterly$quarter),
+                                             levels = unique(paste0(long_rva_quarterly$filing_year, ', ', long_rva_quarterly$quarter)))
+rva_region_summary_quarterly <- ggplot(long_rva_quarterly, aes(x = year_quarter, y = value, group = name)) +
+  geom_point() + geom_line(aes(color = name)) +
+  labs(x = 'Quarter and Year Filed', y = 'Count', title = 'Richmond Region',
+       subtitle = '2018 to Q1 of 2021\nRichmond, Chesterfield, Henrico, Hopewell, and Petersburg General District Courts',
+       caption = 'Source: Ben Schoenfeld | virginiacourtdata.org') +
+  scale_color_discrete(name = 'Measure', labels = c('Cases filed', 'Default judgments', 'Plaintiff judgments')) +
+  guides(shape = F, fill = F) +
+  theme(legend.position = 'bottom')
+
+rva_region_summary_quarterly
+cville_region_summary_quarterly
+```
+
+```{r SERIAL-EXAMPLE, eval = T, echo = F}
+serial_ex <- data.frame(case_no = c(1:5),
+                        pla = rep('ApartCorp', 5),
+                        def = rep('Erin Nire', 5),
+                        zip = rep(12345, 5),
+                        filed_date = c('01-20-2018', '03-29-2018', '04-10-2018', '01-25-2019', '03-04-2019'))
+
+tab <- serial_ex %>% kable() %>% 
+  kable_styling(position = "left", full_width = FALSE) %>%
+  row_spec(1:3, color = 'slateblue') %>% 
+  row_spec(4:5, color = 'darkseagreen') %>% 
+  row_spec(c(3, 5), bold = T) %>% 
+  row_spec(c(1:2, 4), strikeout = T)
+```
+
+---
+
+<details><summary>Click here for additional details on the data cleaning process</summary><br/>
+
+We begin with data scraped from Virginia general district court websites by Ben Schoenfeld ([virginiacourtdata.org](https://virginiacourtdata.org/])). To these data, we apply a set of cleaning procedures to improve the accuracy of later analyses. Specifically, we do the following:
+
+1. Clean and standardize plaintiff and defendant names
+  - Court clerk data-entry practices vary, so "SMITH JONES PROPERTIES, L.L.C." may be entered once as "SMITH-JONES PROPERTIES, LLC" and once as "SMITH JONES PROPERTIES, L.L.C."; to the best of our abilities, we want to ensure that those cases are identified as being associated with the same entity
+  - To this end, we: 
+    - Remove "T/A" and "D/B/A" tags in plaintiff/defendant names
+    - Remove dashes, slashes, and periods
+    - Remove commas/semicolons that come before a business entity identifier (e.g., "WILLIAMS**,** LLC")
+2. Extract and clean defendant ZIP Codes
+  - Not all cases have a ZIP Code listed for the primary defendant that is a valid VA ZIP
+    - (We consider ZIPs within the following sets to be valid VA ZIPs: [20100, 20199] and [22000, 24699])
+  - In the event that a defendant ZIP is not a valid VA ZIP, we convert it to `NA` so that it does not disrupt by-ZIP tabulations
+3. Identify and remove true duplicates (i.e., data entry and/or download errors)
+   - When we find multiple cases with the same filing data, judgment, costs, attorney fees, principal value, other awarded amount, primary plaintiff, primary defendant, and defendant ZIP, we remove all but one of the cases
+4. Identifying and removing all but the final case in chains of *serial* cases
+  - We define serial cases as: Multiple cases in a 12-month period in which plaintiff J filed against defendant K within ZIP Code L
+  - When we identify chains of serial cases, we retain for analysis the *final* case in each chain, as it is the most likely case to represenbt the actual outcome of the plaintiff and defendant's dispute
+  - For example: Say that the table below includs all cases filed by "ApartCorp" against "Erin Nire" in ZIP Code 12345. Cases of the same color are part of the same chain of serial filings, and **bolded** cases are retained for analysis
+```{r SERIAL-EXAMPLE-PRINT, eval = T, echo = F}
+tab
+```
+5. Identifying which cases likely have residential vs. non-residential (e.g., commercial, governmental, etc.) defendants
+  - We use an in-house regular expression pattern to flag cases with non-residential defendants
+  - The table/visualizations above only reflect data for residential cases
+
+Our full code for cleaning and and summarizing data is available [here](https://github.com/virginiaequitycenter/va-evictions).
+</details>
