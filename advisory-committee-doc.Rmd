@@ -30,7 +30,7 @@ table.display td { white-space: nowrap; }
 - Benjamin Teresa &#9708;  
 - Connor White &#9708;
 - Hannah Woehrle &#9708;
-- Jacob Goldstein-Greenwood &#9677; (primary code and document author; [contact](mailto:jacobgg@virginia.edu) with code questions)
+- Jacob Goldstein-Greenwood &#9677; (primary code and document author)
 - Kathryn Howell &#9708;  
 - Michael Salgueiro &#9677;  
 - Michele Claibourn &#9677;  
