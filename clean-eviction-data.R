@@ -1,18 +1,22 @@
 # Loading and cleaning Virginia eviction data from https://virginiacourtdata.org/
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn
-# Last revised: 10-11-2021
+# Last revised: 2021-11-11
+
+enclosing_directory <- 'civilcases'
+string_identifying_data_folders <- 'DistrictCivil'
 
 ###############################################################################
-######### RUNNING ALL SCRIPTS AT ONCE WITH `RUN-ALL.R` IS RECOMMENDED #########
-###############################################################################
 # The only step in advance of running this code is ensuring that:             #
-#   1. The `civilcases` directory contains (a) folders with court-data CSVs   #
-#       for all of the years of interest and (b) this code file               #
-#   2. The folder names for each year contain the string `DistrictCivil` and  #
-#       contain the relevant year                                             #
-#   3. The `data-non-residential-regex.R` file is in the `civilcases`         #
-#       directory                                                             #
-#   4. `civilcases` is the working directory                                  #
+#   1. `enclosing_directory` above is set as the directory containing         #
+#      (a) this code AND (b) the folders containing each year's unprocessed   #
+#      court data                                                             #
+#   2. `string_identifying_data_folders` above is set as a string that        #
+#      identifies folders containing unprocessed court data; that is, a       #
+#      string present only in the names of ALL data folders and not in the    #
+#      names of ANY other files present in `enclosing_directory`              #
+#   2. The data-folder names for each year contain the string above AND       #
+#      each contains the relevant year (YYYY) (e.g., "DistrictCivil_2020")    #
+#   3. `non-residential-regex.R` is present in `enclosing_directory`          #
 # With those conditions satisfied, the data cleaning process will be entirely #
 #   automated, and the code will return a data frame called `cases.csv`       #
 #   containing cleaned, aggregated cases for all years (with `year_filed` as  #
@@ -23,8 +27,7 @@
 #   serial cases the code identified for each year, how many cases            #
 #   were tagged as having non-residential defendants, and how many cases were #
 #   flagged as not having valid VA ZIP codes listed for defendants            #
-###############################################################################
-###############################################################################
+# Warning: This code can take upward of 20 minutes to fully run               #
 ###############################################################################
 
 # Libraries
@@ -36,18 +39,19 @@ library(lubridate)
 library(tigris)
 
 # Checks
-if (stri_detect(getwd(), regex = '(\\/civilcases$)') == F) {
-  stop('civilcases is not the working directory')
+if (stri_detect(getwd(), regex = paste0('(\\/', enclosing_directory, '$)')) == F) {
+  stop('The working directory is not the directory indicated in `enclosing_directory`')
 }
-if ('data-non-residential-regex.R' %in% dir() == F) {
-  stop('data-non-residential-regex.R is not in the working directory')
+if ('non-residential-regex.R' %in% dir() == F) {
+  stop('non-residential-regex.R is not in the working directory')
 }
 
-# Open file to save a few lines of relevant output (saved into `civilcases` directory)
+# Open file to save a few lines of relevant output (saved into `enclosing_directory`)
 sink(file = 'cleaning_notes.txt', type = 'output')
 
 # Load raw district court civil case data
-district_folders <- dir()[stri_detect(dir(), fixed = 'DistrictCivil')]
+district_folders <- dir()[stri_detect(dir(), fixed = string_identifying_data_folders)]
+if (all(stri_detect(district_folders, regex = '\\d{4}')) == F) {stop('Ensure that every data folder has a year in its name')}
 data_years <- stri_extract(district_folders, regex = '(\\d{4})')
 for (i in 1:length(district_folders)) {
   year <- stri_extract(district_folders[i], regex = '(\\d{4})')
@@ -60,14 +64,16 @@ for (i in 1:length(district_folders)) {
 # Read in court names from Ben Schoenfeld's GitHub
 district_courts <- read.csv('https://raw.githubusercontent.com/bschoenfeld/virginia-court-data-analysis/master/data/district_courts.csv')
 colnames(district_courts)[which(colnames(district_courts) == 'name')] <- 'court_name'
-# CANARY: Until this comment is removed, we have to manually add FIPS 710 as Norfolk General District Court
+# Canary: Until this comment is removed, we have to manually add FIPS 710 as Norfolk General District Court
 #   In 2017, Norfolk began condensing their case reporting from three separate courts (711, 712, 713) into one (710)
 #   710 is how Norfolk cases are identified in our data
 district_courts <- rbind(district_courts, c(710, 'Norfolk General District Court'))
 district_courts$fips <- as.integer(district_courts$fips)
 # Notes on courts:
-#   - Unlawful detainer case in Fairfax *City* are held at the Fairfac *County* court, thus no cases linked to Fairfax City GDC appear in the unlawful detainer data, see: http://www.courts.state.va.us/courts/gd/fairfax_city/home.html
-#   - "Richmond Manchester," "Mongomery/Blacksburg," and a few exclusively criminal and/or traffic courts appear in the list but not in the unlawful detainer data (the former two appear to not be real GDCs; the latter are not present for obvious reasons)
+#   - Unlawful detainer case in Fairfax *City* are held at the Fairfac *County* court
+#     - Thus no cases linked to Fairfax City GDC appear in the unlawful detainer data, see: http://www.courts.state.va.us/courts/gd/fairfax_city/home.html
+#   - "Richmond Manchester," "Mongomery/Blacksburg," and a few exclusively criminal and/or traffic courts appear in the list but not in the unlawful
+#       detainer data (the former two appear to not be real GDCs; the latter are not present for obvious reasons)
 
 # Select only cases with `CaseType == 'Unlawful Detainer'` from cases20XX data
 cases_objects <- paste0('cases', data_years)
@@ -170,7 +176,7 @@ for (i in 1:length(cases_objects)) {
 }
 
 ##### Clean plaintiff and defendant names to improve quality of later grouping procedures
-# Store unmodified versions of pla_1 and def_1 in the data frame for safekeeping
+# Store unmodified versions of pla_1 and def_1 in the data frame for posterity and safekeeping
 store_orig_names <- function(x) {
   x$pla_1_unmodified <- x$pla_1
   x$def_1_unmodified <- x$def_1
@@ -215,39 +221,47 @@ pla_and_def_cleaner <- function(x) {
 }
 cases <- pla_and_def_cleaner(cases)
 
+# Address alternative spellings common in eviction/housing data
+bespoke_plaintiff_cleaner <- function(x) {
+  x$pla_1 <- stri_replace_all(x$pla_1, regex = '(?i)\\bapt\\b', replacement = 'APARTMENT')
+  x$pla_1 <- stri_replace_all(x$pla_1, regex = '(?i)\\bapts\\b', replacement = 'APARTMENTS')
+  x$pla_1 <- stri_replace_all(x$pla_1, regex = '(?i)\\b(mgt|mtg|mgmt)\\b', replacement = 'MANAGEMENT')
+  x$pla_1 <- stri_replace_all(x$pla_1, regex = '(?i)\\bco\\b', replacement = 'COMPANY')
+  x
+}
+cases <- bespoke_plaintiff_cleaner(cases)
+
 # Remove commas/semicolons in plaintiff and defendant names if they come before a business entity identifier
-#   (E.g., "Official Company, LLC" --> "Official Company LLC")
-#   This helps prevents differences in court data entry practices from disrupting our ability to accurately group a plaintiff's filings
-#   (E.g., "Virginia Housing, LP" and "Virginia Housing LP" should be treated as the same)
+#   - E.g., "Official Company, LLC" --> "Official Company LLC"
+#   - This helps prevents differences in court data entry practices from disrupting our ability to accurately group a plaintiff's filings
+#   - E.g., "Virginia Housing, LP" and "Virginia Housing LP" should be identifiable as the same entity
 selective_comma_remover <- function(x) {
-  ##### Plaintiff names
+  # Plaintiff names
   x$pla_1 <- ifelse(stri_detect(x$pla_1, regex = ',|;'),
                     ifelse(stri_detect(stri_extract_last(x$pla_1, regex = '(?<=(,|;))(.*)'), regex = '\\b(?i)(l(l)?c|l(l)?p|inc)\\b'),
                            stri_replace_last(x$pla_1, regex = ',|;', replacement = ''),
                            x$pla_1),
                     x$pla_1)
-  ##### Defendant names
+  # Defendant names
   x$def_1 <- ifelse(stri_detect(x$def_1, regex = ',|;'),
                     ifelse(stri_detect(stri_extract_last(x$def_1, regex = '(?<=(,|;))(.*)'), regex = '\\b(?i)(l(l)?c|l(l)?p|inc)\\b'),
                            stri_replace_last(x$def_1, regex = ',|;', replacement = ''),
                            x$def_1),
                     x$def_1)
-  ##### Return corrected names
+  # Return corrected names
   x
 }
 cases <- selective_comma_remover(cases)
 ##### Fin plaintiff and defendant name cleaning process
 
 # Clean ZIP codes
-#   - Current approach: Don't drop any cases, as all cases have an associated VA
-#       court that can be used in by-court case tabulation
-#   - However: Convert def_1_zip to NA when it isn't a valid *Virginia* ZIP code
-#       so as not to disrupt VA by-ZIP case tabulation
-#       - For example: "Henrico, VA 00000," "Charlottesville, VA 99999," Ewing, NJ 12345"
-va_zips <- c(20100:20199, 22000:24699) # https://en.wikipedia.org/wiki/List_of_ZIP_Code_prefixes
+#   - Current approach: Don't drop any cases, as all cases have an associated VA court that can be used in by-court case tabulation
+#   - However: Convert def_1_zip to NA when it isn't a valid *Virginia* ZIP code so as not to disrupt VA by-ZIP case tabulation
+#     - For example: "Henrico, VA 00000," "Charlottesville, VA 99999," "Ewing, NJ 12345"
+valid_va_zips <- c(20100:20199, 22000:24699) # https://en.wikipedia.org/wiki/List_of_ZIP_Code_prefixes
 zip_cleaner <- function(x) {
   pre_na_zips <- x %>% group_by(filing_year) %>% summarize(pre_na = sum(is.na(def_1_zip)))
-  x$def_1_zip <- ifelse(x$def_1_zip %in% va_zips, x$def_1_zip, NA)
+  x$def_1_zip <- ifelse(x$def_1_zip %in% valid_va_zips, x$def_1_zip, NA)
   post_na_zips <- x %>% group_by(filing_year) %>% summarize(post_na = sum(is.na(def_1_zip)))
   merge(pre_na_zips, post_na_zips, by = 'filing_year') %>%
     mutate(na_gain = post_na - pre_na) %>%
@@ -278,7 +292,7 @@ cases <- deduplicater(cases)
 # Within each group of serial cases, we retain the *latest one* and use that for tabulation purposes; this is because
 #   we're concerned with the material effects of filings on tenants, and if there are three serial cases ending in
 #   (1) dismissal, (2) dismissal, (3) eviction, our position is that that sequence of events constitutes an eviction,
-#   not a "final score" of 2-1
+#   not a "final score" of 2-1 for the defendant
 # deserializer_inner() is applied via a wrapper function, deserializer_outer() (see below) to a
 #   tibble of cases grouped by pla_1, def_1, and def_1_zip (i.e., sets of rows where the same
 #   plaintiff filed against the same defendant in the same ZIP code)
@@ -345,7 +359,7 @@ deserializer_outer <- function(x) {
 cases <- deserializer_outer(cases)
 
 # Identify non-residential defendants
-pattern <- source(file = 'data-non-residential-regex.R')$value
+pattern <- source(file = 'non-residential-regex.R')$value
 non_residential_flagger <- function(x, remove_cases) {
   if (any(is.na(x$def_1)) == T) {
     x$def_1 <- ifelse(is.na(x$def_1), '', x$def_1)

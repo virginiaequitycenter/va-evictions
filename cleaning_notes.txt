@@ -1,0 +1,15 @@
+CODE-GENERATED TEXT FILE. DO NOT MODIFY BY HAND.
+GENERATED ON: 2021-11-11 16:51:48.
+2018: 102 non-VA ZIPs identified and converted to NA
+2019: 126 non-VA ZIPs identified and converted to NA
+2020: 87 non-VA ZIPs identified and converted to NA
+2021: 14 non-VA ZIPs identified and converted to NA
+2018: 148 true duplicates identified and removed
+2019: 139 true duplicates identified and removed
+2020: 104 true duplicates identified and removed
+2021:  4 true duplicates identified and removed
+2018: 61117 serial cases identified and removed
+2019: 47568 serial cases identified and removed
+2020: 9958 serial cases identified and removed
+2021:  143 serial cases identified and removed
+Number of cases with non-residential defendants identified and removed in cases_residential_only.csv: 3619 
