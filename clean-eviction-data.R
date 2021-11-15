@@ -1,6 +1,6 @@
 # Loading and cleaning Virginia eviction data from https://virginiacourtdata.org/
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn
-# Last revised: 2021-11-11
+# Last revised: 2021-11-15
 
 enclosing_directory <- 'civilcases'
 string_identifying_data_folders <- 'DistrictCivil'
@@ -36,7 +36,6 @@ library(tidyverse)
 library(readr)
 library(rvest)
 library(lubridate)
-library(tigris)
 
 # Checks
 if (stri_detect(getwd(), regex = paste0('(\\/', enclosing_directory, '$)')) == F) {
@@ -70,7 +69,7 @@ colnames(district_courts)[which(colnames(district_courts) == 'name')] <- 'court_
 district_courts <- rbind(district_courts, c(710, 'Norfolk General District Court'))
 district_courts$fips <- as.integer(district_courts$fips)
 # Notes on courts:
-#   - Unlawful detainer case in Fairfax *City* are held at the Fairfac *County* court
+#   - Unlawful detainer case in Fairfax *City* are held at the Fairfax *County* court
 #     - Thus no cases linked to Fairfax City GDC appear in the unlawful detainer data, see: http://www.courts.state.va.us/courts/gd/fairfax_city/home.html
 #   - "Richmond Manchester," "Mongomery/Blacksburg," and a few exclusively criminal and/or traffic courts appear in the list but not in the unlawful
 #       detainer data (the former two appear to not be real GDCs; the latter are not present for obvious reasons)
@@ -176,7 +175,9 @@ for (i in 1:length(cases_objects)) {
 }
 
 ##### Clean plaintiff and defendant names to improve quality of later grouping procedures
-# Store unmodified versions of pla_1 and def_1 in the data frame for posterity and safekeeping
+# NOTE: This whole name-cleaning chunk could be abbreviated in this file by moving function to another
+#   and calling them here; consider for the future
+# Store unmodified versions of pla_1 and def_1 in the data frame for safekeeping
 store_orig_names <- function(x) {
   x$pla_1_unmodified <- x$pla_1
   x$def_1_unmodified <- x$def_1
@@ -184,13 +185,12 @@ store_orig_names <- function(x) {
 }
 cases <- store_orig_names(cases)
 
+# Remove: TA/DBA tags; dashes, slashes, and periods; commas at ends of lines; double (or more) spaces
 pla_and_def_cleaner <- function(x) {
   ##### Plaintiff names
   # Remove "Trading as..." and "Doing business as..." extraneous text
   x$pla_1 <- ifelse(stri_detect(x$pla_1, regex = ',? T/?A\\b'), stri_extract(x$pla_1, regex = '(.*)(?=(,? T/?A\\b))'), x$pla_1)
   x$pla_1 <- ifelse(stri_detect(x$pla_1, regex = ',? D/?B/?A\\b'), stri_extract(x$pla_1, regex = '(.*)(?=(,? D/?B/?A\\b))'), x$pla_1)
-  # Correct instances of comma misplacements (" ," --> ", ")
-  x$pla_1 <- gsub(' ,', ', ', x$pla_1)
   # Replace dashes with spaces
   x$pla_1 <- gsub('-', ' ', x$pla_1)
   # Replace slashes with spaces
@@ -204,8 +204,6 @@ pla_and_def_cleaner <- function(x) {
   ##### Defendant names
   x$def_1 <- ifelse(stri_detect(x$def_1, regex = ',? T/?A\\b'), stri_extract(x$def_1, regex = '(.*)(?=(,? T/?A\\b))'), x$def_1)
   x$def_1 <- ifelse(stri_detect(x$def_1, regex = ',? D/?B/?A\\b'), stri_extract(x$def_1, regex = '(.*)(?=(,? D/?B/?A\\b))'), x$def_1)
-  # Correct instances of comma misplacements (" ," --> ", ")
-  x$def_1 <- gsub(' ,', ', ', x$def_1)
   # Replace dashes with spaces
   x$def_1 <- gsub('-', ' ', x$def_1)
   # Replace slashes with spaces
@@ -238,13 +236,13 @@ cases <- bespoke_plaintiff_cleaner(cases)
 selective_comma_remover <- function(x) {
   # Plaintiff names
   x$pla_1 <- ifelse(stri_detect(x$pla_1, regex = ',|;'),
-                    ifelse(stri_detect(stri_extract_last(x$pla_1, regex = '(?<=(,|;))(.*)'), regex = '\\b(?i)(l(l)?c|l(l)?p|inc)\\b'),
+                    ifelse(stri_detect(stri_extract_last(x$pla_1, regex = '(?<=(,|;))(.*)'), regex = '(?i)(\\b((p)?l(lc|td|l{0,2}?p))|inc\\b)'),
                            stri_replace_last(x$pla_1, regex = ',|;', replacement = ''),
                            x$pla_1),
                     x$pla_1)
   # Defendant names
   x$def_1 <- ifelse(stri_detect(x$def_1, regex = ',|;'),
-                    ifelse(stri_detect(stri_extract_last(x$def_1, regex = '(?<=(,|;))(.*)'), regex = '\\b(?i)(l(l)?c|l(l)?p|inc)\\b'),
+                    ifelse(stri_detect(stri_extract_last(x$def_1, regex = '(?<=(,|;))(.*)'), regex = '(?i)(\\b((p)?l(lc|td|l{0,2}?p))|inc\\b)'),
                            stri_replace_last(x$def_1, regex = ',|;', replacement = ''),
                            x$def_1),
                     x$def_1)
@@ -252,7 +250,24 @@ selective_comma_remover <- function(x) {
   x
 }
 cases <- selective_comma_remover(cases)
-##### Fin plaintiff and defendant name cleaning process
+
+# Ensure that spacing around punctuation in names is correct
+#   Convert instances of:
+#     - "x , y" and "x ; y" --> "x, y" and "x; y"
+#     - "x,y" and "x;y" --> "x, y" and "x; y"
+#     - "x ,y" and "x ;y" --> "x, y" and "x; y"
+punctuation_spacing_check <- function(x) {
+  # Plaintiff names
+  x$pla_1 <- ifelse(stri_detect(x$pla_1, regex = '(,|;)(\\S)'), gsub('(,|;)(\\S)', '\\1 \\2', x$pla_1), x$pla_1)
+  x$pla_1 <- ifelse(stri_detect(x$pla_1, regex = '(\\S)(\\s{1,})(,|;)'), gsub('(\\S)(\\s{1,})(,|;)', '\\1\\3', x$pla_1), x$pla_1)
+  # Defendant names
+  x$def_1 <- ifelse(stri_detect(x$def_1, regex = '(,|;)(\\S)'), gsub('(,|;)(\\S)', '\\1 \\2', x$def_1), x$def_1)
+  x$def_1 <- ifelse(stri_detect(x$def_1, regex = '(\\S)(\\s{1,})(,|;)'), gsub('(\\S)(\\s{1,})(,|;)', '\\1\\3', x$def_1), x$def_1)
+  # Return corrected names
+  x
+}
+cases <- punctuation_spacing_check(cases)
+##### Finish plaintiff and defendant name cleaning process
 
 # Clean ZIP codes
 #   - Current approach: Don't drop any cases, as all cases have an associated VA court that can be used in by-court case tabulation
@@ -271,10 +286,13 @@ zip_cleaner <- function(x) {
 cases <- zip_cleaner(cases)
 
 # Identify and remove true duplicates
-#   Variables used to identify true duplicates: “FiledDate”, “Judgment”, “Costs”, “AttorneyFees”, “PrincipalAmount", “OtherAmount”, "pla_1", "def_1", "def_1_zip"
+#   Variables used to identify true duplicates: “FiledDate”, “Judgment”, “Costs”, “AttorneyFees”, “PrincipalAmount",
+#   “OtherAmount”, "pla_1_unmodified", "def_1_unmodified", "def_1_zip"
+#   Note that this process currently uses pla_1, def_1, and def_1_zip, which have been cleaned
 deduplicater <- function(x) {
   pre_nrow <- x %>% group_by(filing_year) %>% summarize(pre_n = n())
-  dupes <- x[, c('FiledDate', 'Judgment', 'Costs', 'AttorneyFees', 'PrincipalAmount', 'OtherAmount', 'pla_1', 'def_1', 'def_1_zip')]
+  dupes <- x[, c('FiledDate', 'Judgment', 'Costs', 'AttorneyFees', 'PrincipalAmount',
+                 'OtherAmount', 'pla_1', 'def_1', 'def_1_zip')]
   x <- x[!duplicated(dupes), ]
   post_nrow <- x %>% group_by(filing_year) %>% summarize(post_n = n())
   merge(pre_nrow, post_nrow, by = 'filing_year') %>%
