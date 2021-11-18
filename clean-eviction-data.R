@@ -39,7 +39,7 @@ library(lubridate)
 
 # Checks
 if (stri_detect(getwd(), regex = paste0('(\\/', enclosing_directory, '$)')) == F) {
-  stop('The working directory is not the directory indicated in `enclosing_directory`')
+  stop(paste0('The working directory is not the directory indicated in ', enclosing_directory))
 }
 if ('non-residential-regex.R' %in% dir() == F) {
   stop('non-residential-regex.R is not in the working directory')
@@ -198,7 +198,7 @@ pla_and_def_cleaner <- function(x) {
   # Remove periods
   x$pla_1 <- gsub('\\.', '', x$pla_1)
   # Remove commas at ends of lines
-  x$pla_1 <- stri_replace(x$pla_1, regex = '(,|,\\s{1,})$', replacement = '')
+  x$pla_1 <- stri_replace(x$pla_1, regex = ',\\s{1,}?$', replacement = '')
   # Remove double (or >double) spaces
   x$pla_1 <- gsub('\\s{2,}', ' ', x$pla_1)
   ##### Defendant names
@@ -211,7 +211,7 @@ pla_and_def_cleaner <- function(x) {
   # Remove periods
   x$def_1 <- gsub('\\.', '', x$def_1)
   # Remove commas at ends of lines
-  x$def_1 <- stri_replace(x$def_1, regex = '(,|,\\s{1,})$', replacement = '')
+  x$def_1 <- stri_replace(x$def_1, regex = ',\\s{1,}?$', replacement = '')
   # Remove double (or >double) spaces
   x$def_1 <- gsub('\\s{2,}', ' ', x$def_1)
   ##### Return corrected names
