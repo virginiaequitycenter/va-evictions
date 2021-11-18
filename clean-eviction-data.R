@@ -1,6 +1,6 @@
 # Loading and cleaning Virginia eviction data from https://virginiacourtdata.org/
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn
-# Last revised: 2021-11-15
+# Last revised: 2021-11-18
 
 enclosing_directory <- 'civilcases'
 string_identifying_data_folders <- 'DistrictCivil'
