@@ -1,34 +1,35 @@
 # Loading and cleaning Virginia eviction data from https://virginiacourtdata.org/
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn
-# Last revised: 2021-11-18
+# Last revised: 2021-12-16
 
 enclosing_directory <- 'civilcases'
 string_identifying_data_folders <- 'DistrictCivil'
 
-###############################################################################
-# The only step in advance of running this code is ensuring that:             #
-#   1. `enclosing_directory` above is set as the directory containing         #
-#      (a) this code AND (b) the folders containing each year's unprocessed   #
-#      court data                                                             #
-#   2. `string_identifying_data_folders` above is set as a string that        #
-#      identifies folders containing unprocessed court data; that is, a       #
-#      string present only in the names of ALL data folders and not in the    #
-#      names of ANY other files present in `enclosing_directory`              #
-#   2. The data-folder names for each year contain the string above AND       #
-#      each contains the relevant year (YYYY) (e.g., "DistrictCivil_2020")    #
-#   3. `non-residential-regex.R` is present in `enclosing_directory`          #
-# With those conditions satisfied, the data cleaning process will be entirely #
-#   automated, and the code will return a data frame called `cases.csv`       #
-#   containing cleaned, aggregated cases for all years (with `year_filed` as  #
-#   a year identifier), as well as a version of `cases.csv` excluding cases   #
-#   we tag as having non-residential defendant (`cases_residential_only.csv`) #
-# The code will also save a file named `cleaning_notes.txt` to the working    #
-#   directory that contains information on how many true duplicates and       #
-#   serial cases the code identified for each year, how many cases            #
-#   were tagged as having non-residential defendants, and how many cases were #
-#   flagged as not having valid VA ZIP codes listed for defendants            #
-# Warning: This code can take upward of 20 minutes to fully run               #
-###############################################################################
+################################################################################
+# The only step in advance of running this code is ensuring that:              #
+#   1. `enclosing_directory` above is set as the directory containing          #
+#      (a) this code AND (b) the folders containing each year's unprocessed    #
+#      court data                                                              #
+#   2. `string_identifying_data_folders` above is set as a string that         #
+#      identifies folders containing unprocessed court data; that is, a        #
+#      string present only in the names of ALL data folders and not in the     #
+#      names of ANY other files present in `enclosing_directory`               #
+#   2. The data-folder names for each year contain the string above AND        #
+#      each contains the relevant year (YYYY) (e.g., "DistrictCivil_2020")     #
+#   3. `non-residential-defendant-regex.R` is present in `enclosing_directory` #
+# With those conditions satisfied, the data cleaning process will be entirely  #
+#   automated, and the code will save a data frame called `cases.csv`          #
+#   containing cleaned, aggregated cases for all years (with `year_filed` as   #
+#   a year identifier), as well as a version of `cases.csv` excluding cases    #
+#   we tag as having non-residential defendant (`cases_residential_only.csv`)  #
+#   to a `processed-data` directory                                            #
+# The code will also save a file named `cleaning-notes.txt` to the enclosing   #
+#   directory that contains information on how many true duplicates and        #
+#   serial cases the code identified for each year, how many cases             #
+#   were tagged as having non-residential defendants, and how many cases were  #
+#   flagged as not having valid VA ZIP codes listed for defendants             #
+# Warning: This code can take upward of 20 minutes to fully run                #
+################################################################################
 
 # Libraries
 library(stringi)
@@ -46,7 +47,7 @@ if ('non-residential-regex.R' %in% dir() == F) {
 }
 
 # Open file to save a few lines of relevant output (saved into `enclosing_directory`)
-sink(file = 'cleaning_notes.txt', type = 'output')
+sink(file = 'cleaning-notes.txt', type = 'output')
 
 # Load raw district court civil case data
 district_folders <- dir()[stri_detect(dir(), fixed = string_identifying_data_folders)]
@@ -377,7 +378,7 @@ deserializer_outer <- function(x) {
 cases <- deserializer_outer(cases)
 
 # Identify non-residential defendants
-pattern <- source(file = 'non-residential-regex.R')$value
+pattern <- source(file = 'non-residential-defendant-regex.R')$value
 non_residential_flagger <- function(x, remove_cases) {
   if (any(is.na(x$def_1)) == T) {
     x$def_1 <- ifelse(is.na(x$def_1), '', x$def_1)
@@ -395,16 +396,18 @@ cases <- non_residential_flagger(cases, remove_cases = F)
 cases_residential_only <- non_residential_flagger(cases, remove_cases = T)
 
 # Write cleaned and aggregated CVS containing all cases stacked
-write_csv(cases, file = 'cases.csv')
-write_csv(cases_residential_only, file = 'cases_residential_only.csv')
+target_directory <- 'processed-data'
+if (dir.exists(target_directory) == F) {dir.create(target_directory)}
+write_csv(cases, file = paste0(target_directory, '/', 'cases.csv'))
+write_csv(cases_residential_only, file = paste0(target_directory, '/', 'cases_residential_only.csv'))
 
 # Close file with all output, read back in, clean as desired, and overwrite
 sink()
-data.frame(year_rows = read_lines('cleaning_notes.txt')) %>%
+data.frame(year_rows = read_lines('cleaning-notes.txt')) %>%
   filter(stri_detect(.$year_rows,  regex = '(^\\d{4}\\:)|(^Number)')) %>%
   rbind('CODE-GENERATED TEXT FILE. DO NOT MODIFY BY HAND.',
         paste0('GENERATED ON: ', Sys.time(), '.'),
         .) %>%
   transmute(year_rows = gsub('\\s{2}', ' ', year_rows)) %>%
   apply(., 1, as.character) %>%
-  writeLines(., con = 'cleaning_notes.txt')
+  writeLines(., con = 'cleaning-notes.txt')

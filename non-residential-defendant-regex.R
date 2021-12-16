@@ -1,4 +1,4 @@
-# Regex pattern for identifying commercial/non-residential names
+# Regex pattern for identifying commercial/non-residential defendant names
 # Authors: Jacob Goldstein-Greenwood
 # Last revised: 08-06-2021
 
