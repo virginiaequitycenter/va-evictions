@@ -1,7 +1,8 @@
 # Loading and cleaning Virginia eviction data from https://virginiacourtdata.org/
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn
-# Last revised: 2021-12-16
+# Last revised: 2022-01-05
 
+# `enclosing_directory` and `string_identifying_data_folders` are case sensitive
 enclosing_directory <- 'civilcases'
 string_identifying_data_folders <- 'DistrictCivil'
 
@@ -21,7 +22,7 @@ string_identifying_data_folders <- 'DistrictCivil'
 #   automated, and the code will save a data frame called `cases.csv`          #
 #   containing cleaned, aggregated cases for all years (with `year_filed` as   #
 #   a year identifier), as well as a version of `cases.csv` excluding cases    #
-#   we tag as having non-residential defendant (`cases_residential_only.csv`)  #
+#   we tag as having non-residential defendants (`cases_residential_only.csv`) #
 #   to a `processed-data` directory                                            #
 # The code will also save a file named `cleaning-notes.txt` to the enclosing   #
 #   directory that contains information on how many true duplicates and        #
@@ -42,7 +43,7 @@ library(lubridate)
 if (stri_detect(getwd(), regex = paste0('(\\/', enclosing_directory, '$)')) == F) {
   stop(paste0('The working directory is not the directory indicated in ', enclosing_directory))
 }
-if ('non-residential-regex.R' %in% dir() == F) {
+if ('non-residential-defendant-regex.R' %in% dir() == F) {
   stop('non-residential-regex.R is not in the working directory')
 }
 
@@ -51,6 +52,7 @@ sink(file = 'cleaning-notes.txt', type = 'output')
 
 # Load raw district court civil case data
 district_folders <- dir()[stri_detect(dir(), fixed = string_identifying_data_folders)]
+if (all(dir.exists(district_folders)) == F) {stop('Ensure that `string_identifying_data_folders` is only present in *directory* names within `enclosing_directory, not *file* names')}
 if (all(stri_detect(district_folders, regex = '\\d{4}')) == F) {stop('Ensure that every data folder has a year in its name')}
 data_years <- stri_extract(district_folders, regex = '(\\d{4})')
 for (i in 1:length(district_folders)) {
