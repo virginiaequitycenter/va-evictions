@@ -1,7 +1,8 @@
 # Using fuzzy-matching to "defuzz" plaintiff names
-#   This script also applies bespoke plaintiff-name typo corrections specified in `corrections_file`
+#   This script also applies bespoke typo corrections specified in `corrections_file` to plaintiff names
+#   in advance of defuzzing
 # Author: Jacob Goldstein-Greenwood / jacobgg@virginia.edu / GitHub: jacob-gg
-# Last revised: 2021-12-16
+# Last revised: 2022-01-06
 
 ################# Customize as desired to defuzz plaintiff names for a specific locality #################
 court_of_interest <- 'Albemarle General District Court'
@@ -63,8 +64,8 @@ fuzzy_ider <- function(name_zip_vec, right_side_data, fuzzy_method = 'lv', upper
   #   Note: In testing for match of first 2 characters, we ignore spaces; this is to ensure that rare
   #         cases like "B & L" can be matched to "B&L"
   x_first_two_chars <- substr(gsub(x = x, pattern = '\\s{1,}', replacement = ''), 1, 2)
-  right_side_data <- right_side_data[grep(pattern = paste0('(?i)^', x_first_two_chars),
-                                          x = gsub(x = right_side_data$pla_1, pattern = '\\s{1,}', replacement = '')), ]
+  right_side_data <- right_side_data[grep(x = gsub(x = right_side_data$pla_1, pattern = '\\s{1,}', replacement = ''),
+                                          pattern = paste0('(?i)^', x_first_two_chars)), ]
   # Apply fuzzy matching process to identify possible final defuzzed names
   temp <- stringdist_right_join(data.frame(pla_1 = x, match = 1),
                                 right_side_data,
