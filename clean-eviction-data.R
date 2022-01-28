@@ -1,28 +1,34 @@
 # Loading and cleaning Virginia eviction data from https://virginiacourtdata.org/
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn
-# Last revised: 2022-01-05
+# Last revised: 2022-01-28
 
-# `enclosing_directory` and `string_identifying_data_folders` are case sensitive
-enclosing_directory <- 'civilcases'
-string_identifying_data_folders <- 'DistrictCivil'
+# Possible future revisions:
+#   - The name-cleaning chunk could be abbreviated in this file by moving function(s)
+#       to another file and calling them here; consider for the future
+#   - Currently, defendant #1 ZIPs are converted to NA if they're not valid Virginia ZIPs;
+#       we could optionally (a) remove this cleaning step and clean as needed in
+#       mapping scrips or (b) add a similar step to clean plaintiff ZIPs in the same way
 
 ################################################################################
 # The only step in advance of running this code is ensuring that:              #
-#   1. `enclosing_directory` above is set as the directory containing          #
+#   1. `enclosing_directory` below is set as the directory containing          #
 #      (a) this code AND (b) the folders containing each year's unprocessed    #
 #      court data                                                              #
-#   2. `string_identifying_data_folders` above is set as a string that         #
+#   2. `string_identifying_data_folders` below is set as a string that         #
 #      identifies folders containing unprocessed court data; that is, a        #
 #      string present only in the names of ALL data folders and not in the     #
 #      names of ANY other files present in `enclosing_directory`               #
-#   2. The data-folder names for each year contain the string above AND        #
+#   3. `target_directory` below is set to whatever folder the user wants the   #
+#      cleaned data to be deposited in (directory will be created if it        #
+#      doesn't already exist)                                                  #
+#   4. The data-folder names for each year contain the string below AND        #
 #      each contains the relevant year (YYYY) (e.g., "DistrictCivil_2020")     #
-#   3. `non-residential-defendant-regex.R` is present in `enclosing_directory` #
+#   5. `non-residential-defendant-regex.R` is present in `enclosing_directory` #
 # With those conditions satisfied, the data cleaning process will be entirely  #
-#   automated, and the code will save a data frame called `cases.csv`          #
+#   automated, and the code will save a data frame called `cases.txt`          #
 #   containing cleaned, aggregated cases for all years (with `year_filed` as   #
-#   a year identifier), as well as a version of `cases.csv` excluding cases    #
-#   we tag as having non-residential defendants (`cases_residential_only.csv`) #
+#   a year identifier), as well as a version of `cases.txt` excluding cases    #
+#   we tag as having non-residential defendants (`cases_residential_only.txt`) #
 #   to a `processed-data` directory                                            #
 # The code will also save a file named `cleaning-notes.txt` to the enclosing   #
 #   directory that contains information on how many true duplicates and        #
@@ -31,6 +37,11 @@ string_identifying_data_folders <- 'DistrictCivil'
 #   flagged as not having valid VA ZIP codes listed for defendants             #
 # Warning: This code can take upward of 20 minutes to fully run                #
 ################################################################################
+
+# `enclosing_directory` and `string_identifying_data_folders` are case sensitive
+enclosing_directory <- 'civilcases'
+string_identifying_data_folders <- 'DistrictCivil'
+target_directory <- 'processed-data'
 
 # Libraries
 library(stringi)
@@ -106,7 +117,7 @@ aggregator <- function(x, year, what) {
                 def_id = paste0(id, collapse = ' | '),
                 def_count = stri_count(def, regex = '(\\|)') + 1,
                 def_1 = ifelse(def_count > 1, stri_extract(def, regex = '(^.*?)(?= \\|)'), stri_extract(def, regex = '(^.*)')),
-                def_1_zip = ifelse(def_count > 1, stri_extract(def_address, regex = '(\\d{5}?)(?= \\|)'), stri_extract(def_address, regex = '(\\d{5})'))) %>%
+                def_1_zip = as.character(ifelse(def_count > 1, stri_extract(def_address, regex = '(\\d{5}?)(?= \\|)'), stri_extract(def_address, regex = '(\\d{5})')))) %>%
       ungroup()
   }
   if (what == 'plaintiffs') {
@@ -118,7 +129,7 @@ aggregator <- function(x, year, what) {
                 pla_id = paste0(id, collapse = ' | '),
                 pla_count = stri_count(pla, regex = '(\\|)') + 1,
                 pla_1 = ifelse(pla_count > 1, stri_extract(pla, regex = '(^.*?)(?= \\|)'), stri_extract(pla, regex = '(^.*)')),
-                pla_1_zip = ifelse(pla_count > 1, stri_extract(pla_address, regex = '(\\d{5}?)(?= \\|)'), stri_extract(pla_address, regex = '(\\d{5})'))) %>%
+                pla_1_zip = as.character(ifelse(pla_count > 1, stri_extract(pla_address, regex = '(\\d{5}?)(?= \\|)'), stri_extract(pla_address, regex = '(\\d{5})')))) %>%
       ungroup()
   }
   if (what == 'hearings') {
@@ -178,8 +189,6 @@ for (i in 1:length(cases_objects)) {
 }
 
 ##### Clean plaintiff and defendant names to improve quality of later grouping procedures
-# NOTE: This whole name-cleaning chunk could be abbreviated in this file by moving function to another
-#   and calling them here; consider for the future
 # Store unmodified versions of pla_1 and def_1 in the data frame for safekeeping
 store_orig_names <- function(x) {
   x$pla_1_unmodified <- x$pla_1
@@ -272,21 +281,20 @@ punctuation_spacing_check <- function(x) {
 cases <- punctuation_spacing_check(cases)
 ##### Finish plaintiff and defendant name cleaning process
 
-# Clean ZIP codes
-#   - Current approach: Don't drop any cases, as all cases have an associated VA court that can be used in by-court case tabulation
-#   - However: Convert def_1_zip to NA when it isn't a valid *Virginia* ZIP code so as not to disrupt VA by-ZIP case tabulation
-#     - For example: "Henrico, VA 00000," "Charlottesville, VA 99999," "Ewing, NJ 12345"
-valid_va_zips <- c(20100:20199, 22000:24699) # https://en.wikipedia.org/wiki/List_of_ZIP_Code_prefixes
-zip_cleaner <- function(x) {
+# Clean defendant ZIP codes
+#   - Current approach: Convert def_1_zip to NA when it isn't a valid *Virginia* ZIP code so as not to disrupt VA by-ZIP case tabulation
+#   - For example: "Henrico, VA 00000," "Charlottesville, VA 99999," "Ewing, NJ 12345"
+valid_va_zips <- as.character(c(20100:20199, 22000:24699)) # https://en.wikipedia.org/wiki/List_of_ZIP_Code_prefixes
+def_zip_cleaner <- function(x) {
   pre_na_zips <- x %>% group_by(filing_year) %>% summarize(pre_na = sum(is.na(def_1_zip)))
   x$def_1_zip <- ifelse(x$def_1_zip %in% valid_va_zips, x$def_1_zip, NA)
   post_na_zips <- x %>% group_by(filing_year) %>% summarize(post_na = sum(is.na(def_1_zip)))
   merge(pre_na_zips, post_na_zips, by = 'filing_year') %>%
     mutate(na_gain = post_na - pre_na) %>%
-    apply(., 1, function(x) cat(paste0(x[1], ': ', x[length(x)], ' non-VA ZIPs identified and converted to NA', '\n')))
+    apply(., 1, function(x) cat(paste0(x[1], ': ', x[length(x)], ' non-VA defendant ZIPs identified and converted to NA', '\n')))
   x
 }
-cases <- zip_cleaner(cases)
+cases <- def_zip_cleaner(cases)
 
 # Identify and remove true duplicates
 #   Variables used to identify true duplicates: “FiledDate”, “Judgment”, “Costs”, “AttorneyFees”, “PrincipalAmount",
@@ -305,79 +313,69 @@ deduplicater <- function(x) {
 }
 cases <- deduplicater(cases)
 
-# Identify and remove serial cases
+# Identify serial cases
 #   Variables used to identify serial cases: "pla_1", "def_1", "def_1_zip"
 # We define serial cases as: Sequential filings by a given plaintiff ("pla_1") against a given primary defendant ("def_1")
-#   in a given ZIP code ("def_1_zip") within 12 months of an initial filing (note that this implies that there can be
-#   multiple "groups" of serial filings for a given pla_1/def_1/def_1_zip combination)
-# Within each group of serial cases, we retain the *latest one* and use that for tabulation purposes; this is because
-#   we're concerned with the material effects of filings on tenants, and if there are three serial cases ending in
-#   (1) dismissal, (2) dismissal, (3) eviction, our position is that that sequence of events constitutes an eviction,
-#   not a "final score" of 2-1 for the defendant
-# deserializer_inner() is applied via a wrapper function, deserializer_outer() (see below) to a
-#   tibble of cases grouped by pla_1, def_1, and def_1_zip (i.e., sets of rows where the same
-#   plaintiff filed against the same defendant in the same ZIP code)
-# A reasonable test of whether the deserialization is working properly is checking that the value obtained from:
-#   nrow(cases %>% group_by(pla_1, def_1, def_1_zip) %>% summarize(n()))
-#   is identical before and after running deserializer_inner()/deserializer_outer()
-deserializer_inner <- function(z, ...) {
-  # If there's only one case filed by the plaintiff against the defendant, simply keep that case
+#   in a given ZIP code ("def_1_zip") filed 12 months of less after an initial filing (<=12 months)
+#   (Note that this implies that there can be multiple "groups" of serial filings for a given pla_1/def_1/def_1_zip combination)
+# ID_serials_inner() is applied via a wrapper function, ID_serials_outer(), to subsets of the case data grouped by
+#   pla_1, def_1, and def_1_zip; the resulting data has two new columns: serial_filing (T/F) indicating whether a
+#   given case is serial, and latest_filing_between_pla_and_def (T/F), indicating whether a given case is the latest
+#   within a group of serial cases (defined by am inclusive 12-month window)
+n_year <- length(unique(cases$filing_year))
+ID_serials_inner <- function(z, max_windows = 4, ...) {
+  z$serial_filing <- NA
+  z$latest_filing_between_pla_and_def <- NA
   if (nrow(z) == 1) {
-    z$serial_filings_by_pla_against_def <- FALSE
+    z$serial_filing <- FALSE
+    z$latest_filing_between_pla_and_def <- TRUE
     return(z)
   }
-  # If there's >1 case filed by the plaintiff against the defendant...
   if (nrow(z) > 1) {
-    # First: Determine whether the time span from the first case to the latest is >1 year
     cases_span_more_than_1_yr <- (interval(min(z$date_filed), max(z$date_filed)) / years(1)) > 1
-    # If the interval is *not* >1 year, simply keep the latest case (because all cases selected are considered serial with the first)
     if (cases_span_more_than_1_yr == F) {
-      z <- z %>%filter(date_filed == max(date_filed)) %>% filter(id == max(id))
-      z$serial_filings_by_pla_against_def <- TRUE
+      z$serial_filing <- ifelse(z$date_filed == min(z$date_filed), FALSE, TRUE)
+      z$latest_filing_between_pla_and_def <- ifelse(z$date_filed == max(z$date_filed), TRUE, FALSE)
       return(z)
     }
     # If the interval is >1 year...
     if (cases_span_more_than_1_yr == T) {
-      num_cases_pre <- nrow(z)
       for (i in 1:100) {
-        # First determine the latest case filed that is not more than 12 months after the very first case (this is the
-        #   latest in the first "group" of serial cases)
         if (i == 1) {
-          latest_in_serial_group_1 <- max(z$date_filed[z$date_filed <= (min(z$date_filed) %m+% months(12))])
+          begin_window_1 <- min(z$date_filed)
+          end_window_1 <- min(z$date_filed) %m+% months(12)
         }
-        # Then, find the latest case in the next "group" of serial cases by determining the latest case
-        #   that was filed not more than 12 months after the first case that follows the case identified
-        #   as the latest in the previous serial "group"
         if (i > 1) {
-          temp_min <- min(z$date_filed[z$date_filed > eval(parse(text = paste0('latest_in_serial_group_', i-1)))])
-          assign(paste0('latest_in_serial_group_', i),
-                 max(z$date_filed[z$date_filed >= temp_min & z$date_filed <= (temp_min %m+% months(12))]))
+          if (max(z$date_filed) <= eval(parse(text = paste0('end_window_', i-1)))) {break}
+          assign(paste0('begin_window_', i),
+                 min(z$date_filed[z$date_filed > eval(parse(text = paste0('end_window_', i-1)))]))
+          assign(paste0('end_window_', i),
+                 eval(parse(text = paste0('begin_window_', i))) %m+% months(12))
         }
-        # Iterate this process until the case identified as the latest in a serial "group" is the most recent case
-        #   filed by a given plaintiff against a given defendant in a given ZIP code
-        if (eval(parse(text = paste0('latest_in_serial_group_', i))) == max(z$date_filed)) {break}
       }
-      # Subset the cases previously identified, thereby selecting only the latest case in each group of serial cases
-      #   for each plaintiff/defendant/ZIP combination
-      dates_to_select <- sapply(paste0('latest_in_serial_group_', 1:i), function(x) eval(parse(text = x)))
-      z <- z[z$date_filed %in% dates_to_select, ]
-      z <- z %>% group_by(date_filed) %>% filter(id == max(id))
-      num_cases_post <- nrow(z)
-      z$serial_filings_by_pla_against_def <- ifelse(num_cases_post < num_cases_pre, TRUE, FALSE)
+      # Identify and mark cases that are the beginnings of "serial windows"
+      # (n_window_beginnings is i-1 because when the loop terminates, i is equal to n_windows+1)
+      window_beginnings <- paste0('begin_window_', 1:(i-1))
+      z$serial_filing <- ifelse(z$date_filed %in% sapply(window_beginnings, function(x) eval(parse(text = x))),
+                                FALSE, TRUE)
+      for (j in 1:length(window_beginnings)) {
+        z_sub <- z[z$date_filed >= eval(parse(text = window_beginnings[j])) &
+                     z$date_filed <= eval(parse(text = paste0('end_window_', j))), ]
+        z$latest_filing_between_pla_and_def[z$date_filed == max(z_sub$date_filed)] <- TRUE
+      }
+      z$latest_filing_between_pla_and_def <- ifelse(is.na(z$latest_filing_between_pla_and_def), FALSE, z$latest_filing_between_pla_and_def)
       z
     }
   }
 }
-deserializer_outer <- function(x) {
-  pre_nrow <- x %>% group_by(filing_year) %>% summarize(pre_n = n())
-  x <- x %>% group_by(pla_1, def_1, def_1_zip) %>% group_modify(deserializer_inner) %>% ungroup()
-  post_nrow <- x %>% group_by(filing_year) %>% summarize(post_n = n())
-  merge(pre_nrow, post_nrow, by = 'filing_year') %>%
-    mutate(nrow_change = pre_n - post_n) %>%
-    apply(., 1, function(x) cat(paste0(x[1], ': ', x[length(x)], ' serial cases identified and removed', '\n')))
+
+ID_serials_outer <- function(x) {
+  x <- x %>% group_by(pla_1, def_1, def_1_zip) %>% group_modify(ID_serials_inner) %>% ungroup()
+  x %>% group_by(filing_year) %>% summarize(serials = sum(serial_filing == T, na.rm = T)) %>%
+    apply(., 1, function(w) cat(paste0(w[1], ': ', w[length(w)], ' serial cases identified', '\n')))
   x
 }
-cases <- deserializer_outer(cases)
+cases <- ID_serials_outer(cases)
 
 # Identify non-residential defendants
 pattern <- source(file = 'non-residential-defendant-regex.R')$value
@@ -386,22 +384,23 @@ non_residential_flagger <- function(x, remove_cases) {
     x$def_1 <- ifelse(is.na(x$def_1), '', x$def_1)
   }
   # Flag non-residential defendants
-  x$non_residential <- stri_detect(x$def_1, regex = pattern)
+  x$non_residential_defendant <- stri_detect(x$def_1, regex = pattern)
   if (remove_cases == T) {
-    cat('Number of cases with non-residential defendants identified and removed in cases_residential_only.csv:',
-        sum(x$non_residential, na.rm = T), '\n')
-    x <- x[x$non_residential == F, ]
+    cat('Number of cases with non-residential defendants identified and removed in cases_residential_only.txt:',
+        sum(x$non_residential_defendant, na.rm = T), '\n')
+    x <- x[x$non_residential_defendant == F, ]
   }
   x
 }
 cases <- non_residential_flagger(cases, remove_cases = F)
 cases_residential_only <- non_residential_flagger(cases, remove_cases = T)
 
-# Write cleaned and aggregated CVS containing all cases stacked
-target_directory <- 'processed-data'
+# Write cleaned and aggregated data containing all cases stacked
+# Note: Writing to CSV results in leading zeros being dropped; as of
+#       2022-01, this is not desired behavior, so we write to .txt
 if (dir.exists(target_directory) == F) {dir.create(target_directory)}
-write_csv(cases, file = paste0(target_directory, '/', 'cases.csv'))
-write_csv(cases_residential_only, file = paste0(target_directory, '/', 'cases_residential_only.csv'))
+write_csv(cases, file = paste0(target_directory, '/', 'cases.txt'))
+write_csv(cases_residential_only, file = paste0(target_directory, '/', 'cases_residential_only.txt'))
 
 # Close file with all output, read back in, clean as desired, and overwrite
 sink()
