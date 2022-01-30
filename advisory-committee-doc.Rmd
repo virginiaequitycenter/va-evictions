@@ -26,14 +26,14 @@ table.display td { white-space: nowrap; }
 
 <details><summary>Team members</summary><br/>
 
-- Barbara Wilson &#9677;  
-- Benjamin Teresa &#9708;  
-- Connor White &#9708;
-- Hannah Woehrle &#9708;
+- Michele Claibourn &#9677; (data lead)  
 - Jacob Goldstein-Greenwood &#9677; (primary code and document author)
 - Kathryn Howell &#9708;  
 - Michael Salgueiro &#9677;  
-- Michele Claibourn &#9677;  
+- Benjamin Teresa &#9708;  
+- Connor White &#9708;
+- Barbara Wilson &#9677;  
+- Hannah Woehrle &#9708;
 
 &#9708; - [RVA Eviction Lab](https://rampages.us/rvaevictionlab/)  
 &#9677; - [UVa Equity Center](https://virginiaequitycenter.org/)
@@ -65,7 +65,7 @@ We begin with raw case data scraped from general district court websites, and we
 
 ```{r COURTS-TABLE, echo = F, eval = T}
 # Read in CSV
-courts <- read.csv('/Users/jgg/Desktop/equity-center/eviction-project/civilcases/csvs-summaries/by_court_residential_only_wide.csv')
+courts <- read.csv('civilcases/csvs-summaries/by_court_residential_only_wide.csv')
 
 # Regexes for selecting just RVA/Cville cases
 rva_areas <- c('Richmond\\-Civil', 'Chesterfield', 'Henrico', 'Petersburg', 'Hopewell')
@@ -81,7 +81,7 @@ years <- stri_extract(colnames(courts)[stri_detect(colnames(courts), regex = 'ca
 courts$merge_var <- stri_extract(courts$court, regex = '\\w+(?=\\W)')
 
 # ACS data, locality-level
-acs_locality <- read.csv('/Users/jgg/Desktop/equity-center/va_acs_data_zcta_and_county/household_county_acsdata.csv')
+acs_locality <- read.csv('../acs_data/household_county_acsdata.csv')
 to_pull <- c('Richmond city, Virginia', 'Chesterfield County, Virginia', 'Henrico County, Virginia',
              'Petersburg city, Virginia', 'Hopewell city, Virginia', 'Charlottesville city, Virginia',
              'Greene County, Virginia', 'Albemarle County, Virginia', 'Nelson County, Virginia',
@@ -102,7 +102,7 @@ courts$non_white_percent <- ((courts$tot_pop - courts$white_pop) / courts$tot_po
 acs_vars <- c('rent_prop', 'tot_rental', 'median_rent', 'median_hhinc', 'tot_pop', 'non_white_percent')
 
 # Identify which quarters are present in data
-cases_res <- read.csv('/Users/jgg/Desktop/equity-center/eviction-project/civilcases/csvs-cases/cases_residential_only.csv')
+cases_res <- read.csv('civilcases/csvs-cases/cases_residential_only.csv')
 years <- data.frame(years = years, quarters = cases_res %>% group_by(filing_year) %>% summarize(length(unique(quarter))) %>% select(-filing_year))
 
 # Create list containing yearly data frame with the eviction variables of interest
@@ -180,7 +180,7 @@ out_cases <- lapply(seq_along(years$years),
 ### Eviction Rates by Defendant ZIP Code by Year
 ```{r ZIP-MAP, echo = F, eval = T, message = F, warning = F}
 # Read by-ZIP summary data
-zip_summaries <- read.csv('/Users/jgg/Desktop/equity-center/eviction-project/civilcases/csvs-summaries/by_zip_residential_only.csv')
+zip_summaries <- read.csv('civilcases/csvs-summaries/by_zip_residential_only.csv')
 
 # Download SF file for mapping
 va_zctas <- zctas(state = 51, year = 2010, progress_bar = F)
@@ -192,7 +192,9 @@ to_outline <- to_outline[to_outline$NAME10 %in% c('Richmond', 'Chesterfield', 'H
 to_outline <- to_outline[!(to_outline$NAMELSAD10 == 'Richmond County'), ] # drop Richmond County
 
 # Identify which ZIPs intersect with the Cville and RVA regions
-zip_intersects <- st_intersects(va_zctas, to_outline, s2_model = 'open')
+# zip_intersects <- st_intersects(va_zctas, to_outline, s2_model = 'open')
+zip_intersects <- st_intersects(va_zctas, to_outline)
+
 # Pull out the ZIPs to map based on the above
 to_map <- which(lapply((lapply(zip_intersects, function(x) x != 0)), any) == T)
 va_zctas <- va_zctas[to_map, ]
@@ -201,7 +203,7 @@ va_zctas <- va_zctas[to_map, ]
 centers <- st_centroid(to_outline)
 
 # Read in ZIP ACS data and merge with shape/eviction data
-acs_zip <- read.csv('/Users/jgg/Desktop/equity-center/va_acs_data_zcta_and_county/household_zcta_acsdata.csv')
+acs_zip <- read.csv('../acs_data/household_zcta_acsdata.csv')
 acs_zip$ZIP <- stri_extract(acs_zip$NAME, regex = '(?<=ZCTA5 )\\d{5}')
 
 # Generate list of yearly datasets
