@@ -372,8 +372,8 @@ cases <- non_residential_flagger(cases, remove_cases = F)
 cases_residential_only <- non_residential_flagger(cases, remove_cases = T)
 
 # Write cleaned and aggregated CVS containing all cases stacked
-write_csv(cases, file = 'cases.csv')
-write_csv(cases_residential_only, file = 'cases_residential_only.csv')
+write_csv(cases, path = 'cases.csv')
+write_csv(cases_residential_only, path = 'cases_residential_only.csv')
 
 # Close file with all output, read back in, clean as desired, and overwrite
 sink()
