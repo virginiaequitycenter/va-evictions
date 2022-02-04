@@ -1,4 +1,4 @@
-_Repo last updated: 2022-01-28_
+_Repo last updated: 2022-02-04_
 
 This repository contains code for cleaning and summarizing Virginia eviction data. The data are filings scraped from the [Virginia court system](www.courts.state.va.us) by [Ben Schoenfeld](https://github.com/bschoenfeld). Anonymized data are available through [virginiacourtdata.org](https://virginiacourtdata.org/). In our work, we use de-anonymized data, and accordingly, we do not currently include the data in this repository.
 
@@ -14,6 +14,7 @@ Contents:
 - defuzz-locality-plaintiff-names.R contains code for "defuzzing" plaintiff names for a user-specified locality, thereby reducing the number of alternative spellings of the same name, misspellings, etc.; this process is done by fuzzy matching each plaintiff names to others listed across cases and picking from possible fuzzy matches
   - defuzz-bespoke-corrections.csv is a simple, two-column CSV in which a user can specific typo corrections that they want to be automatically applied in advance of the defuzzing (e.g., if "SQUARE" is repeatedly misspelled "SQUERE" in a locality's case data, it can be easier to correct that by using the CSV instead of relying on the defuzzing process)
   - non-residential-plaintiff-regex.R contains a regex pattern that used for separating non-residential and residential plaintiffs, as we apply a more-conservative defuzzing process to non-residential names than to residential ones
+- _Note: This code for defuzzing plaintiff names in a single user-specified locality will soon be replaced with code for doing so in all localities_
 
 - summarize-eviction-data.R summarizes the cleaned data by VA court and by VA ZIP code; it exports:
     - Four _long_ comma-separated data files where 1 row = 1 court/ZIP code for _one year_
