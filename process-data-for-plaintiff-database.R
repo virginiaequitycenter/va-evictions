@@ -1,6 +1,6 @@
 # Aggregating case data up to plaintiff level for use in Shiny app
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn
-# Last revised: 2022-03-01
+# Last revised: 2022-03-02
 
 ###############################################################################
 # This code takes eviction case data that has undergone plaintiff-name        #
@@ -11,7 +11,7 @@
 # excluding non-final serial cases, etc.)                                     #
 ###############################################################################
 
-# WARNING: AS OF 2022-03-01, THIS CODE IS SET UP TO INGEST *PARTIALLY DEFUZZED,
+# WARNING: AS OF 2022-03-02, THIS CODE IS SET UP TO INGEST *PARTIALLY DEFUZZED,
 # INCOMPLETE* CASE DATA. (SEE DATA FILE NAME BELOW.) ONCE DEFUZZING IS
 # COMPLETE FOR ALL CASES/LOCALITIES, THE FILE NAME WILL NEED TO BE UPDATED.
 
@@ -36,4 +36,4 @@ plaintiff_aggregated <- cases_to_aggregate %>%
             def_zips = paste0(unique(def_1_zip), collapse = ', ')) %>% ungroup()
 
 # Export for Shiny app
-write.table(plaintiff_aggregated, file = paste0('plaintiff-database-Shiny/', 'plaintiff-aggregated-data.txt'), row.names = F, sep = ',')
+write.csv(plaintiff_aggregated, file = paste0('plaintiff-database-Shiny/plaintiff-aggregated-data.txt'), row.names = F)
