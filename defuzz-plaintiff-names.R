@@ -2,9 +2,10 @@
 # Author: Jacob Goldstein-Greenwood / jacobgg@virginia.edu / GitHub: jacob-gg
 # Last revised: 2022-03-02
 
-# NOTE: As of 2022-03-02, we've been defuzzing cases in blocks (of 20k-30k) on
-# Rivanna in order to prevent the process from (a) taking days and days and
-# (b) crashing. Adopting some other process in the future will be desirable.
+# NOTE: As of 2022-03-02, we've been defuzzing cases in blocks of 20k-30k
+# (where blocks are comprised of complete localities) on Rivanna in order
+# to prevent the process from (a) taking days and days and (b) crashing.
+# Adopting some other process in the future will be desirable.
 
 ##################################################################################
 # This code take in case data and defuzzes plaintiff names (process details      #
