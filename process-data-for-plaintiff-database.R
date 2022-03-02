@@ -21,7 +21,7 @@ library(tidyverse)
 
 # Set data folder name (directory created in clean-eviction-data.R)
 data_folder <- 'processed-data'
-data_file <- 'defuzzed_cases_residential_only_PARTIAL-thru-block-11.txt'
+data_file <- 'PARTIALLY-DEFUZZED-all-but-norfolk-newportnews-richmond.txt'
 
 # Load
 cases_to_aggregate <- read.csv(paste0(data_folder, '/', data_file), colClasses = 'character')

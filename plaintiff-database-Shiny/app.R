@@ -1,6 +1,6 @@
 # Shiny app: Plaintiff database
 # Author: Jacob Goldstein-Greenwood / jacobgg@virginia.edu / GitHub: jacob-gg
-# Last revised: 2022-03-01
+# Last revised: 2022-03-02
 
 ################################################# CANARY #################################################
 canary_message <- HTML(paste0('<br><font color="red">NOTE: Until this message is removed,',
@@ -16,6 +16,9 @@ library(shinyalert)
 
 # Set required password
 password <- 'tenant'
+
+# Load user notes
+user_notes <- HTML(readLines('app-user-notes'))
 
 # Preprocess
 plaintiff_dat <- read.csv('plaintiff-aggregated-data.txt', colClasses = 'character')
@@ -70,9 +73,6 @@ server <- function(input, output) {
   output$plaintiff_table <- DT::renderDT({get_locality_dat()})
   output$notes <- renderUI(user_notes)
 }
-
-# user_notes <- HTML('Notes A<br><em>Notes B</em>')
-user_notes <- HTML(readLines('app-user-notes'))
 
 # Run app
 shinyApp(ui = ui, server = server)
