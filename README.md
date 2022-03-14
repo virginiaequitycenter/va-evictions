@@ -31,7 +31,7 @@ Contents:
 
 Team:  
 Jacob Goldstein-Greenwood &#9677; (primary code author)  
-Michele Claibourn &#9677; (code author)
+Michele Claibourn &#9677; (code author) 
 Kathryn Howell &#9708;  
 Michael Salgueiro &#9677;  
 Benjamin Teresa &#9708;  
