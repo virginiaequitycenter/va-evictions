@@ -1,6 +1,6 @@
 # Regex pattern for identifying commercial/non-residential defendant names
 # Authors: Jacob Goldstein-Greenwood
-# Last revised: 08-06-2021
+# Last revised: 2021-08-06
 
 pattern <- paste0('(?i)', paste0(c('(\\bacadem(y|ics?)\\b)',
                                    '(\\badvis(ers?|ors?|ing)\\b)',

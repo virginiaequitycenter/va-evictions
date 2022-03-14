@@ -1,6 +1,6 @@
 # Loading and cleaning Virginia eviction data from https://virginiacourtdata.org/
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn
-# Last revised: 2022-01-28
+# Last revised: 2022-02-02
 
 # Possible future revisions:
 #   - The name-cleaning chunk could be abbreviated in this file by moving function(s)
@@ -55,7 +55,7 @@ if (stri_detect(getwd(), regex = paste0('(\\/', enclosing_directory, '$)')) == F
   stop(paste0('The working directory is not the directory indicated in ', enclosing_directory))
 }
 if ('non-residential-defendant-regex.R' %in% dir() == F) {
-  stop('non-residential-regex.R is not in the working directory')
+  stop('non-residential-defendant-regex.R is not in the working directory')
 }
 
 # Open file to save a few lines of relevant output (saved into `enclosing_directory`)
@@ -83,7 +83,7 @@ colnames(district_courts)[which(colnames(district_courts) == 'name')] <- 'court_
 district_courts <- rbind(district_courts, c(710, 'Norfolk General District Court'))
 district_courts$fips <- as.integer(district_courts$fips)
 # Notes on courts:
-#   - Unlawful detainer case in Fairfax *City* are held at the Fairfax *County* court
+#   - Unlawful detainer cases in Fairfax *City* are held at the Fairfax *County* court
 #     - Thus no cases linked to Fairfax City GDC appear in the unlawful detainer data, see: http://www.courts.state.va.us/courts/gd/fairfax_city/home.html
 #   - "Richmond Manchester," "Mongomery/Blacksburg," and a few exclusively criminal and/or traffic courts appear in the list but not in the unlawful
 #       detainer data (the former two appear to not be real GDCs; the latter are not present for obvious reasons)
@@ -411,5 +411,4 @@ data.frame(year_rows = read_lines('cleaning-notes.txt')) %>%
         .) %>%
   transmute(year_rows = gsub('\\s{2}', ' ', year_rows)) %>%
   apply(., 1, as.character) %>%
-
   writeLines(., con = 'cleaning-notes.txt')
