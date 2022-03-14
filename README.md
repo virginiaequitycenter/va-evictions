@@ -30,14 +30,14 @@ Contents:
 - plaintiff-database-Shiny/ contains the plaintiff Shiny app/database
 
 Team:  
-Barbara Wilson &#9677;  
-Benjamin Teresa &#9708;  
-Connor White &#9708;  
-Hannah Woehrle &#9708;  
-Jacob Goldstein-Greenwood &#9677; (code author)  
+Jacob Goldstein-Greenwood &#9677; (primary code author)  
+Michele Claibourn &#9677; (code author)
 Kathryn Howell &#9708;  
 Michael Salgueiro &#9677;  
-Michele Claibourn &#9677;  
+Benjamin Teresa &#9708;  
+Connor White &#9708;  
+Barbara Wilson &#9677;  
+Hannah Woehrle &#9708;  
 
 &#9708; - [RVA Eviction Lab](https://rampages.us/rvaevictionlab/)  
 &#9677; - [UVa Equity Center](https://virginiaequitycenter.org/)
