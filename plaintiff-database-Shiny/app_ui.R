@@ -2,12 +2,12 @@
 # Author: Jacob Goldstein-Greenwood / jacobgg@virginia.edu / GitHub: jacob-gg
 # Last revised: 2022-04-11
 
-################################################# CANARY #################################################
-canary_message <- HTML(paste0('<br><font color="red">NOTE: the database contains data that has been ',
-                              ' processed to deduplicate plaintiff names through fuzzy matching.',
-                              ' This process has not yet been completed for the cities of Norfolk, ',
-                              ' Newport News, or Richmond.</font><br><br>'))
-##########################################################################################################
+# ################################################# CANARY #################################################
+# canary_message <- HTML(paste0('<br><font color="red">NOTE: the database contains data that has been ',
+#                               ' processed to deduplicate plaintiff names through fuzzy matching.',
+#                               ' This process has not yet been completed for the cities of Norfolk, ',
+#                               ' Newport News, or Richmond.</font><br><br>'))
+# ##########################################################################################################
 
 # Packages
 library(shiny)
@@ -24,24 +24,14 @@ user_notes <- HTML(readLines('app-user-notes'))
 viz_notes <- HTML(readLines('app-viz-notes'))
 
 # Preprocess ----
-# Note: consider reading in defuzzed data and aggregating in app...
+# The app needs to be able to read in some version of the underlying
+# data to generate the jurisdiction list. Because we don't want to
+# upload the data to a public repo, for the app_ui.R version I'm 
+# creating a toy data set to read in that will contain the court
+# names. The final app reads in the full plaintiff data.
 
-plaintiff_dat <- read.csv('plaintiff-aggregated-data.txt', colClasses = 'character')
-# Make certain variables numeric so that sorting (e.g, cases hi-->lo) works appropriately
-plaintiff_dat <- plaintiff_dat %>% mutate(cases_filed = as.numeric(cases_filed),
-                                          cases_filed_excluding_all_but_final_serial = as.numeric(cases_filed_excluding_all_but_final_serial),
-                                          plaintiff_judgments = as.numeric(plaintiff_judgments)) %>% 
-  arrange(desc(cases_filed))
-# plaintiff_dat <- plaintiff_dat %>% select(-filing_years)
-plaintiff_dat$pla_1_zip <- ifelse(is.na(plaintiff_dat$pla_1_zip), 'NA', plaintiff_dat$pla_1_zip)
+plaintiff_dat <- read.csv('plaintiff_courtnamesonly.csv')
 
-# ADD SELECTION OF DATA BY QUARTER
-quarterly_plaintiff_dat <- read.csv('quarterly-plaintiff-aggregated-data.txt', colClasses = 'character')
-quarterly_plaintiff_dat <- quarterly_plaintiff_dat %>% mutate(cases_filed = as.numeric(cases_filed),
-                                                              cases_filed_excluding_all_but_final_serial = as.numeric(cases_filed_excluding_all_but_final_serial),
-                                                              plaintiff_judgments = as.numeric(plaintiff_judgments)) %>% 
-  arrange(desc(cases_filed))
-quarterly_plaintiff_dat$pla_1_zip <- ifelse(is.na(quarterly_plaintiff_dat$pla_1_zip), 'NA', quarterly_plaintiff_dat$pla_1_zip)
 
 # Title code
 title2 <- tags$div(style = "display: inline; position: relative",
