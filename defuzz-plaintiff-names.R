@@ -155,3 +155,66 @@ write.csv(defuzzed_cases, file = defuzzed_filename, row.names = F)
 # Possible improvements:
 # - For residential names: IF [single letter present, like SMITH, JOHN L]
 #                             THEN [eliminate from set of possible matches names with single letters other than the one detected]
+
+
+# TEMPORARY UPDATE ----
+# MPC added 4/4/2022
+# To be removed when Norfolk, Newport News, Richmond have been defuzzed
+
+# Run lines 39-53
+#   Read in cases_residential_only.txt
+#   Add non_residential_plaintff column
+
+cases_directory <- 'processed-data'
+cases_to_defuzz_file <- 'cases_residential_only.txt'
+non_residential_plaintiff_regex_file <- 'va-evictions/non-residential-plaintiff-regex.R'
+
+# Packages
+library(dplyr)
+library(stringi)
+library(fuzzyjoin)
+
+# Read in cleaned case data
+cases_to_defuzz <- read.csv(paste0(cases_directory, '/', cases_to_defuzz_file), sep = ',', colClasses = 'character')
+
+# Identify residential/non-residential plaintiffs, as a slightly different defuzzing process is applied to each group within a locality
+non_residential_plaintiff_regex <- source(non_residential_plaintiff_regex_file)$value
+cases_to_defuzz$non_residential_plaintiff <- stri_detect(cases_to_defuzz$pla_1, regex = non_residential_plaintiff_regex)
+
+# Keep just localities currently missing from defuzzed set
+#   Richmond, Newport News, Norfolk, and Fairfax City
+#   Add defuzzed_pla (fill with pla_1) column 
+
+richmond <- cases_to_defuzz %>% filter(fips == "763") %>% 
+  mutate(defuzzed_pla = pla_1) %>% 
+  select(defuzzed_pla, everything())
+newportnews <- cases_to_defuzz %>% filter(fips == "703") %>% 
+  mutate(defuzzed_pla = pla_1) %>% 
+  select(defuzzed_pla, everything())
+norfolk <- cases_to_defuzz %>% filter(fips == "710") %>% 
+  mutate(defuzzed_pla = pla_1) %>% 
+  select(defuzzed_pla, everything())
+# fairfaxcty <- cases_to_defuzz %>% filter(fips == "600") # doesn't exist
+
+# Save these files to defuzzed-by-court
+court_path <- paste0(cases_directory, '/defuzzed-by-court/Richmond General Distrit Court original plaintiffs.txt')
+write.csv(richmond, file = court_path, row.names = F)
+
+court_path <- paste0(cases_directory, '/defuzzed-by-court/Newport News General Distrit Court original plaintiffs.txt')
+write.csv(newportnews, file = court_path, row.names = F)
+
+court_path <- paste0(cases_directory, '/defuzzed-by-court/Norfolk General Distrit Court original plaintiffs.txt')
+write.csv(norfolk, file = court_path, row.names = F)
+
+# Re-run bind_together() function (lines 140-147)
+bind_together <- function(folder) {
+  defuzzed_indiv_localities <- dir(paste0(cases_directory, '/defuzzed-by-court'))
+  defuzzed_indiv_localities <- lapply(defuzzed_indiv_localities,
+                                      function(x) read.csv(paste0(cases_directory, '/defuzzed-by-court/', x),
+                                                           header = T, sep = ',', colClasses = 'character'))
+  defuzzed_localities <- bind_rows(defuzzed_indiv_localities)
+  defuzzed_localities
+}
+
+all_locality_cases <- bind_together()
+write.csv(all_locality_cases, paste0(cases_directory, "/PARTIALLY-DEFUZZED-with-original-norfolk-newportnews-richmond.txt"), row.names = F)

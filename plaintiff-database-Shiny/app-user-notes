@@ -1,6 +1,6 @@
 <br>
 <b>This database contains data about plaintiffs in Virginia eviction cases ranging from 2018 through the first quarter of 2021.</b><br><br>
-Data were web-scraped and made available by Ben Schoenfeld @ <a href="https://virginiacourtdata.org/">virginiacourtdata.org</a>.
+Currently available data were web-scraped and made available by Ben Schoenfeld @ <a href="https://virginiacourtdata.org/">virginiacourtdata.org</a>.
 <br><br>
 Each row in the database represents a plaintiff with a given ZIP Code. This means that if a plaintiff listed their ZIP Code as 12345 on some cases they filed and as 98765 on others, they'd appear twice in the database, once for each plaintiff/ZIP combination. Similarly, if a plaintiff had a ZIP Code listed for some cases but did not have a ZIP Code listed for others, they'd appear twice in the database, once with an associated ZIP Code and once without.
 <br><br>
@@ -21,6 +21,9 @@ We have applied several cleaning procedures to improve data quality, including:
 <li>This means that, e.g., "1010 BEACHFRONT APARTMENTS" and "1010 BEACHFFRONT APARTMENTS" would be correctly identified as the same entity when aggregating data up to the level of plaintiff (e.g., when determining cases-filed-per-plaintiff)</li>
 </ul>
 </ul>
+
+<br><font color="red">NOTE: the database contains data that has been processed to deduplicate plaintiff names through fuzzy matching. This process has not yet been completed for the cities of Norfolk, Newport News, or Richmond.</font><br><br>
+
 See the full data-cleaning code <a href="https://github.com/virginiaequitycenter/va-evictions">here</a>.
 <br><br>
 <b>Notes on selected variables:</b>
@@ -39,4 +42,4 @@ Serial-adjusted # Filings
 <hr>
 App and data cleaning/aggregation by: Jacob Goldstein-Greenwood (<a href="https://github.com/jacob-gg">jacob-gg</a>) and Michele Claibourn (<a href="https://github.com/mclaibourn">mclaibourn</a>).
 <br><br>
-<em>Last updated: 2022-03-02</em>
+<em>Last updated: 2022-04-11</em>

@@ -1,6 +1,6 @@
 # Aggregating case data up to plaintiff level for use in Shiny app
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn
-# Last revised: 2022-03-02
+# Last revised: 2022-04-04
 
 ###############################################################################
 # This code takes eviction case data that has undergone plaintiff-name        #
@@ -15,13 +15,19 @@
 # INCOMPLETE* CASE DATA. (SEE DATA FILE NAME BELOW.) ONCE DEFUZZING IS
 # COMPLETE FOR ALL CASES/LOCALITIES, THE FILE NAME WILL NEED TO BE UPDATED.
 
+# UPDATE: AS OF 2022-04-04 WE'VE ADDED BACK IN NON-DEFUZZED CASES FOR
+# THREE MISSING LOCALITIES: RICHMOND, NORFOLK, NEWPORT NEWS.ONCE DEFUZZING IS
+# COMPLETE FOR ALL CASES/LOCALITIES, THE FILE NAME WILL NEED TO BE UPDATED.
+
 # Libraries
 library(stringi)
 library(tidyverse)
+library(lubridate)
 
 # Set data folder name (directory created in clean-eviction-data.R)
 data_folder <- 'processed-data'
-data_file <- 'PARTIALLY-DEFUZZED-all-but-norfolk-newportnews-richmond.txt'
+# data_file <- 'PARTIALLY-DEFUZZED-all-but-norfolk-newportnews-richmond.txt'
+data_file <- 'PARTIALLY-DEFUZZED-with-original-norfolk-newportnews-richmond.txt'
 
 # Load
 cases_to_aggregate <- read.csv(paste0(data_folder, '/', data_file), colClasses = 'character')
@@ -33,7 +39,28 @@ plaintiff_aggregated <- cases_to_aggregate %>%
             cases_filed_excluding_all_but_final_serial = sum(latest_filing_between_pla_and_def == T, na.rm = T),
             plaintiff_judgments = sum(Judgment == 'Plaintiff', na.rm = T),
             filing_years = paste0(unique(filing_year), collapse = ', '),
-            def_zips = paste0(unique(def_1_zip), collapse = ', ')) %>% ungroup()
+            def_zips = paste0(unique(def_1_zip), collapse = ', ')) %>% ungroup() %>% 
+  relocate(filing_years, .after = last_col())
 
 # Export for Shiny app
-write.csv(plaintiff_aggregated, file = paste0('plaintiff-database-Shiny/plaintiff-aggregated-data.txt'), row.names = F)
+# write.csv(plaintiff_aggregated, file = paste0('plaintiff-database-Shiny/plaintiff-aggregated-data.txt'), row.names = F)
+# until I get file structure aligned
+write.csv(plaintiff_aggregated, file = paste0('va-evictions/plaintiff-database-Shiny/plaintiff-aggregated-data.txt'), row.names = F)
+
+
+# Quarterly summarizing by plaintiff
+plaintiff_aggregated_quarterly <- cases_to_aggregate %>%
+  mutate(filing_quarter = quarter(FiledDate, type = "year.quarter")) %>% 
+  group_by(court_name, filing_quarter, defuzzed_pla, pla_1_zip) %>%
+  summarize(cases_filed = n(),
+            cases_filed_excluding_all_but_final_serial = sum(latest_filing_between_pla_and_def == T, na.rm = T),
+            plaintiff_judgments = sum(Judgment == 'Plaintiff', na.rm = T),
+            def_zips = paste0(unique(def_1_zip), collapse = ', ')) %>% ungroup() %>% 
+  relocate(filing_quarter, .after = last_col())
+
+# Export for Shiny app
+write.csv(plaintiff_aggregated_quarterly, file = paste0('va-evictions/plaintiff-database-Shiny/quarterly-plaintiff-aggregated-data.txt'), row.names = F)
+
+# plaintiff_dat <- read.csv('va-evictions/plaintiff-database-Shiny/plaintiff-aggregated-data.txt', colClasses = 'character')
+# quarterly_plaintiff_dat <- read.csv('va-evictions/plaintiff-database-Shiny/quarterly-plaintiff-aggregated-data.txt', colClasses = 'character')
+
