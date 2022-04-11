@@ -30,7 +30,7 @@ viz_notes <- HTML(readLines('app-viz-notes'))
 # creating a toy data set to read in that will contain the court
 # names. The final app reads in the full plaintiff data.
 
-plaintiff_dat <- read.csv('plaintiff_courtnamesonly.csv')
+plaintiff_dat <- read.csv('www/plaintiff_courtnamesonly.csv')
 
 
 # Title code
