@@ -1,5 +1,6 @@
 # Shiny app: Plaintiff database
 # Author: Jacob Goldstein-Greenwood / jacobgg@virginia.edu / GitHub: jacob-gg
+# Author: Michele Claibourn / mclaibourn@virginia.edu / GitHub: mclaibourn
 # Last revised: 2022-04-11
 
 ################################################# CANARY #################################################
@@ -12,16 +13,16 @@ canary_message <- HTML(paste0('<br><font color="red">NOTE: the database contains
 # Packages
 library(shiny)
 library(DT)
-library(dplyr)
+library(tidyverse)
 library(shinyalert)
 library(bslib)
+library(plotly)
 
 # Set required password
 password <- 'tenant'
 
 # Load user notes
 user_notes <- HTML(readLines('app-user-notes'))
-viz_notes <- HTML(readLines('app-viz-notes'))
 
 # Preprocess ----
 # Note: consider reading in defuzzed data and aggregating in app...
@@ -31,28 +32,38 @@ plaintiff_dat <- read.csv('plaintiff-aggregated-data.txt', colClasses = 'charact
 plaintiff_dat <- plaintiff_dat %>% mutate(cases_filed = as.numeric(cases_filed),
                                           cases_filed_excluding_all_but_final_serial = as.numeric(cases_filed_excluding_all_but_final_serial),
                                           plaintiff_judgments = as.numeric(plaintiff_judgments)) %>% 
-  arrange(desc(cases_filed))
-# plaintiff_dat <- plaintiff_dat %>% select(-filing_years)
+  relocate(filing_years, .before = def_zips)
 plaintiff_dat$pla_1_zip <- ifelse(is.na(plaintiff_dat$pla_1_zip), 'NA', plaintiff_dat$pla_1_zip)
+
+# Add attributes
+attributes(plaintiff_dat$cases_filed)  <- list(labels = "Number of Cases Filed")
+attributes(plaintiff_dat$cases_filed_excluding_all_but_final_serial)  <- list(labels = "Number of Non-Serial Cases Filed")
+attributes(plaintiff_dat$plaintiff_judgments)  <- list(labels = "Number of Evictions")
 
 # ADD SELECTION OF DATA BY QUARTER
 quarterly_plaintiff_dat <- read.csv('quarterly-plaintiff-aggregated-data.txt', colClasses = 'character')
 quarterly_plaintiff_dat <- quarterly_plaintiff_dat %>% mutate(cases_filed = as.numeric(cases_filed),
                                                               cases_filed_excluding_all_but_final_serial = as.numeric(cases_filed_excluding_all_but_final_serial),
                                                               plaintiff_judgments = as.numeric(plaintiff_judgments)) %>% 
-  arrange(desc(cases_filed))
+  relocate(filing_quarter, .before = def_zips)
 quarterly_plaintiff_dat$pla_1_zip <- ifelse(is.na(quarterly_plaintiff_dat$pla_1_zip), 'NA', quarterly_plaintiff_dat$pla_1_zip)
+
+# Add attributes
+attributes(quarterly_plaintiff_dat$cases_filed)  <- list(labels = "Number of Cases Filed")
+attributes(quarterly_plaintiff_dat$cases_filed_excluding_all_but_final_serial)  <- list(labels = "Number of Non-Serial Cases Filed")
+attributes(quarterly_plaintiff_dat$plaintiff_judgments)  <- list(labels = "Number of Evictions")
+
 
 # Title code
 title2 <- tags$div(style = "display: inline; position: relative",
                    img(src = "eclogo.png", height='60' 
-    #style="width:100%; max-width:100%; position: absolute; z-index:-1;"
-    ),
-    HTML("&nbsp;"),
-    h1('Housing Justice Atlas: Eviction Filers', style="display: inline;"),
-    HTML("&nbsp;"),
-  img(src="rvalogo.jpg", height='50'
-  )
+                       #style="width:100%; max-width:100%; position: absolute; z-index:-1;"
+                   ),
+                   HTML("&nbsp;"),
+                   h1('Housing Justice Atlas: Eviction Filers', style="display: inline;"),
+                   HTML("&nbsp;"),
+                   img(src="rvalogo.jpg", height='50'
+                   )
 )
 
 # User interface ----
@@ -64,46 +75,60 @@ ui <- fluidPage(theme = bs_theme(version = 5),
                 ),
                 tags$div(class="title", title2),
                 
-  tags$br(),
-  tags$hr(),
-  
-
-  tags$div(tags$p('This site contains data about plaintiffs filing unlawful detainers (evictions) with the Virginia State District Courts from January 2018 through March of 2021. Each row in the table below represents a plaintiff with a given ZIP code.'),
-                  tags$ul(
-                    tags$li('Filter the table to a specific court or locality by selecting the court name under Select Court Jurisdiction or by entering a court name into the field above the Court Jurisdiction column in the table.'),
-                    tags$li('Display the total filings or the filings for each quarter during this time period by selecting either Totals by Full Period or Totals by Quarter. If selecting by quarter, the table can be further filtered to a specified quarter by typing the quarter into the field above the Time Frame of Cases column in the table.'),
-                    tags$li('For any selection of data, the table can be sorted by the number of filings, filings removing serial eviction filings, or filings resulting in eviction judgments (click the up/down arrows next to the column to sort by).'),
-                    tags$li('Filter by plaintiff by typing the plaintiff name into the field above Plaintff Name in the table. This can also be used to find individual plaintiffs with variations on the same name.')
-                  )),
-  tags$hr(),
-  
-  #mainPanel(canary_message),
-
-  fluidRow(#theme = bs_theme(bg = "#B8BCC2", fg = "#202123"),
-    column(1),
-    column(5,
-           wellPanel(
-           selectInput('court', 'Select Court Jurisdiction', 
-                       choices = c('All', unique(plaintiff_dat$court_name)),
-                       multiple = FALSE)
-    )),
-    
-    column(5,
-           wellPanel(
-           radioButtons("time", 'Totals by Full Period/by Quarter',
-               choices = list("Totals for Period" = "All", "Totals by Quarter" = "Quarter"), 
-               selected = "All")
-    )),
-  ),
-  
-  tags$hr(),
-
-    tabsetPanel(type = 'tabs',
-              tabPanel('Data Table', DTOutput('plaintiff_table')),
-              tabPanel('Visuals', uiOutput('viz')),
-              tabPanel('Data Notes', uiOutput('notes'))),
-  tags$hr()
-)
+                tags$br(),
+                tags$hr(),
+                
+                
+                tags$div(tags$p('This site contains data about plaintiffs filing unlawful detainers (evictions) with the Virginia State District Courts from January 2018 through March of 2021. Each row in the table below represents a plaintiff with a given ZIP code filing in a given court jurisdiction.'),
+                         tags$ul(
+                           tags$li('Filter the table to a specific court or locality by selecting the court name under Select Court Jurisdiction or by entering a court name into the field above the Court Jurisdiction column in the table.'),
+                           tags$li('Display the total filings or the filings for each quarter during this time period by selecting either Totals by Full Period or Totals by Quarter. If selecting by quarter, the table can be further filtered to a specified quarter by typing the quarter (for example, "2020.1") into the field above the Time Frame of Cases column in the table.'),
+                           tags$li('For any selection of data, the table can be sorted by the number of filings, filings removing serial eviction filings, or filings resulting in eviction judgments (click the up/down arrows next to the column to sort by).'),
+                           tags$li('Filter by plaintiff by typing the plaintiff name into the field above Plaintff Name in the table. This can also be used to find individual plaintiffs with variations on the same name or filing across multliple court jurisdictions.')
+                         )),
+                tags$hr(),
+                
+                #mainPanel(canary_message),
+                
+                fluidRow(#theme = bs_theme(bg = "#B8BCC2", fg = "#202123"),
+                  column(5,
+                         wellPanel(
+                           selectInput('court', 'Select Court Jurisdiction',
+                                       multiple = TRUE,
+                                       choices = unique(plaintiff_dat$court_name),
+                                       selected = unique(plaintiff_dat$court_name),
+                                       size = 5,
+                                       selectize = FALSE)
+                         )),
+                  
+                  column(3,
+                         wellPanel(
+                           radioButtons("time", 'Totals by Full Period/by Quarter',
+                                        choices = list("Totals for Period" = "All", "Totals by Quarter" = "Quarter"), 
+                                        selected = "All")
+                         )),
+                  
+                  column(3,
+                         wellPanel(
+                           radioButtons("var", 'Outcome to Visualize',
+                                        choices = list("Number of Cases Filed" = "cases_filed",
+                                                       "Number of Non-Serial Cases Filed" = "cases_filed_excluding_all_but_final_serial",
+                                                       "Number of Eviction Judgments" = "plaintiff_judgments")
+                           ))
+                  ),
+                  
+                  tags$hr(),
+                  
+                  tabsetPanel(type = 'tabs',
+                              tabPanel('Data Table', DTOutput('plaintiff_table')),
+                              
+                              tabPanel('Visuals', 
+                                       textOutput("viztitle"),
+                                       plotlyOutput('viz', width = '100%', height = '700')),
+                              
+                              tabPanel('Data Notes', uiOutput('notes'))),
+                  tags$hr()
+                ))
 
 # Server ----
 server <- function(input, output) {
@@ -112,37 +137,83 @@ server <- function(input, output) {
     textInput("pass", "Password: ", ),
   ))
   
-  get_locality_dat <- reactive({
+  # create data for data table
+  df <- reactive({
     
     req(input$pass == password)
     
-    if (input$time == 'All' & input$court == 'All') {
-      locality_dat <- plaintiff_dat
-    } else if (input$time == 'All' & input$court != 'All') { 
-      locality_dat <- plaintiff_dat[plaintiff_dat$court_name == input$court, ] %>% dplyr::arrange(desc(cases_filed))
-    } else if (input$time == 'Quarter' & input$court == 'All') {
-      locality_dat <- quarterly_plaintiff_dat
-    } else {
-      locality_dat <- quarterly_plaintiff_dat[quarterly_plaintiff_dat$court_name == input$court, ] %>% dplyr::arrange(desc(cases_filed))
-    }
+    d <- switch(input$time,
+                "All" = plaintiff_dat,
+                "Quarter" = quarterly_plaintiff_dat)
     
-    cases_filed_col_no <- which(colnames(locality_dat) == 'cases_filed')
-    dt <- datatable(locality_dat, rownames = F,
-                    # caption = 'Sources: Ben Schoenfeld (virginiacourtdata.org)',
-                    class = 'display nowrap',
-                    filter = 'top',
-                    options = list(searchHighlight = T,
-                                   scrollX = T,
-                                   pageLength = 20,
-                                   order = list(cases_filed_col_no, 'desc')),
-                    colnames = c('Court Jurisdiction', 'Plaintiff Name', 'Plaintiff ZIP', '# Filings', 'Serial-adjusted # Filings',
-                                 '# Eviction Judgments', 'ZIPs of Defendants',
-                                 'Time Frame of Cases'))
-    # %>% formatStyle(columns = 'court_name', background = 'lightblue') <-- if column colors are desired
-    dt
+    d <- d %>% filter(court_name %in% input$court) %>% 
+      mutate(outcome_cases = !!sym(input$var))
   })
-  output$plaintiff_table <- DT::renderDT({get_locality_dat()})
-  output$viz <- renderUI(viz_notes)
+  
+  
+  # output datatable
+  output$plaintiff_table <- DT::renderDT(
+    
+    # prep table
+    #cases_filed_col_no <- which(colnames(df()) == 'cases_filed') -1
+    
+    datatable(df(), rownames = F,
+              # caption = 'Sources: Ben Schoenfeld (virginiacourtdata.org)',
+              class = 'display nowrap',
+              filter = 'top',
+              options = list(searchHighlight = T,
+                             scrollX = T,
+                             pageLength = 20,
+                             order = list(3, 'desc')),
+              colnames = c('Court Jurisdiction', 'Plaintiff Name', 'Plaintiff ZIP', '# Filings', 'Serial-adjusted # Filings',
+                           '# Eviction Judgments', 'Time Frame of Cases', 'ZIPs of Defendants'))
+    # %>% formatStyle(columns = 'court_name', background = 'lightblue') <-- if column colors are desired
+  )
+  
+  # output viz title
+  output$viztitle <- renderText({
+    paste(attr(df()[,input$var], "labels"), "within Selected Localities (January 2018-March 2021)")
+  })
+
+  # output visuals
+  output$viz <- renderPlotly({
+    
+    if (input$time == 'All') {
+      
+      p <- df() %>%
+        mutate(court_name = str_remove(court_name, "General District Court")) %>%
+        group_by(court_name) %>%
+        summarize(total = sum(outcome_cases)) %>%
+        ggplot(aes(y = fct_reorder(court_name, total),
+                   x = total,
+                   court = court_name)) +
+        geom_segment(aes(x = 0, xend = total,
+                         y = fct_reorder(court_name, total), yend = fct_reorder(court_name, total)),
+                     color = "gray") +
+        geom_point(size = 2, color = "tan4") +
+        labs(x = "Selected Outcome", y = "") +
+        theme(axis.text.y = element_text(size = 2)) +
+        theme_classic()
+      
+      ggplotly(p, tooltip = c("x", "court"))
+      
+    } else {
+      
+      p <- df() %>%
+        group_by(filing_quarter) %>%
+        summarize(total = sum(outcome_cases)) %>%
+        ggplot(aes(x = filing_quarter, y = total, group = 1)) +
+        geom_point(color = "tan4") +
+        geom_line(color = "tan4") +
+        labs(x = "Year.Quarter", y = "") +
+        theme(axis.text.x = element_text(angle = 45))
+      
+      ggplotly(p)
+      
+    }
+  })
+  
+  # output notes
   output$notes <- renderUI(user_notes)
 }
 
