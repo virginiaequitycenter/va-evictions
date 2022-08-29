@@ -7,7 +7,7 @@
 #       to another file and calling them here; consider for the future
 #   - Currently, defendant #1 ZIPs are converted to NA if they're not valid Virginia ZIPs;
 #       we could optionally (a) remove this cleaning step and clean as needed in
-#       mapping scrips or (b) add a similar step to clean plaintiff ZIPs in the same way
+#       mapping scripts or (b) add a similar step to clean plaintiff ZIPs in the same way
 
 ################################################################################
 # The only step in advance of running this code is ensuring that:              #
@@ -38,8 +38,9 @@
 # Warning: This code can take upward of 20 minutes to fully run                #
 ################################################################################
 
+# Set up (vars, libraries) ----
 # `enclosing_directory` and `string_identifying_data_folders` are case sensitive
-enclosing_directory <- 'civilcases'
+enclosing_directory <- 'va-evictions'
 string_identifying_data_folders <- 'DistrictCivil'
 target_directory <- 'processed-data'
 
@@ -50,7 +51,7 @@ library(readr)
 library(rvest)
 library(lubridate)
 
-# Checks
+# Checks ----
 if (stri_detect(getwd(), regex = paste0('(\\/', enclosing_directory, '$)')) == F) {
   stop(paste0('The working directory is not the directory indicated in ', enclosing_directory))
 }
@@ -61,19 +62,55 @@ if ('non-residential-defendant-regex.R' %in% dir() == F) {
 # Open file to save a few lines of relevant output (saved into `enclosing_directory`)
 sink(file = 'cleaning-notes.txt', type = 'output')
 
+# Read data ----
 # Load raw district court civil case data
-district_folders <- dir()[stri_detect(dir(), fixed = string_identifying_data_folders)]
+district_folders <- list.files("civilcases", pattern = string_identifying_data_folders, full.names = TRUE)
+
+# district_folders <- dir()[stri_detect(dir(), fixed = string_identifying_data_folders)]
 if (all(dir.exists(district_folders)) == F) {stop('Ensure that `string_identifying_data_folders` is only present in *directory* names within `enclosing_directory, not *file* names')}
 if (all(stri_detect(district_folders, regex = '\\d{4}')) == F) {stop('Ensure that every data folder has a year in its name')}
 data_years <- stri_extract(district_folders, regex = '(\\d{4})')
 for (i in 1:length(district_folders)) {
   year <- stri_extract(district_folders[i], regex = '(\\d{4})')
-  assign(paste0('cases', year), read.csv(paste0(district_folders[i], '/Cases.csv')))
-  assign(paste0('defendants', year), read.csv(paste0(district_folders[i], '/Defendants.csv')))
-  assign(paste0('plaintiffs', year), read.csv(paste0(district_folders[i], '/Plaintiffs.csv')))
-  assign(paste0('hearings', year), read.csv(paste0(district_folders[i], '/Hearings.csv')))
+  assign(paste0('cases', year), read_csv(paste0(district_folders[i], '/Cases.csv')))
+  assign(paste0('defendants', year), read_csv(paste0(district_folders[i], '/Defendants.csv')))
+  assign(paste0('plaintiffs', year), read_csv(paste0(district_folders[i], '/Plaintiffs.csv')))
+  assign(paste0('hearings', year), read_csv(paste0(district_folders[i], '/Hearings.csv')))
 }
 
+# Fix 2021 data ----
+# Updated 2021 data - already filtered to unlawful detainers
+#    1. slice 2021 data to keep only one distinct record per data file
+#     a. cases (50,100), group_by(id) %>% slice(1) -- what is casenumber relative to id?
+#     b. hearings (99,676), group_by(id) %>% slice(1)
+#     c. plaintiffs (51,607), group_by(id) %>% slice(1)
+#     d. defendants (68,571), group_by(id) %>% slice(1)
+#    2. remove cases with filed dates prior to 2021
+#    2b. if time permits, revise to find duplicates from updated 2021
+#    data and retain latest case information
+# Note: id in cases matches case_id in everything else
+cases2021 <- cases2021 %>% 
+  group_by(id) %>% 
+  slice(1) %>% 
+  ungroup() %>% 
+  filter(FiledDate >= as.Date("2021-01-01"))
+
+hearings2021 <- hearings2021 %>% 
+  group_by(id) %>% 
+  slice(1) %>% 
+  ungroup()
+
+defendants2021 <- defendants2021 %>% 
+  group_by(id) %>% 
+  slice(1) %>% 
+  ungroup()
+
+plaintiffs2021 <- plaintiffs2021 %>% 
+  group_by(id) %>% 
+  slice(1) %>% 
+  ungroup()
+
+# Data munging ----
 # Read in court names from Ben Schoenfeld's GitHub
 district_courts <- read.csv('https://raw.githubusercontent.com/bschoenfeld/virginia-court-data-analysis/master/data/district_courts.csv')
 colnames(district_courts)[which(colnames(district_courts) == 'name')] <- 'court_name'
