@@ -15,6 +15,7 @@ library(DT)
 library(dplyr)
 library(shinyalert)
 library(bslib)
+library(shinyWidgets)
 
 # Set required password
 password <- 'tenant'
@@ -34,15 +35,14 @@ plaintiff_dat <- read.csv('www/plaintiff_courtnamesonly.csv')
 
 
 # Title code
-title2 <- tags$div(style = "display: inline; position: relative",
-                   img(src = "eclogo.png", height='60' 
-                       #style="width:100%; max-width:100%; position: absolute; z-index:-1;"
-                   ),
+ title2 <- tags$div(style = "display: inline; position: relative;",
+                   (tags$a(img(src = "eclogo.png", height='60'),href="https://virginiaequitycenter.org/", target="_blank")),
                    HTML("&nbsp;"),
                    h1('Housing Justice Atlas: Eviction Filers', style="display: inline;"),
                    HTML("&nbsp;"),
-                   img(src="rvalogo.jpg", height='50'
+                   (tags$a(img(src="rvalogo.jpg", height='50'),href="https://rampages.us/rvaevictionlab/", target="_blank")
                    )
+                   
 )
 
 # User interface ----

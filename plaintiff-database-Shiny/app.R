@@ -23,6 +23,7 @@ password <- 'tenant'
 
 # Load user notes
 user_notes <- HTML(readLines('app-user-notes'))
+orient_notes <- HTML(readLines('app-orient-notes'))
 
 # Preprocess ----
 # Note: consider reading in defuzzed data and aggregating in app...
@@ -55,14 +56,12 @@ attributes(quarterly_plaintiff_dat$plaintiff_judgments)  <- list(labels = "Numbe
 
 
 # Title code
-title2 <- tags$div(style = "display: inline; position: relative",
-                   img(src = "eclogo.png", height='60' 
-                       #style="width:100%; max-width:100%; position: absolute; z-index:-1;"
-                   ),
+title2 <- tags$div(style = "display: inline; position: relative;",
+                   (tags$a(img(src = "eclogo.png", height='60'),href="https://virginiaequitycenter.org/", target="_blank")),
                    HTML("&nbsp;"),
                    h1('Housing Justice Atlas: Eviction Filers', style="display: inline;"),
                    HTML("&nbsp;"),
-                   img(src="rvalogo.jpg", height='50'
+                   (tags$a(img(src="rvalogo.jpg", height='50'),href="https://rampages.us/rvaevictionlab/", target="_blank")
                    )
 )
 
@@ -77,18 +76,14 @@ ui <- fluidPage(theme = bs_theme(version = 5),
                 
                 tags$br(),
                 tags$hr(),
-                
-                
-                tags$div(tags$p('This site contains data about plaintiffs filing unlawful detainers (evictions) with the Virginia State District Courts from January 2018 through March of 2021. Each row in the table below represents a plaintiff with a given ZIP code filing in a given court jurisdiction.'),
-                         tags$ul(
-                           tags$li('Filter the table to a specific court or locality by selecting the court name under Select Court Jurisdiction or by entering a court name into the field above the Court Jurisdiction column in the table.'),
-                           tags$li('Display the total filings or the filings for each quarter during this time period by selecting either Totals by Full Period or Totals by Quarter. If selecting by quarter, the table can be further filtered to a specified quarter by typing the quarter (for example, "2020.1") into the field above the Time Frame of Cases column in the table.'),
-                           tags$li('For any selection of data, the table can be sorted by the number of filings, filings removing serial eviction filings, or filings resulting in eviction judgments (click the up/down arrows next to the column to sort by).'),
-                           tags$li('Filter by plaintiff by typing the plaintiff name into the field above Plaintff Name in the table. This can also be used to find individual plaintiffs with variations on the same name or filing across multliple court jurisdictions.')
-                         )),
-                tags$hr(),
-                
                 #mainPanel(canary_message),
+                
+                fluidRow(
+                  column(12,
+                  htmlOutput('orient')
+                )),
+                
+                tags$hr(),
                 
                 fluidRow(#theme = bs_theme(bg = "#B8BCC2", fg = "#202123"),
                   column(5,
@@ -103,8 +98,8 @@ ui <- fluidPage(theme = bs_theme(version = 5),
                   
                   column(3,
                          wellPanel(
-                           radioButtons("time", 'Totals by Full Period/by Quarter',
-                                        choices = list("Totals for Period" = "All", "Totals by Quarter" = "Quarter"), 
+                           radioButtons("time", 'Totals to Display',
+                                        choices = list("Totals for Full Period" = "All", "Totals by Quarter" = "Quarter"), 
                                         selected = "All")
                          )),
                   
@@ -120,13 +115,13 @@ ui <- fluidPage(theme = bs_theme(version = 5),
                   tags$hr(),
                   
                   tabsetPanel(type = 'tabs',
-                              tabPanel('Data Table', DTOutput('plaintiff_table')),
+                              tabPanel('Table', DTOutput('plaintiff_table')),
                               
                               tabPanel('Visuals', 
                                        textOutput("viztitle"),
                                        plotlyOutput('viz', width = '100%', height = '700')),
                               
-                              tabPanel('Data Notes', uiOutput('notes'))),
+                              tabPanel('Notes', uiOutput('notes'))),
                   tags$hr()
                 ))
 
@@ -157,7 +152,7 @@ server <- function(input, output) {
     # prep table
     #cases_filed_col_no <- which(colnames(df()) == 'cases_filed') -1
     
-    datatable(df(), rownames = F,
+    datatable(select(df(), -outcome_cases), rownames = F,
               # caption = 'Sources: Ben Schoenfeld (virginiacourtdata.org)',
               class = 'display nowrap',
               filter = 'top',
@@ -165,8 +160,9 @@ server <- function(input, output) {
                              scrollX = T,
                              pageLength = 20,
                              order = list(3, 'desc')),
-              colnames = c('Court Jurisdiction', 'Plaintiff Name', 'Plaintiff ZIP', '# Filings', 'Serial-adjusted # Filings',
-                           '# Eviction Judgments', 'Time Frame of Cases', 'ZIPs of Defendants'))
+              colnames = c('Court Jurisdiction', 'Plaintiff Name', 'Plaintiff ZIP', 
+                           '# Filings', 'Serial-adjusted # Filings', '# Eviction Judgments', 
+                           'Time Frame of Cases', 'ZIPs of Defendants'))
     # %>% formatStyle(columns = 'court_name', background = 'lightblue') <-- if column colors are desired
   )
   
@@ -212,6 +208,9 @@ server <- function(input, output) {
       
     }
   })
+  
+  # output orienting instructions
+  output$orient <- renderUI(orient_notes)
   
   # output notes
   output$notes <- renderUI(user_notes)
