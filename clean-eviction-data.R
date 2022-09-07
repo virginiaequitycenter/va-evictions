@@ -64,18 +64,25 @@ sink(file = 'cleaning-notes.txt', type = 'output')
 
 # Read data ----
 # Load raw district court civil case data
-district_folders <- list.files("civilcases", pattern = string_identifying_data_folders, full.names = TRUE)
+# district_folders <- list.files("civilcases", pattern = string_identifying_data_folders, full.names = TRUE)
+district_folders <- dir_ls("civilcases", regexp = string_identifying_data_folders) 
+
+read_fmt <- spec_csv("civilcases/DB_DistrictCivil_2018_PNGV1T/Cases.csv")
+read_fmt_def <- spec_csv("civilcases/DB_DistrictCivil_2018_PNGV1T/Defendants.csv")
+read_fmt_plain <- spec_csv("civilcases/DB_DistrictCivil_2018_PNGV1T/Plaintiffs.csv")
+read_fmt_hear <- spec_csv("civilcases/DB_DistrictCivil_2018_PNGV1T/Hearings.csv")
 
 # district_folders <- dir()[stri_detect(dir(), fixed = string_identifying_data_folders)]
 if (all(dir.exists(district_folders)) == F) {stop('Ensure that `string_identifying_data_folders` is only present in *directory* names within `enclosing_directory, not *file* names')}
 if (all(stri_detect(district_folders, regex = '\\d{4}')) == F) {stop('Ensure that every data folder has a year in its name')}
 data_years <- stri_extract(district_folders, regex = '(\\d{4})')
+
 for (i in 1:length(district_folders)) {
   year <- stri_extract(district_folders[i], regex = '(\\d{4})')
-  assign(paste0('cases', year), read_csv(paste0(district_folders[i], '/Cases.csv')))
-  assign(paste0('defendants', year), read_csv(paste0(district_folders[i], '/Defendants.csv')))
-  assign(paste0('plaintiffs', year), read_csv(paste0(district_folders[i], '/Plaintiffs.csv')))
-  assign(paste0('hearings', year), read_csv(paste0(district_folders[i], '/Hearings.csv')))
+  assign(paste0('cases', year), read_csv(paste0(district_folders[i], '/Cases.csv'), col_types = read_fmt))
+  assign(paste0('defendants', year), read_csv(paste0(district_folders[i], '/Defendants.csv'), col_types = read_fmt_def))
+  assign(paste0('plaintiffs', year), read_csv(paste0(district_folders[i], '/Plaintiffs.csv'), col_types = read_fmt_plain))
+  assign(paste0('hearings', year), read_csv(paste0(district_folders[i], '/Hearings.csv'), col_types = read_fmt_hear))
 }
 
 # Fix 2021 data ----
@@ -222,8 +229,11 @@ for (i in 1:length(cases_objects)) {
 cases <- data.frame()
 for (i in 1:length(cases_objects)) {
   x <- eval(parse(text = cases_objects[i]))
-  cases <- rbind(cases, x)
+  cases <- bind_rows(cases, x)
+  # cases <- rbind(cases, x)
 }
+
+summary(cases$FiledDate) # make sure new 2021 data is included
 
 ##### Clean plaintiff and defendant names to improve quality of later grouping procedures
 # Store unmodified versions of pla_1 and def_1 in the data frame for safekeeping
