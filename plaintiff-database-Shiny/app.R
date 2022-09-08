@@ -19,7 +19,7 @@ library(bslib)
 library(plotly)
 
 # Set required password
-password <- 'tenant'
+# password <- 'tenant'
 
 # Load user notes
 user_notes <- HTML(readLines('app-user-notes'))
@@ -128,14 +128,14 @@ ui <- fluidPage(theme = bs_theme(version = 5),
 # Server ----
 server <- function(input, output) {
   
-  shinyalert(html = TRUE, text = tagList(
-    textInput("pass", "Password: ", ),
-  ))
+  # shinyalert(html = TRUE, text = tagList(
+  #   textInput("pass", "Password: ", ),
+  # ))
   
   # create data for data table
   df <- reactive({
     
-    req(input$pass == password)
+    # req(input$pass == password)
     
     d <- switch(input$time,
                 "All" = plaintiff_dat,

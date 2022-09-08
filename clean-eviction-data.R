@@ -64,13 +64,16 @@ sink(file = 'cleaning-notes.txt', type = 'output')
 
 # Read data ----
 # Load raw district court civil case data
-# district_folders <- list.files("civilcases", pattern = string_identifying_data_folders, full.names = TRUE)
-district_folders <- dir_ls("civilcases", regexp = string_identifying_data_folders) 
+district_folders <- list.files("civilcases", pattern = string_identifying_data_folders, full.names = TRUE)
+# district_folders <- dir_ls("civilcases", regexp = string_identifying_data_folders) 
 
-read_fmt <- spec_csv("civilcases/DB_DistrictCivil_2018_PNGV1T/Cases.csv")
-read_fmt_def <- spec_csv("civilcases/DB_DistrictCivil_2018_PNGV1T/Defendants.csv")
-read_fmt_plain <- spec_csv("civilcases/DB_DistrictCivil_2018_PNGV1T/Plaintiffs.csv")
-read_fmt_hear <- spec_csv("civilcases/DB_DistrictCivil_2018_PNGV1T/Hearings.csv")
+file_names <- list.files(district_folders[1], pattern = ".csv")[1:4]
+list_formats <- map(paste0(district_folders[1], "/", file_names), spec_csv)
+
+# read_fmt <- spec_csv("civilcases/DB_DistrictCivil_2018_PNGV1T/Cases.csv")
+# read_fmt_def <- spec_csv("civilcases/DB_DistrictCivil_2018_PNGV1T/Defendants.csv")
+# read_fmt_plain <- spec_csv("civilcases/DB_DistrictCivil_2018_PNGV1T/Plaintiffs.csv")
+# read_fmt_hear <- spec_csv("civilcases/DB_DistrictCivil_2018_PNGV1T/Hearings.csv")
 
 # district_folders <- dir()[stri_detect(dir(), fixed = string_identifying_data_folders)]
 if (all(dir.exists(district_folders)) == F) {stop('Ensure that `string_identifying_data_folders` is only present in *directory* names within `enclosing_directory, not *file* names')}
@@ -79,10 +82,10 @@ data_years <- stri_extract(district_folders, regex = '(\\d{4})')
 
 for (i in 1:length(district_folders)) {
   year <- stri_extract(district_folders[i], regex = '(\\d{4})')
-  assign(paste0('cases', year), read_csv(paste0(district_folders[i], '/Cases.csv'), col_types = read_fmt))
-  assign(paste0('defendants', year), read_csv(paste0(district_folders[i], '/Defendants.csv'), col_types = read_fmt_def))
-  assign(paste0('plaintiffs', year), read_csv(paste0(district_folders[i], '/Plaintiffs.csv'), col_types = read_fmt_plain))
-  assign(paste0('hearings', year), read_csv(paste0(district_folders[i], '/Hearings.csv'), col_types = read_fmt_hear))
+  assign(paste0('cases', year), read_csv(paste0(district_folders[i], "/", file_names[1]), col_types = list_formats[[1]]))
+  assign(paste0('defendants', year), read_csv(paste0(district_folders[i], "/", file_names[2]), col_types = list_formats[[2]]))
+  assign(paste0('hearings', year), read_csv(paste0(district_folders[i], "/", file_names[3]), col_types = list_formats[[3]]))
+  assign(paste0('plaintiffs', year), read_csv(paste0(district_folders[i], "/", file_names[4]), col_types = list_formats[[4]]))
 }
 
 # Fix 2021 data ----
@@ -92,7 +95,7 @@ for (i in 1:length(district_folders)) {
 #     b. hearings (99,676), group_by(id) %>% slice(1)
 #     c. plaintiffs (51,607), group_by(id) %>% slice(1)
 #     d. defendants (68,571), group_by(id) %>% slice(1)
-#    2. remove cases with filed dates prior to 2021
+#    2. remove cases with filed dates prior to 2021 
 #    2b. if time permits, revise to find duplicates from updated 2021
 #    data and retain latest case information
 # Note: id in cases matches case_id in everything else
@@ -214,10 +217,10 @@ yearquarter_assigner <- function(x, yr) {
   x <- x %>%
     mutate(filing_year = yr,
            date_filed = as.Date(FiledDate, "%Y-%m-%d"),
-           quarter = case_when(date_filed < as.Date(paste0(yr, '-04-01')) ~ 'Q1',
-                               date_filed >= as.Date(paste0(yr, '-04-01')) & date_filed < as.Date(paste0(yr, '-07-01')) ~ 'Q2',
-                               date_filed >= as.Date(paste0(yr, '-07-01')) & date_filed < as.Date(paste0(yr, '-10-01')) ~ 'Q3',
-                               date_filed >= as.Date(paste0(yr, '-10-01')) ~ 'Q4'))
+           quarter = case_when(date_filed < as.Date(paste0(yr, '-04-01')) ~ 'Jan-Mar',
+                               date_filed >= as.Date(paste0(yr, '-04-01')) & date_filed < as.Date(paste0(yr, '-07-01')) ~ 'Apr-Jun',
+                               date_filed >= as.Date(paste0(yr, '-07-01')) & date_filed < as.Date(paste0(yr, '-10-01')) ~ 'Jul-Sep',
+                               date_filed >= as.Date(paste0(yr, '-10-01')) ~ 'Oct-Nov'))
   x
 }
 for (i in 1:length(cases_objects)) {
@@ -230,7 +233,7 @@ cases <- data.frame()
 for (i in 1:length(cases_objects)) {
   x <- eval(parse(text = cases_objects[i]))
   cases <- bind_rows(cases, x)
-  # cases <- rbind(cases, x)
+  #cases <- rbind(cases, x)
 }
 
 summary(cases$FiledDate) # make sure new 2021 data is included

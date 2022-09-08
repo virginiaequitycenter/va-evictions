@@ -27,14 +27,16 @@ library(lubridate)
 # Set data folder name (directory created in clean-eviction-data.R)
 data_folder <- 'processed-data'
 # data_file <- 'PARTIALLY-DEFUZZED-all-but-norfolk-newportnews-richmond.txt'
-data_file <- 'PARTIALLY-DEFUZZED-with-original-norfolk-newportnews-richmond.txt'
+# data_file <- 'PARTIALLY-DEFUZZED-with-original-norfolk-newportnews-richmond.txt'
+data_file <- "cases_residential_only.txt"
 
 # Load
 cases_to_aggregate <- read.csv(paste0(data_folder, '/', data_file), colClasses = 'character')
 
 # Initial summarizing by plaintiff
 plaintiff_aggregated <- cases_to_aggregate %>%
-  group_by(court_name, defuzzed_pla, pla_1_zip) %>%
+  #group_by(court_name, defuzzed_pla, pla_1_zip) %>%
+  group_by(court_name, pla_1, pla_1_zip) %>% 
   summarize(cases_filed = n(),
             cases_filed_excluding_all_but_final_serial = sum(latest_filing_between_pla_and_def == T, na.rm = T),
             plaintiff_judgments = sum(Judgment == 'Plaintiff', na.rm = T),
@@ -45,13 +47,14 @@ plaintiff_aggregated <- cases_to_aggregate %>%
 # Export for Shiny app
 # write.csv(plaintiff_aggregated, file = paste0('plaintiff-database-Shiny/plaintiff-aggregated-data.txt'), row.names = F)
 # until I get file structure aligned
-write.csv(plaintiff_aggregated, file = paste0('va-evictions/plaintiff-database-Shiny/plaintiff-aggregated-data.txt'), row.names = F)
+write.csv(plaintiff_aggregated, file = 'plaintiff-database-Shiny/plaintiff-aggregated-data.txt', row.names = F)
 
 
 # Quarterly summarizing by plaintiff
 plaintiff_aggregated_quarterly <- cases_to_aggregate %>%
   mutate(filing_quarter = quarter(FiledDate, type = "year.quarter")) %>% 
-  group_by(court_name, filing_quarter, defuzzed_pla, pla_1_zip) %>%
+  # group_by(court_name, filing_quarter, defuzzed_pla, pla_1_zip) %>%
+  group_by(court_name, filing_quarter, pla_1, pla_1_zip) %>%
   summarize(cases_filed = n(),
             cases_filed_excluding_all_but_final_serial = sum(latest_filing_between_pla_and_def == T, na.rm = T),
             plaintiff_judgments = sum(Judgment == 'Plaintiff', na.rm = T),
@@ -59,7 +62,7 @@ plaintiff_aggregated_quarterly <- cases_to_aggregate %>%
   relocate(filing_quarter, .after = last_col())
 
 # Export for Shiny app
-write.csv(plaintiff_aggregated_quarterly, file = paste0('va-evictions/plaintiff-database-Shiny/quarterly-plaintiff-aggregated-data.txt'), row.names = F)
+write.csv(plaintiff_aggregated_quarterly, file = 'plaintiff-database-Shiny/quarterly-plaintiff-aggregated-data.txt', row.names = F)
 
 # plaintiff_dat <- read.csv('va-evictions/plaintiff-database-Shiny/plaintiff-aggregated-data.txt', colClasses = 'character')
 # quarterly_plaintiff_dat <- read.csv('va-evictions/plaintiff-database-Shiny/quarterly-plaintiff-aggregated-data.txt', colClasses = 'character')
