@@ -329,6 +329,16 @@ punctuation_spacing_check <- function(x) {
   x
 }
 cases <- punctuation_spacing_check(cases)
+
+# Experiment with list method of correcting names
+#   use manually curated list of same names to match and replace
+# pull in charlottesville and albemarle plaintiff_names sheets
+# library(googlesheets4)
+# sheet_url <- "https://docs.google.com/spreadsheets/d/1WhWmluKv4hA721jUT_y3u9ESB2WiPJ3MF05ji8LgPmE/edit?usp=sharing"
+# cvlnames <- read_sheet(sheet_url, sheet = "Charlottesville") %>% as.list()
+# albnames <- read_sheet(sheet_url, sheet = "Albemarle")
+# 
+
 ##### Finish plaintiff and defendant name cleaning process
 
 # Clean defendant ZIP codes

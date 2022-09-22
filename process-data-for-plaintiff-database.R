@@ -35,8 +35,9 @@ cases_to_aggregate <- read.csv(paste0(data_folder, '/', data_file), colClasses =
 
 # Initial summarizing by plaintiff
 plaintiff_aggregated <- cases_to_aggregate %>%
-  #group_by(court_name, defuzzed_pla, pla_1_zip) %>%
-  group_by(court_name, pla_1, pla_1_zip) %>% 
+  # group_by(court_name, defuzzed_pla, pla_1_zip) %>% # skipped defuzzing step
+  # group_by(court_name, pla_1, pla_1_zip) %>% # remove zip code grouping
+  group_by(court_name, pla_1) %>% 
   summarize(cases_filed = n(),
             cases_filed_excluding_all_but_final_serial = sum(latest_filing_between_pla_and_def == T, na.rm = T),
             plaintiff_judgments = sum(Judgment == 'Plaintiff', na.rm = T),
@@ -50,19 +51,22 @@ plaintiff_aggregated <- cases_to_aggregate %>%
 write.csv(plaintiff_aggregated, file = 'plaintiff-database-Shiny/plaintiff-aggregated-data.txt', row.names = F)
 
 
-# Quarterly summarizing by plaintiff
-plaintiff_aggregated_quarterly <- cases_to_aggregate %>%
-  mutate(filing_quarter = quarter(FiledDate, type = "year.quarter")) %>% 
-  # group_by(court_name, filing_quarter, defuzzed_pla, pla_1_zip) %>%
-  group_by(court_name, filing_quarter, pla_1, pla_1_zip) %>%
+# Monthly summarizing by plaintiff
+plaintiff_aggregated_monthly <- cases_to_aggregate %>%
+  # mutate(filing_quarter = quarter(FiledDate, type = "year.quarter")) %>% # change from quarter to month
+  mutate(filing_month = paste0(year(FiledDate), "-", month(FiledDate)),
+         filing_month = format(filing_month, format = "%Y-%m")) %>% 
+# group_by(court_name, filing_quarter, defuzzed_pla, pla_1_zip) %>% # skipped defuzzing step
+# group_by(court_name, filing_quarter, pla_1, pla_1_zip) %>% # remove zip code grouping
+group_by(court_name, filing_month, pla_1) %>%
   summarize(cases_filed = n(),
             cases_filed_excluding_all_but_final_serial = sum(latest_filing_between_pla_and_def == T, na.rm = T),
             plaintiff_judgments = sum(Judgment == 'Plaintiff', na.rm = T),
             def_zips = paste0(unique(def_1_zip), collapse = ', ')) %>% ungroup() %>% 
-  relocate(filing_quarter, .after = last_col())
+  relocate(filing_month, .after = last_col())
 
 # Export for Shiny app
-write.csv(plaintiff_aggregated_quarterly, file = 'plaintiff-database-Shiny/quarterly-plaintiff-aggregated-data.txt', row.names = F)
+write.csv(plaintiff_aggregated_monthly, file = 'plaintiff-database-Shiny/monthly-plaintiff-aggregated-data.txt', row.names = F)
 
 # plaintiff_dat <- read.csv('va-evictions/plaintiff-database-Shiny/plaintiff-aggregated-data.txt', colClasses = 'character')
 # quarterly_plaintiff_dat <- read.csv('va-evictions/plaintiff-database-Shiny/quarterly-plaintiff-aggregated-data.txt', colClasses = 'character')

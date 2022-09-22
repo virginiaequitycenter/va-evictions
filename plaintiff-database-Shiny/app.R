@@ -34,25 +34,25 @@ plaintiff_dat <- plaintiff_dat %>% mutate(cases_filed = as.numeric(cases_filed),
                                           cases_filed_excluding_all_but_final_serial = as.numeric(cases_filed_excluding_all_but_final_serial),
                                           plaintiff_judgments = as.numeric(plaintiff_judgments)) %>% 
   relocate(filing_years, .before = def_zips)
-plaintiff_dat$pla_1_zip <- ifelse(is.na(plaintiff_dat$pla_1_zip), 'NA', plaintiff_dat$pla_1_zip)
+# plaintiff_dat$pla_1_zip <- ifelse(is.na(plaintiff_dat$pla_1_zip), 'NA', plaintiff_dat$pla_1_zip)
 
 # Add attributes
 attributes(plaintiff_dat$cases_filed)  <- list(labels = "Number of Cases Filed")
 attributes(plaintiff_dat$cases_filed_excluding_all_but_final_serial)  <- list(labels = "Number of Non-Serial Cases Filed")
 attributes(plaintiff_dat$plaintiff_judgments)  <- list(labels = "Number of Evictions")
 
-# ADD SELECTION OF DATA BY QUARTER
-quarterly_plaintiff_dat <- read.csv('quarterly-plaintiff-aggregated-data.txt', colClasses = 'character')
-quarterly_plaintiff_dat <- quarterly_plaintiff_dat %>% mutate(cases_filed = as.numeric(cases_filed),
+# ADD SELECTION OF DATA BY MONTH
+monthly_plaintiff_dat <- read.csv('monthly-plaintiff-aggregated-data.txt', colClasses = 'character')
+monthly_plaintiff_dat <- monthly_plaintiff_dat %>% mutate(cases_filed = as.numeric(cases_filed),
                                                               cases_filed_excluding_all_but_final_serial = as.numeric(cases_filed_excluding_all_but_final_serial),
                                                               plaintiff_judgments = as.numeric(plaintiff_judgments)) %>% 
-  relocate(filing_quarter, .before = def_zips)
-quarterly_plaintiff_dat$pla_1_zip <- ifelse(is.na(quarterly_plaintiff_dat$pla_1_zip), 'NA', quarterly_plaintiff_dat$pla_1_zip)
+  relocate(filing_month, .before = def_zips)
+# monthly_plaintiff_dat$pla_1_zip <- ifelse(is.na(monthly_plaintiff_dat$pla_1_zip), 'NA', monthly_plaintiff_dat$pla_1_zip)
 
 # Add attributes
-attributes(quarterly_plaintiff_dat$cases_filed)  <- list(labels = "Number of Cases Filed")
-attributes(quarterly_plaintiff_dat$cases_filed_excluding_all_but_final_serial)  <- list(labels = "Number of Non-Serial Cases Filed")
-attributes(quarterly_plaintiff_dat$plaintiff_judgments)  <- list(labels = "Number of Evictions")
+attributes(monthly_plaintiff_dat$cases_filed)  <- list(labels = "Number of Cases Filed")
+attributes(monthly_plaintiff_dat$cases_filed_excluding_all_but_final_serial)  <- list(labels = "Number of Non-Serial Cases Filed")
+attributes(monthly_plaintiff_dat$plaintiff_judgments)  <- list(labels = "Number of Evictions")
 
 
 # Title code
@@ -99,7 +99,7 @@ ui <- fluidPage(theme = bs_theme(version = 5),
                   column(3,
                          wellPanel(
                            radioButtons("time", 'Totals to Display',
-                                        choices = list("Totals for Full Period" = "All", "Totals by Quarter" = "Quarter"), 
+                                        choices = list("Totals for Full Period" = "All", "Totals by Month" = "Month"), 
                                         selected = "All")
                          )),
                   
@@ -139,7 +139,7 @@ server <- function(input, output) {
     
     d <- switch(input$time,
                 "All" = plaintiff_dat,
-                "Quarter" = quarterly_plaintiff_dat)
+                "Month" = monthly_plaintiff_dat)
     
     d <- d %>% filter(court_name %in% input$court) %>% 
       mutate(outcome_cases = !!sym(input$var))
@@ -160,7 +160,7 @@ server <- function(input, output) {
                              scrollX = T,
                              pageLength = 20,
                              order = list(3, 'desc')),
-              colnames = c('Court Jurisdiction', 'Plaintiff Name', 'Plaintiff ZIP', 
+              colnames = c('Court Jurisdiction', 'Plaintiff Name', 
                            '# Filings', 'Serial-adjusted # Filings', '# Eviction Judgments', 
                            'Time Frame of Cases', 'ZIPs of Defendants'))
     # %>% formatStyle(columns = 'court_name', background = 'lightblue') <-- if column colors are desired
@@ -196,12 +196,12 @@ server <- function(input, output) {
     } else {
       
       p <- df() %>%
-        group_by(filing_quarter) %>%
+        group_by(filing_month) %>%
         summarize(total = sum(outcome_cases)) %>%
-        ggplot(aes(x = filing_quarter, y = total, group = 1)) +
+        ggplot(aes(x = filing_month, y = total, group = 1)) +
         geom_point(color = "tan4") +
         geom_line(color = "tan4") +
-        labs(x = "Year.Quarter", y = "") +
+        labs(x = "Year-Month", y = "") +
         theme(axis.text.x = element_text(angle = 45))
       
       ggplotly(p)
