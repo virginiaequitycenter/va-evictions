@@ -6,7 +6,7 @@ library(paletteer)
 # read data ----
 
 # data for full period
-plaintiff_dat <- read.csv('plaintiff-aggregated-data.txt', colClasses = 'character')
+plaintiff_dat <- read.csv('plaintiff-database-Shiny/plaintiff-aggregated-data.txt', colClasses = 'character')
 
 # Make certain variables numeric so that sorting (e.g, cases hi-->lo) works appropriately
 plaintiff_dat <- plaintiff_dat %>% 
@@ -19,7 +19,7 @@ plaintiff_dat <- plaintiff_dat %>%
 
 
 # data by quarter
-monthly_plaintiff_dat <- read.csv('monthly-plaintiff-aggregated-data.txt', colClasses = 'character')
+monthly_plaintiff_dat <- read.csv('plaintiff-database-Shiny/monthly-plaintiff-aggregated-data.txt', colClasses = 'character')
 
 monthly_plaintiff_dat <- monthly_plaintiff_dat %>% 
   mutate(cases_filed = as.numeric(cases_filed),

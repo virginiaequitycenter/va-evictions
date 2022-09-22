@@ -55,6 +55,7 @@ write.csv(plaintiff_aggregated, file = 'plaintiff-database-Shiny/plaintiff-aggre
 plaintiff_aggregated_monthly <- cases_to_aggregate %>%
   # mutate(filing_quarter = quarter(FiledDate, type = "year.quarter")) %>% # change from quarter to month
   mutate(filing_month = paste0(year(FiledDate), "-", month(FiledDate)),
+         filing_month = ym(filing_month), 
          filing_month = format(filing_month, format = "%Y-%m")) %>% 
 # group_by(court_name, filing_quarter, defuzzed_pla, pla_1_zip) %>% # skipped defuzzing step
 # group_by(court_name, filing_quarter, pla_1, pla_1_zip) %>% # remove zip code grouping
