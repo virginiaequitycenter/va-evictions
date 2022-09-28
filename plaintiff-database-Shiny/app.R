@@ -41,6 +41,18 @@ attributes(plaintiff_dat$cases_filed)  <- list(labels = "Number of Cases Filed")
 attributes(plaintiff_dat$cases_filed_excluding_all_but_final_serial)  <- list(labels = "Number of Non-Serial Cases Filed")
 attributes(plaintiff_dat$plaintiff_judgments)  <- list(labels = "Number of Evictions")
 
+# ADD SELECTION OF DATA BY YEAR
+yearly_plaintiff_dat <- read.csv('yearly-plaintiff-aggregated-data.txt', colClasses = 'character')
+yearly_plaintiff_dat <- yearly_plaintiff_dat %>% mutate(cases_filed = as.numeric(cases_filed),
+                                                          cases_filed_excluding_all_but_final_serial = as.numeric(cases_filed_excluding_all_but_final_serial),
+                                                          plaintiff_judgments = as.numeric(plaintiff_judgments)) %>% 
+  relocate(filing_year, .before = def_zips)
+
+# Add attributes
+attributes(yearly_plaintiff_dat$cases_filed)  <- list(labels = "Number of Cases Filed")
+attributes(yearly_plaintiff_dat$cases_filed_excluding_all_but_final_serial)  <- list(labels = "Number of Non-Serial Cases Filed")
+attributes(yearly_plaintiff_dat$plaintiff_judgments)  <- list(labels = "Number of Evictions")
+
 # ADD SELECTION OF DATA BY MONTH
 monthly_plaintiff_dat <- read.csv('monthly-plaintiff-aggregated-data.txt', colClasses = 'character')
 monthly_plaintiff_dat <- monthly_plaintiff_dat %>% mutate(cases_filed = as.numeric(cases_filed),
@@ -54,6 +66,8 @@ attributes(monthly_plaintiff_dat$cases_filed)  <- list(labels = "Number of Cases
 attributes(monthly_plaintiff_dat$cases_filed_excluding_all_but_final_serial)  <- list(labels = "Number of Non-Serial Cases Filed")
 attributes(monthly_plaintiff_dat$plaintiff_judgments)  <- list(labels = "Number of Evictions")
 
+# palette
+pal_lake_superior <- c("#c87d4b", "#324b64")
 
 # Title code
 title2 <- tags$div(style = "display: inline; position: relative;",
@@ -99,7 +113,9 @@ ui <- fluidPage(theme = bs_theme(version = 5),
                   column(3,
                          wellPanel(
                            radioButtons("time", 'Totals to Display',
-                                        choices = list("Totals for Full Period" = "All", "Totals by Month" = "Month"), 
+                                        choices = list("Totals across All Years" = "All", 
+                                                       "Totals by Year" = "Year",
+                                                       "Totals by Month" = "Month"), 
                                         selected = "All")
                          )),
                   
@@ -139,6 +155,7 @@ server <- function(input, output) {
     
     d <- switch(input$time,
                 "All" = plaintiff_dat,
+                "Year" = yearly_plaintiff_dat,
                 "Month" = monthly_plaintiff_dat)
     
     d <- d %>% filter(court_name %in% input$court) %>% 
@@ -159,7 +176,7 @@ server <- function(input, output) {
               options = list(searchHighlight = T,
                              scrollX = T,
                              pageLength = 20,
-                             order = list(3, 'desc')),
+                             order = list(2, 'desc')), # for order, column indexing starts at 0 (3rd column visually is indexed as 2)
               colnames = c('Court Jurisdiction', 'Plaintiff Name', 
                            '# Filings', 'Serial-adjusted # Filings', '# Eviction Judgments', 
                            'Time Frame of Cases', 'ZIPs of Defendants'))
@@ -168,7 +185,7 @@ server <- function(input, output) {
   
   # output viz title
   output$viztitle <- renderText({
-    paste(attr(df()[,input$var], "labels"), "within Selected Localities (January 2018-March 2021)")
+    paste(attr(df()[,input$var], "labels"), "within Selected Court Jurisdictions (Totals across All Years)")
   })
 
   # output visuals
@@ -177,21 +194,37 @@ server <- function(input, output) {
     if (input$time == 'All') {
       
       p <- df() %>%
-        mutate(court_name = str_remove(court_name, "General District Court")) %>%
-        group_by(court_name) %>%
-        summarize(total = sum(outcome_cases)) %>%
-        ggplot(aes(y = fct_reorder(court_name, total),
-                   x = total,
+        
+        mutate(court_name = str_remove(court_name, "General District Court"),
+               court_name = str_trim(court_name)) %>% 
+        group_by(court_name) %>% 
+        summarize(cases_filed = sum(cases_filed),
+                  cases_eviction = sum(plaintiff_judgments)) %>% 
+        pivot_longer(cols = -court_name, names_to = "Outcome", values_to = "Number",
+                     names_prefix = "cases_") %>% 
+        mutate(Outcome = ifelse(Outcome == "filed", "Cases", "Evictions"),
+               Outcome = factor(Outcome, levels = c("Evictions", "Cases"))) %>% 
+        
+        ggplot(aes(y = fct_reorder(court_name, Number), 
+                   x = Number,
+                   color = Outcome,
+                   label = Outcome,
                    court = court_name)) +
-        geom_segment(aes(x = 0, xend = total,
-                         y = fct_reorder(court_name, total), yend = fct_reorder(court_name, total)),
+        geom_segment(aes(x = 0, xend = Number, 
+                         y = fct_reorder(court_name, Number), yend = fct_reorder(court_name, Number)),
                      color = "gray") +
-        geom_point(size = 2, color = "tan4") +
-        labs(x = "Selected Outcome", y = "") +
-        theme(axis.text.y = element_text(size = 2)) +
+        geom_point(size = 2) +
+        scale_color_manual(values = pal_lake_superior,
+                           labels = c("Evictions", "Cases"),
+                           name = "") +
+        scale_x_continuous(expand = expansion(mult = c(0,.05))) +
+        labs(x = "", y = "") +
+        theme(axis.text.y = element_text(size = 2),
+              legend.position = "bottom") +
         theme_classic()
       
-      ggplotly(p, tooltip = c("x", "court"))
+      ggplotly(p, tooltip = c("x", "label", "color", "court")) %>% 
+        layout(legend = list(orientation = "h"))
       
     } else {
       
@@ -204,7 +237,9 @@ server <- function(input, output) {
         labs(x = "Year-Month", y = "") +
         theme(axis.text.x = element_text(angle = 45))
       
-      ggplotly(p)
+      ggplotly(pdot, tooltip = c("x", "color", "court")) %>% 
+        layout(legend = list(orientation = "h"))
+      
       
     }
   })

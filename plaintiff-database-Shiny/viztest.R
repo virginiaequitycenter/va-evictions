@@ -6,7 +6,7 @@ library(paletteer)
 # read data ----
 
 # data for full period
-plaintiff_dat <- read.csv('plaintiff-database-Shiny/plaintiff-aggregated-data.txt', colClasses = 'character')
+plaintiff_dat <- read.csv('plaintiff-aggregated-data.txt', colClasses = 'character')
 
 # Make certain variables numeric so that sorting (e.g, cases hi-->lo) works appropriately
 plaintiff_dat <- plaintiff_dat %>% 
@@ -113,12 +113,12 @@ ggplotly(psum, tooltip = c("x", "y", "group"))
 # make jurisdiction selectable
 # make outcome selectable
 pdot <- plaintiff_dat %>% 
-  filter(court_name %in% c("Albemarle General District Court",
-                           "Charlottesville General District Court",
-                           "Fluvanna General District Court",
-                           "Greene General District Court",
-                           "Louisa General District Court",
-                           "Nelson General District Court")) %>%
+  # filter(court_name %in% c("Albemarle General District Court",
+  #                          "Charlottesville General District Court",
+  #                          "Fluvanna General District Court",
+  #                          "Greene General District Court",
+  #                          "Louisa General District Court",
+  #                          "Nelson General District Court")) %>%
   mutate(court_name = str_remove(court_name, "General District Court")) %>% 
   group_by(court_name) %>% 
   summarize(cases_filed = sum(cases_filed)) %>% 
@@ -132,10 +132,19 @@ pdot <- plaintiff_dat %>%
   labs(x = "Number of Cases Filed", y = "") +
   theme(axis.text.y = element_text(size = 2)) +
   theme_classic()
+pdot
 
 ggplotly(pdot, tooltip = c("x", "court"))
 
+
 # b. all outcomes
+# palette
+library(scales)
+#install.packages("nord")
+library(nord)
+show_col(nord_palettes$lake_superior)
+pal_lake_superior <- c("#c87d4b", "#324b64")
+
 pdot <- plaintiff_dat %>% 
   filter(court_name %in% c("Albemarle General District Court",
                            "Charlottesville General District Court",
@@ -143,29 +152,38 @@ pdot <- plaintiff_dat %>%
                            "Greene General District Court",
                            "Louisa General District Court",
                            "Nelson General District Court")) %>%
-  mutate(court_name = str_remove(court_name, "General District Court")) %>% 
+  mutate(court_name = str_remove(court_name, "General District Court"),
+         court_name = str_trim(court_name)) %>% 
   group_by(court_name) %>% 
   summarize(cases_filed = sum(cases_filed),
-            cases_filed_ns = sum(cases_filed_excluding_all_but_final_serial),
             cases_eviction = sum(plaintiff_judgments)) %>% 
-  pivot_longer(cols = -court_name, names_to = "outcome_type", values_to = "outcome") %>% 
+  pivot_longer(cols = -court_name, names_to = "Outcome", values_to = "Number",
+               names_prefix = "cases_") %>% 
+  mutate(Outcome = ifelse(Outcome == "filed", "Cases", "Evictions"),
+         Outcome = factor(Outcome, levels = c("Evictions", "Cases"))) %>% 
   
-  ggplot(aes(y = fct_reorder(court_name, outcome), 
-             x = outcome,
-             color = outcome_type,
+  ggplot(aes(y = fct_reorder(court_name, Number), 
+             x = Number,
+             color = Outcome,
+             label = Outcome,
              court = court_name)) +
-  geom_segment(aes(x = 0, xend = outcome, 
-                   y = fct_reorder(court_name, outcome), yend = fct_reorder(court_name, outcome)),
+  geom_segment(aes(x = 0, xend = Number, 
+                   y = fct_reorder(court_name, Number), yend = fct_reorder(court_name, Number)),
                color = "gray") +
   geom_point(size = 2) +
-  scale_color_paletteer_d("nord::lake_superior") +
+  scale_color_manual(values = pal_lake_superior,
+                     labels = c("Evictions", "Cases"),
+                     name = "") +
+  scale_x_continuous(expand = expansion(mult = c(0,.05))) +
   labs(x = "", y = "") +
-  theme_classic() +
   theme(axis.text.y = element_text(size = 2),
-        legend.position = "bottom") 
+        legend.position = "bottom") +
+  theme_classic()
+pdot
 
-ggplotly(pdot, tooltip = c("x", "color", "court"))
-# fix legend 
+ggplotly(pdot, tooltip = c("x", "label", "color", "court")) %>% 
+  layout(legend = list(orientation = "h"))
+# fix tooltips: court_name
 
 
 ## map? ----

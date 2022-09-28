@@ -50,6 +50,20 @@ plaintiff_aggregated <- cases_to_aggregate %>%
 # until I get file structure aligned
 write.csv(plaintiff_aggregated, file = 'plaintiff-database-Shiny/plaintiff-aggregated-data.txt', row.names = F)
 
+# Yearly summarizing by plaintiff
+plaintiff_aggregated_yearly <- cases_to_aggregate %>%
+  mutate(filing_year = year(FiledDate)) %>% 
+  #       filing_month = format(filing_month, format = "%Y-%m")
+  group_by(court_name, filing_year, pla_1) %>%
+  summarize(cases_filed = n(),
+            cases_filed_excluding_all_but_final_serial = sum(latest_filing_between_pla_and_def == T, na.rm = T),
+            plaintiff_judgments = sum(Judgment == 'Plaintiff', na.rm = T),
+            def_zips = paste0(unique(def_1_zip), collapse = ', ')) %>% ungroup() %>% 
+  relocate(filing_year, .after = last_col())
+
+# Export for Shiny app
+write.csv(plaintiff_aggregated_yearly, file = 'plaintiff-database-Shiny/yearly-plaintiff-aggregated-data.txt', row.names = F)
+
 
 # Monthly summarizing by plaintiff
 plaintiff_aggregated_monthly <- cases_to_aggregate %>%
