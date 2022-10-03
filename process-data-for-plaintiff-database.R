@@ -39,8 +39,8 @@ plaintiff_aggregated <- cases_to_aggregate %>%
   # group_by(court_name, pla_1, pla_1_zip) %>% # remove zip code grouping
   group_by(court_name, pla_1) %>% 
   summarize(cases_filed = n(),
-            cases_filed_excluding_all_but_final_serial = sum(latest_filing_between_pla_and_def == T, na.rm = T),
             plaintiff_judgments = sum(Judgment == 'Plaintiff', na.rm = T),
+            cases_filed_excluding_all_but_final_serial = sum(latest_filing_between_pla_and_def == T, na.rm = T),
             filing_years = paste0(unique(filing_year), collapse = ', '),
             def_zips = paste0(unique(def_1_zip), collapse = ', ')) %>% ungroup() %>% 
   relocate(filing_years, .after = last_col())
@@ -56,8 +56,8 @@ plaintiff_aggregated_yearly <- cases_to_aggregate %>%
   #       filing_month = format(filing_month, format = "%Y-%m")
   group_by(court_name, filing_year, pla_1) %>%
   summarize(cases_filed = n(),
-            cases_filed_excluding_all_but_final_serial = sum(latest_filing_between_pla_and_def == T, na.rm = T),
             plaintiff_judgments = sum(Judgment == 'Plaintiff', na.rm = T),
+            cases_filed_excluding_all_but_final_serial = sum(latest_filing_between_pla_and_def == T, na.rm = T),
             def_zips = paste0(unique(def_1_zip), collapse = ', ')) %>% ungroup() %>% 
   relocate(filing_year, .after = last_col())
 
@@ -75,8 +75,8 @@ plaintiff_aggregated_monthly <- cases_to_aggregate %>%
 # group_by(court_name, filing_quarter, pla_1, pla_1_zip) %>% # remove zip code grouping
 group_by(court_name, filing_month, pla_1) %>%
   summarize(cases_filed = n(),
-            cases_filed_excluding_all_but_final_serial = sum(latest_filing_between_pla_and_def == T, na.rm = T),
             plaintiff_judgments = sum(Judgment == 'Plaintiff', na.rm = T),
+            cases_filed_excluding_all_but_final_serial = sum(latest_filing_between_pla_and_def == T, na.rm = T),
             def_zips = paste0(unique(def_1_zip), collapse = ', ')) %>% ungroup() %>% 
   relocate(filing_month, .after = last_col())
 

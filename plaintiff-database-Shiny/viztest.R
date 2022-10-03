@@ -2,11 +2,17 @@ library(tidyverse)
 library(plotly)
 library(ggthemes)
 library(paletteer)
+library(scales)
+#install.packages("nord")
+library(nord)
+show_col(nord_palettes$lake_superior)
+pal_lake_superior <- c("#c87d4b", "#324b64")
 
 # read data ----
 
 # data for full period
-plaintiff_dat <- read.csv('plaintiff-database-Shiny/plaintiff-aggregated-data.txt', colClasses = 'character')
+#plaintiff_dat <- read.csv('plaintiff-database-Shiny/plaintiff-aggregated-data.txt', colClasses = 'character')
+plaintiff_dat <- read.csv('plaintiff-aggregated-data.txt', colClasses = 'character')
 
 # Make certain variables numeric so that sorting (e.g, cases hi-->lo) works appropriately
 plaintiff_dat <- plaintiff_dat %>% 
@@ -18,7 +24,8 @@ plaintiff_dat <- plaintiff_dat %>%
 # plaintiff_dat$pla_1_zip <- ifelse(is.na(plaintiff_dat$pla_1_zip), 'NA', plaintiff_dat$pla_1_zip)
 
 # data by year
-yearly_plaintiff_dat <- read.csv('plaintiff-database-Shiny/yearly-plaintiff-aggregated-data.txt', colClasses = 'character')
+#yearly_plaintiff_dat <- read.csv('plaintiff-database-Shiny/yearly-plaintiff-aggregated-data.txt', colClasses = 'character')
+yearly_plaintiff_dat <- read.csv('yearly-plaintiff-aggregated-data.txt', colClasses = 'character')
 
 yearly_plaintiff_dat <- yearly_plaintiff_dat %>% 
   mutate(cases_filed = as.numeric(cases_filed),
@@ -27,7 +34,8 @@ yearly_plaintiff_dat <- yearly_plaintiff_dat %>%
   relocate(filing_year, .before = def_zips)
 
 # data by month
-monthly_plaintiff_dat <- read.csv('plaintiff-database-Shiny/monthly-plaintiff-aggregated-data.txt', colClasses = 'character')
+#monthly_plaintiff_dat <- read.csv('plaintiff-database-Shiny/monthly-plaintiff-aggregated-data.txt', colClasses = 'character')
+monthly_plaintiff_dat <- read.csv('monthly-plaintiff-aggregated-data.txt', colClasses = 'character')
 
 monthly_plaintiff_dat <- monthly_plaintiff_dat %>% 
   mutate(cases_filed = as.numeric(cases_filed),
@@ -138,7 +146,7 @@ psum <- monthly_plaintiff_dat %>%
 psum
 
 ggplotly(psum, tooltip = c("x", "y", "group"))%>% 
-  layout(legend = list(orientation = "h"))
+  layout(legend = list(orientation = "h", x = .3, y = 10))
 # fix tooltips: filing_month
 
 # Yearly Evictions and Cases (2 outcomes) together (summed across selection) ----
@@ -147,18 +155,15 @@ psum_year <- yearly_plaintiff_dat %>%
   group_by(filing_year) %>% 
   summarize(Cases = sum(cases_filed),
             Evictions = sum(plaintiff_judgments)) %>%
-  # pivot_longer(cols = -filing_year, names_to = "Outcome", values_to = "Number",
-  #              names_prefix = "cases_") %>%
-  # mutate(Outcome = ifelse(Outcome == "filed", "Cases", "Evictions"),
-  #        Outcome = factor(Outcome, levels = c("Evictions", "Cases"))) %>%
-  
+  mutate(cases = "Cases", evictions = "Evictions") %>% 
+
   ggplot() +
-  geom_col(aes(x = filing_year, y = Cases, group = 1, fill = pal_lake_superior[1])) +
-  geom_col(aes(x = filing_year, y = Evictions, group = 1, fill = pal_lake_superior[2]),
-           width = 0.80) +
-  # scale_color_manual(values = pal_lake_superior,
-  #                    labels = c("Evictions", "Cases"),
-  #                    name = "") +
+  geom_col(aes(x = filing_year, y = Cases, fill = cases)) +
+  geom_col(aes(x = filing_year, y = Evictions, fill = evictions),
+           width = 0.70) +
+  scale_fill_manual(values = pal_lake_superior[c(2,1)],
+                     labels = c("Cases", "Evictions"),
+                     name = "") +
   labs(x = "Year", y = "") +
   theme(legend.position = "bottom") 
 psum_year
@@ -200,11 +205,6 @@ ggplotly(pdot, tooltip = c("x", "court"))
 
 # b. all outcomes ----
 # palette
-library(scales)
-#install.packages("nord")
-library(nord)
-show_col(nord_palettes$lake_superior)
-pal_lake_superior <- c("#c87d4b", "#324b64")
 
 pdot <- plaintiff_dat %>% 
   # filter(court_name %in% c("Albemarle General District Court",

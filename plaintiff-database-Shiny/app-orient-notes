@@ -1,0 +1,11 @@
+<br>
+<p>This site provides data about plaintiffs filing unlawful detainers (evictions) with the Virginia State District Courts from January 2018 through January of 2022. Each row in the table below represents a plaintiff filing in a specific court jurisdiction.</p> 
+<ul>
+<li>Filter the table to a court jurisdictions by selecting the court name under Select Court Jurisdiction. Select multiple jurisdictions by clicking on additional court names while holding down the control/commmand key. To select all jurisdictions, click the first court name and then the last court name while holding down the shift key.</li>
+
+<li>To display the sum of filings for this period, select "Totals for Full Period" under  Totals to Display; to display the sum of filings within each month during this time period, select "Totals by Month". When selecting totals by month, the table can be further filtered to a specific period by typing the year-month into the field above the Time Frame of Cases column in the table (for example, "2020-1" will filter the table to cases filed during January, 2020).</li>
+
+<li>In the table of data, sort by the number of filings, filings removing serial eviction filings, or filings resulting in eviction judgments by clicking the up/down arows next to the column heading.
+
+<li>Filter the table by plaintiff by typing the plaintiff name into the field above Plaintff Name. This can also be used to find individual plaintiffs with variations on the same name by typing only part of a plaintiff name or to see if an individual plaintiff filed evictions across multliple court jurisdictions.</li>
+<ul>

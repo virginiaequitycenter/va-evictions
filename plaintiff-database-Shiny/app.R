@@ -100,7 +100,7 @@ ui <- fluidPage(theme = bs_theme(version = 5),
                 tags$hr(),
                 
                 fluidRow(#theme = bs_theme(bg = "#B8BCC2", fg = "#202123"),
-                  column(5,
+                  column(4,
                          wellPanel(
                            selectInput('court', 'Select Court Jurisdiction',
                                        multiple = TRUE,
@@ -119,14 +119,14 @@ ui <- fluidPage(theme = bs_theme(version = 5),
                                         selected = "All")
                          )),
                   
-                  column(3,
-                         wellPanel(
-                           radioButtons("var", 'Outcome to Visualize',
-                                        choices = list("Number of Cases Filed" = "cases_filed",
-                                                       "Number of Non-Serial Cases Filed" = "cases_filed_excluding_all_but_final_serial",
-                                                       "Number of Eviction Judgments" = "plaintiff_judgments")
-                           ))
-                  ),
+                  # column(3,
+                  #        wellPanel(
+                  #          radioButtons("var", 'Outcome to Visualize',
+                  #                       choices = list("Number of Cases Filed" = "cases_filed",
+                  #                                      "Number of Non-Serial Cases Filed" = "cases_filed_excluding_all_but_final_serial",
+                  #                                      "Number of Eviction Judgments" = "plaintiff_judgments")
+                  #          ))
+                  # ),
                   
                   tags$hr(),
                   
@@ -158,8 +158,8 @@ server <- function(input, output) {
                 "Year" = yearly_plaintiff_dat,
                 "Month" = monthly_plaintiff_dat)
     
-    d <- d %>% filter(court_name %in% input$court) %>% 
-      mutate(outcome_cases = !!sym(input$var))
+    d <- d %>% filter(court_name %in% input$court) #%>% 
+      #mutate(outcome_cases = !!sym(input$var))
   })
   
   
@@ -169,7 +169,7 @@ server <- function(input, output) {
     # prep table
     #cases_filed_col_no <- which(colnames(df()) == 'cases_filed') -1
     
-    datatable(select(df(), -outcome_cases), rownames = F,
+    datatable(df(), rownames = F,
               # caption = 'Sources: Ben Schoenfeld (virginiacourtdata.org)',
               class = 'display nowrap',
               filter = 'top',
@@ -178,7 +178,7 @@ server <- function(input, output) {
                              pageLength = 20,
                              order = list(2, 'desc')), # for order, column indexing starts at 0 (3rd column visually is indexed as 2)
               colnames = c('Court Jurisdiction', 'Plaintiff Name', 
-                           '# Filings', 'Serial-adjusted # Filings', '# Eviction Judgments', 
+                           '# Filings', '# Eviction Judgments', 'Serial-adjusted # Filings', 
                            'Time Frame of Cases', 'ZIPs of Defendants'))
     # %>% formatStyle(columns = 'court_name', background = 'lightblue') <-- if column colors are desired
   )
@@ -195,7 +195,7 @@ server <- function(input, output) {
     if (input$time == 'All') {
       # output viz title
       output$viztitle <- renderText({
-        paste(attr(df()[,input$var], "labels"), "within Selected Court Jurisdictions (Totals across All Years)")
+        "Cases and Evictions within Selected Court Jurisdictions (Totals across All Years)"
       })
       
       p <- df() %>%
@@ -229,12 +229,36 @@ server <- function(input, output) {
         theme_classic()
       
       ggplotly(p, tooltip = c("x", "label", "color", "court")) %>% 
-        layout(legend = list(orientation = "h"))
+        layout(legend = list(orientation = "h", x = 0, y = 10))
+      
+    } else if (input$time == 'Year')  {
+      output$viztitle <- renderText({
+        "Cases and Evictions within Selected Court Jurisdictions (Totals by Year across All Years)"
+      })
+      
+      p <- df() %>% 
+        group_by(filing_year) %>% 
+        summarize(Cases = sum(cases_filed),
+                  Evictions = sum(plaintiff_judgments)) %>%
+        mutate(cases = "Cases", evictions = "Evictions") %>% 
+        
+        ggplot() +
+        geom_col(aes(x = filing_year, y = Cases, fill = cases)) +
+        geom_col(aes(x = filing_year, y = Evictions, fill = evictions),
+                 width = 0.70) +
+        scale_fill_manual(values = pal_lake_superior[c(2,1)],
+                          labels = c("Cases", "Evictions"),
+                          name = "") +
+        labs(x = "Year", y = "") +
+        theme(legend.position = "bottom") 
+
+      ggplotly(p, tooltip = c("x", "y"))%>% 
+        layout(legend = list(orientation = "h", x = 0, y = 10))
       
     } else {
       # output viz title
       output$viztitle <- renderText({
-        paste(attr(df()[,input$var], "labels"), "within Selected Court Jurisdictions (Totals by Month across All Years)")
+        "Cases and Evictions within Selected Court Jurisdictions (Totals by Month across All Years)"
       })
       
       p <- df() %>% 
@@ -258,7 +282,7 @@ server <- function(input, output) {
               legend.position = "bottom") 
      
       ggplotly(p, tooltip = c("x", "y", "group"))%>% 
-        layout(legend = list(orientation = "h"))
+        layout(legend = list(orientation = "h", x = 0, y = 10))
       
       # p <- df() %>%
       #   group_by(filing_month) %>%
