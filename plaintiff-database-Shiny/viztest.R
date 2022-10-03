@@ -6,7 +6,7 @@ library(paletteer)
 # read data ----
 
 # data for full period
-plaintiff_dat <- read.csv('plaintiff-aggregated-data.txt', colClasses = 'character')
+plaintiff_dat <- read.csv('plaintiff-database-Shiny/plaintiff-aggregated-data.txt', colClasses = 'character')
 
 # Make certain variables numeric so that sorting (e.g, cases hi-->lo) works appropriately
 plaintiff_dat <- plaintiff_dat %>% 
@@ -17,8 +17,16 @@ plaintiff_dat <- plaintiff_dat %>%
 
 # plaintiff_dat$pla_1_zip <- ifelse(is.na(plaintiff_dat$pla_1_zip), 'NA', plaintiff_dat$pla_1_zip)
 
+# data by year
+yearly_plaintiff_dat <- read.csv('plaintiff-database-Shiny/yearly-plaintiff-aggregated-data.txt', colClasses = 'character')
 
-# data by quarter
+yearly_plaintiff_dat <- yearly_plaintiff_dat %>% 
+  mutate(cases_filed = as.numeric(cases_filed),
+         cases_filed_excluding_all_but_final_serial = as.numeric(cases_filed_excluding_all_but_final_serial),
+         plaintiff_judgments = as.numeric(plaintiff_judgments)) %>% 
+  relocate(filing_year, .before = def_zips)
+
+# data by month
 monthly_plaintiff_dat <- read.csv('plaintiff-database-Shiny/monthly-plaintiff-aggregated-data.txt', colClasses = 'character')
 
 monthly_plaintiff_dat <- monthly_plaintiff_dat %>% 
@@ -83,12 +91,12 @@ ggplotly(psep, tooltip = c("x", "y", "group"))
 # c. all three outcomes together (summed across selection)
 # show all outcomes (summed)
 psum <- monthly_plaintiff_dat %>% 
-  filter(court_name %in% c("Albemarle General District Court",
-                           "Charlottesville General District Court",
-                           "Fluvanna General District Court",
-                           "Greene General District Court",
-                           "Louisa General District Court",
-                           "Nelson General District Court")) %>%
+  # filter(court_name %in% c("Albemarle General District Court",
+  #                          "Charlottesville General District Court",
+  #                          "Fluvanna General District Court",
+  #                          "Greene General District Court",
+  #                          "Louisa General District Court",
+  #                          "Nelson General District Court")) %>%
   group_by(filing_month) %>% 
   summarize(cases_filed = sum(cases_filed),
             cases_filed_ns = sum(cases_filed_excluding_all_but_final_serial),
@@ -105,6 +113,59 @@ psum <- monthly_plaintiff_dat %>%
         legend.position = "none")
 
 ggplotly(psum, tooltip = c("x", "y", "group"))
+
+# d. Evictions and Cases (2 outcomes) together (summed across selection) ----
+# show all outcomes (summed)
+psum <- monthly_plaintiff_dat %>% 
+  group_by(filing_month) %>% 
+  summarize(cases_filed = sum(cases_filed),
+            cases_eviction = sum(plaintiff_judgments)) %>%
+  pivot_longer(cols = -filing_month, names_to = "Outcome", values_to = "Number",
+               names_prefix = "cases_") %>% 
+  mutate(Outcome = ifelse(Outcome == "filed", "Cases", "Evictions"),
+         Outcome = factor(Outcome, levels = c("Evictions", "Cases"))) %>%
+  
+  ggplot(aes(x = filing_month, y = Number, 
+             group = Outcome, color = Outcome)) +
+  geom_point() +
+  geom_line() +
+  scale_color_manual(values = pal_lake_superior,
+                     labels = c("Evictions", "Cases"),
+                     name = "") +
+  labs(x = "Year-Month", y = "") +
+  theme(axis.text.x = element_text(angle = 45),
+        legend.position = "bottom") 
+psum
+
+ggplotly(psum, tooltip = c("x", "y", "group"))%>% 
+  layout(legend = list(orientation = "h"))
+# fix tooltips: filing_month
+
+# Yearly Evictions and Cases (2 outcomes) together (summed across selection) ----
+# show all outcomes (summed)
+psum_year <- yearly_plaintiff_dat %>% 
+  group_by(filing_year) %>% 
+  summarize(Cases = sum(cases_filed),
+            Evictions = sum(plaintiff_judgments)) %>%
+  # pivot_longer(cols = -filing_year, names_to = "Outcome", values_to = "Number",
+  #              names_prefix = "cases_") %>%
+  # mutate(Outcome = ifelse(Outcome == "filed", "Cases", "Evictions"),
+  #        Outcome = factor(Outcome, levels = c("Evictions", "Cases"))) %>%
+  
+  ggplot() +
+  geom_col(aes(x = filing_year, y = Cases, group = 1, fill = pal_lake_superior[1])) +
+  geom_col(aes(x = filing_year, y = Evictions, group = 1, fill = pal_lake_superior[2]),
+           width = 0.80) +
+  # scale_color_manual(values = pal_lake_superior,
+  #                    labels = c("Evictions", "Cases"),
+  #                    name = "") +
+  labs(x = "Year", y = "") +
+  theme(legend.position = "bottom") 
+psum_year
+
+ggplotly(psum_year, tooltip = c("x", "y"))%>% 
+  layout(legend = list(orientation = "h"))
+# fix tooltips: filing_month
 
 
 
@@ -137,7 +198,7 @@ pdot
 ggplotly(pdot, tooltip = c("x", "court"))
 
 
-# b. all outcomes
+# b. all outcomes ----
 # palette
 library(scales)
 #install.packages("nord")
@@ -146,12 +207,12 @@ show_col(nord_palettes$lake_superior)
 pal_lake_superior <- c("#c87d4b", "#324b64")
 
 pdot <- plaintiff_dat %>% 
-  filter(court_name %in% c("Albemarle General District Court",
-                           "Charlottesville General District Court",
-                           "Fluvanna General District Court",
-                           "Greene General District Court",
-                           "Louisa General District Court",
-                           "Nelson General District Court")) %>%
+  # filter(court_name %in% c("Albemarle General District Court",
+  #                          "Charlottesville General District Court",
+  #                          "Fluvanna General District Court",
+  #                          "Greene General District Court",
+  #                          "Louisa General District Court",
+  #                          "Nelson General District Court")) %>%
   mutate(court_name = str_remove(court_name, "General District Court"),
          court_name = str_trim(court_name)) %>% 
   group_by(court_name) %>% 

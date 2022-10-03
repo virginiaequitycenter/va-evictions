@@ -183,15 +183,20 @@ server <- function(input, output) {
     # %>% formatStyle(columns = 'court_name', background = 'lightblue') <-- if column colors are desired
   )
   
-  # output viz title
-  output$viztitle <- renderText({
-    paste(attr(df()[,input$var], "labels"), "within Selected Court Jurisdictions (Totals across All Years)")
-  })
+  # Moved to output$viz 
+  # # output viz title
+  # output$viztitle <- renderText({
+  #   paste(attr(df()[,input$var], "labels"), "within Selected Court Jurisdictions (Totals across All Years)")
+  # })
 
   # output visuals
   output$viz <- renderPlotly({
     
     if (input$time == 'All') {
+      # output viz title
+      output$viztitle <- renderText({
+        paste(attr(df()[,input$var], "labels"), "within Selected Court Jurisdictions (Totals across All Years)")
+      })
       
       p <- df() %>%
         
@@ -220,25 +225,52 @@ server <- function(input, output) {
         scale_x_continuous(expand = expansion(mult = c(0,.05))) +
         labs(x = "", y = "") +
         theme(axis.text.y = element_text(size = 2),
-              legend.position = "bottom") +
+              legend.position = "top") +
         theme_classic()
       
       ggplotly(p, tooltip = c("x", "label", "color", "court")) %>% 
         layout(legend = list(orientation = "h"))
       
     } else {
+      # output viz title
+      output$viztitle <- renderText({
+        paste(attr(df()[,input$var], "labels"), "within Selected Court Jurisdictions (Totals by Month across All Years)")
+      })
       
-      p <- df() %>%
-        group_by(filing_month) %>%
-        summarize(total = sum(outcome_cases)) %>%
-        ggplot(aes(x = filing_month, y = total, group = 1)) +
-        geom_point(color = "tan4") +
-        geom_line(color = "tan4") +
+      p <- df() %>% 
+        group_by(filing_month) %>% 
+        summarize(cases_filed = sum(cases_filed),
+                  cases_eviction = sum(plaintiff_judgments)) %>% 
+        pivot_longer(cols = -filing_month, names_to = "Outcome", values_to = "Number",
+                     names_prefix = "cases_") %>% 
+        mutate(Outcome = ifelse(Outcome == "filed", "Cases", "Evictions"),
+               Outcome = factor(Outcome, levels = c("Evictions", "Cases"))) %>%
+        
+        ggplot(aes(x = filing_month, y = Number, 
+                   group = Outcome, color = Outcome)) +
+        geom_point() +
+        geom_line() +
+        scale_color_manual(values = pal_lake_superior,
+                           labels = c("Evictions", "Cases"),
+                           name = "") +
         labs(x = "Year-Month", y = "") +
-        theme(axis.text.x = element_text(angle = 45))
-      
-      ggplotly(pdot, tooltip = c("x", "color", "court")) %>% 
+        theme(axis.text.x = element_text(angle = 45),
+              legend.position = "bottom") 
+     
+      ggplotly(p, tooltip = c("x", "y", "group"))%>% 
         layout(legend = list(orientation = "h"))
+      
+      # p <- df() %>%
+      #   group_by(filing_month) %>%
+      #   summarize(total = sum(outcome_cases)) %>%
+      #   ggplot(aes(x = filing_month, y = total, group = 1)) +
+      #   geom_point(color = "tan4") +
+      #   geom_line(color = "tan4") +
+      #   labs(x = "Year-Month", y = "") +
+      #   theme(axis.text.x = element_text(angle = 45))
+      # 
+      # ggplotly(p, tooltip = c("x", "color", "court")) %>% 
+      #   layout(legend = list(orientation = "h"))
       
       
     }
