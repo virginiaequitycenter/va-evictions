@@ -30,7 +30,7 @@ test_vector <- test_nomatch[which(test_nomatch$pla_1 %in% cvlnames$AlternativeNa
 ######################################### jgg name-match testing ######################################### 
 # Name-replacement function (arguments: a plaintiff name and a table of corrections like cvlnames or albnames)
 replace_pla1_name <- function(pla_1, locality_names) {
-  ifelse(pla_1 %in% locality_names$AlternativeNames, locality_names$PrimaryName[locality_names$AlternativeNames == pla_1], pla_1)
+  ifelse(tolower(pla_1) %in% tolower(locality_names$AlternativeNames), locality_names$PrimaryName[tolower(locality_names$AlternativeNames) == tolower(pla_1)], pla_1)
 }
 test_nomatch$pla_1_defuzzed <- sapply(test_nomatch$pla_1, function(x) replace_pla1_name(x, cvlnames))
 
