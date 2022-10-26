@@ -22,7 +22,7 @@ library(plotly)
 # password <- 'tenant'
 
 # Load user notes
-user_notes <- HTML(readLines('app-user-notes'))
+data_notes <- HTML(readLines('app-data-notes'))
 orient_notes <- HTML(readLines('app-orient-notes'))
 
 # Preprocess ----
@@ -304,7 +304,7 @@ server <- function(input, output) {
   output$orient <- renderUI(orient_notes)
   
   # output notes
-  output$notes <- renderUI(user_notes)
+  output$notes <- renderUI(data_notes)
 }
 
 # Run app
