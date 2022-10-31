@@ -1,6 +1,6 @@
 # Loading and cleaning Virginia eviction data from https://virginiacourtdata.org/
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn
-# Last revised: 2022-02-02
+# Last revised: 2022-10-30
 
 # Possible future revisions:
 #   - The name-cleaning chunk could be abbreviated in this file by moving function(s)
@@ -70,6 +70,12 @@ district_folders <- list.files("civilcases", pattern = string_identifying_data_f
 file_names <- list.files(district_folders[1], pattern = ".csv")[1:4]
 list_formats <- map(paste0(district_folders[1], "/", file_names), spec_csv)
 
+# in 2022 data, case id needs to be a character; in prior data, it's read as a number
+list_formats[[1]]$cols$id <- col_character()
+list_formats[[2]]$cols$case_id <- col_character()
+list_formats[[3]]$cols$case_id <- col_character()
+list_formats[[4]]$cols$case_id <- col_character()
+
 # read_fmt <- spec_csv("civilcases/DB_DistrictCivil_2018_PNGV1T/Cases.csv")
 # read_fmt_def <- spec_csv("civilcases/DB_DistrictCivil_2018_PNGV1T/Defendants.csv")
 # read_fmt_plain <- spec_csv("civilcases/DB_DistrictCivil_2018_PNGV1T/Plaintiffs.csv")
@@ -89,7 +95,10 @@ for (i in 1:length(district_folders)) {
 }
 
 # Fix 2021 data ----
-# Updated 2021 data - already filtered to unlawful detainers
+# FILTER TO ONLY 2021
+# Bring in new 2021 data
+#  already filtered to unlawful detainers
+#  already joined
 #    1. slice 2021 data to keep only one distinct record per data file
 #     a. cases (50,100), group_by(id) %>% slice(1) -- what is casenumber relative to id?
 #     b. hearings (99,676), group_by(id) %>% slice(1)
@@ -103,7 +112,8 @@ cases2021 <- cases2021 %>%
   group_by(id) %>% 
   slice(1) %>% 
   ungroup() %>% 
-  filter(FiledDate >= as.Date("2021-01-01"))
+  filter(FiledDate >= as.Date("2021-01-01") &
+           FiledDate <= as.Date("2021-12-31"))
 
 hearings2021 <- hearings2021 %>% 
   group_by(id) %>% 
@@ -140,6 +150,7 @@ cases_objects <- paste0('cases', data_years)
 for (i in 1:length(cases_objects)) {
   assign(cases_objects[i], filter(eval(parse(text = cases_objects[i])), CaseType == 'Unlawful Detainer'))
 }
+
 
 # Function to aggregate defendant, plaintiff, and hearing data by case_id
 #   - First, select only those rows in the defendants/plaintiffs/hearings data sets with case_ids
@@ -200,6 +211,10 @@ for (i in 1:length(court_dat_objects)) {
                                           year = stri_extract(court_dat_objects[i], regex = '(\\d{4})'),
                                           what = stri_extract(court_dat_objects[i], regex = '(\\D+)')))
 }
+
+# assign(court_dat_objects[15], aggregator(x = eval(parse(text = court_dat_objects[15])),
+#                                         year = stri_extract(court_dat_objects[15], regex = '(\\d{4})'),
+#                                         what = stri_extract(court_dat_objects[15], regex = '(\\D+)')))
 
 # Merge defendant, plaintiff, and hearing data with case data; merge cases with court names
 for (i in 1:length(cases_objects)) {

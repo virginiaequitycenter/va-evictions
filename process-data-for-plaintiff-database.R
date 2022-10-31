@@ -1,6 +1,6 @@
 # Aggregating case data up to plaintiff level for use in Shiny app
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn
-# Last revised: 2022-04-04
+# Last revised: 2022-10-30
 
 ###############################################################################
 # This code takes eviction case data that has undergone plaintiff-name        #
