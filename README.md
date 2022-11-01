@@ -37,7 +37,8 @@ Michael Salgueiro &#9677;
 Benjamin Teresa &#9708;  
 Connor White &#9708;  
 Barbara Wilson &#9677;  
-Hannah Woehrle &#9708;  
+Hannah Woehrle &#9708;
+Elizabeth Mitchell &#9677;
 
 &#9708; - [RVA Eviction Lab](https://rampages.us/rvaevictionlab/)  
 &#9677; - [UVa Equity Center](https://virginiaequitycenter.org/)
