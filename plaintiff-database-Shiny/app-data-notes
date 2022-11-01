@@ -1,10 +1,12 @@
+<div class="page-content">
 <h1>Data Notes</h1>
-<b>This database contains data about plaintiffs in Virginia eviction cases filed from January 2018 through October 2022.</b>
-<br><br>
-The current data were web-scraped from the Virginia Online Case Information System and made available by Ben Schoenfeld @ <a href="https://virginiacourtdata.org/">virginiacourtdata.org</a>.
 
-<br><br>
-<b>Data Notes:</b>
+<h2>Notes on the data:</h2>
+
+<p><b>This database contains data about plaintiffs in Virginia eviction cases filed from January 2018 through October 2022.</b></p>
+  
+  <p>The current data were web-scraped from the Virginia Online Case Information System and made available by Ben Schoenfeld @ <a href="https://virginiacourtdata.org/">virginiacourtdata.org</a>.</p>
+  
 <ul>
  <li>Each row in the database represents a plaintiff with a given ZIP Code. This means that if a plaintiff listed their ZIP Code as 12345 on some filings and as 98765 on others, they will appear twice in the database, once for each plaintiff-ZIP combination. Similarly, if a plaintiff had a ZIP Code listed for some cases but did not have a ZIP Code listed for others, they will appear twice in the database, once with an associated ZIP Code and once without.</li>
  
@@ -15,43 +17,45 @@ The current data were web-scraped from the Virginia Online Case Information Syst
 </li>
 </ul>
 
-<br>
-<b>Notes on selected variables:</b>
-<br>
-ZIPs of Defendants
-<ul>
-<li>For a given plaintiff/ZIP combination, this variable reflects the ZIP Codes of all primary defendants listed in cases filed by that plaintiff</li>
-<li>Defendant ZIP Codes are not repeated, so if a plaintiff filed four case against defendants in ZIP 12345, 12345 would only be listed once</li>
-<li>NA for this variable indicates that a primary defendant in a case filed by the relevant plaintiff did not have a valid Virginia ZIP Code listed in the Online Case Information System</li>
-</ul>
-Serial-adjusted # Filings
-<ul>
-<li>We consider serial cases to be repeated cases filed by a given plaintiff against a given defendant in a given ZIP Code within a 12-month period</li>
-<li>The serial-adjusted # filings variable reflects only the <em>final</em> case in each group of serial cases</li>
-</ul>
+<h2>Notes on selected variables:</h2>
 
-<br>
-<b>Notes on data cleaning:</b>
-We have applied several cleaning procedures to improve data quality, including:
-<ul>
-<li>Removing duplicate case records</li>
-<li>Standardizing plaintiff and defendant names; for example:</li>
-<ul>
-<li>A court clerk might record a name as "FRESH FRUIT LLC" on Monday and as "FRESH FRUIT, LLC" on Tuesday, so we eliminate commas before business-identifying acronyms (LLC, LP, LLP, etc.)</li>
-<li>A plaintiff might be listed as "GOOD LIVING APTS" in one case and as "GOOD LIVING APARTMENTS" in another, so we expand common housing acronyms (APTS&#8594;APARTMENTS; MGMT&#8594;MANAGEMENT, etc.)</li>
-</ul>
-<li>"Defuzzing" plaintiff names in order to reduce the number of alternative spellings/misspellings of the same name, which would otherwise reduce the accuracy of this database; for example:</li>
-<ul>
-<li>A plaintiff with ZIP Code 98765 might be listed as "BEACH, JENNIFER" in one case and as "BEACHH, JENNIFER" (a misspelling) in another</li>
-<li>We use string-distance algorithms to identify likely "fuzzy matches" between plaintiff names with slight spelling differences that share the same court of filing and ZIP Code, and we use those matches to reduce the number of alternative spellings/misspellings in the data</li>
-<li>This means that, e.g., "1010 BEACHFRONT APARTMENTS" and "1010 BEACHFFRONT APARTMENTS" would be correctly identified as the same entity when aggregating data up to the level of plaintiff (e.g., when determining cases-filed-per-plaintiff)</li>
-</ul>
-</ul>
-See the full data-cleaning code <a href="https://github.com/virginiaequitycenter/va-evictions">here</a>.
+<h3>Defendant Zip Codes</h3>
+  <ul>
+    <li>For a given plaintiff/ZIP combination, this variable reflects the ZIP Codes of all primary defendants listed in cases filed by that plaintiff</li>
+    <li>Defendant ZIP Codes are not repeated, so if a plaintiff filed four case against defendants in ZIP 12345, 12345 would only be listed once</li>
+    <li>NA for this variable indicates that a primary defendant in a case filed by the relevant plaintiff did not have a valid Virginia ZIP Code listed in the Online Case Information System  </li>
+  </ul>
+
+<h3>Serial-adjusted # Filings</h3>
+  <ul>
+    <li>We consider serial cases to be repeated cases filed by a given plaintiff against a given defendant in a given ZIP Code within a 12-month period</li>
+    <li>The serial-adjusted # filings variable reflects only the <em>final</em> case in each group of serial cases</li>
+  </ul>
+
+<h2>Notes on data cleaning:</h2>
+<p>We have applied several cleaning procedures to improve data quality, including:</p>
+  <ul>
+    <li>Removing duplicate case records</li>
+    <li>Standardizing plaintiff and defendant names; for example:</li>
+      <ul>
+        <li>A court clerk might record a name as "FRESH FRUIT LLC" on Monday and as "FRESH FRUIT, LLC" on Tuesday, so we eliminate commas before business-identifying acronyms (LLC, LP, LLP, etc.)</li>
+        <li>A plaintiff might be listed as "GOOD LIVING APTS" in one case and as "GOOD LIVING APARTMENTS" in another, so we expand common housing acronyms (APTS&#8594;APARTMENTS; MGMT&#8594;MANAGEMENT, etc.)</li>
+      </ul>
+    <li>"Defuzzing" plaintiff names in order to reduce the number of alternative spellings/misspellings of the same name, which would otherwise reduce the accuracy of this database; for example:</li>
+      <ul>
+        <li>A plaintiff with ZIP Code 98765 might be listed as "BEACH, JENNIFER" in one case and as "BEACHH, JENNIFER" (a misspelling) in another</li>
+        <li>We use string-distance algorithms to identify likely "fuzzy matches" between plaintiff names with slight spelling differences that share the same court of filing and ZIP Code, and we use those matches to reduce the number of alternative spellings/misspellings in the data</li>
+        <li>This means that, e.g., "1010 BEACHFRONT APARTMENTS" and "1010 BEACHFFRONT APARTMENTS" would be correctly identified as the same entity when aggregating data up to the level of plaintiff (e.g., when determining cases-filed-per-plaintiff)</li>
+      </ul>
+  </ul>
+  
+<p>See the full data-cleaning code <a href="https://github.com/virginiaequitycenter/va-evictions">here</a>.</p>
 
 <hr>
 
-<br>
+<p>
 App and data cleaning/aggregation by: Jacob Goldstein-Greenwood (<a href="https://github.com/jacob-gg">jacob-gg</a>) and Michele Claibourn (<a href="https://github.com/mclaibourn">mclaibourn</a>). The code repository for this work is available on <a href="https://github.com/virginiaequitycenter/va-evictions">GitHub</a>.
-<br><br>
-<em>Last updated: 2022-04-28</em>
+</p>
+
+<p><em>Last updated: 2022-04-28</em></p>
+</div>

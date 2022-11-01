@@ -1,3 +1,4 @@
+<div class="page-content">
 <h1>Virginia Evictor Catalog</h1>
 
 <h2>Project Description</h2>
@@ -35,10 +36,11 @@ Github page and contributions.</li>
   <li>The data on which the project relies were initially collected by Ben Schoenfeld as scraped from the Virginia Online Case Information System and made available at virginiacourtdata.org.</li>
   <li>Current and ongoing data are provided by Legal Services Corporation.</li>
   <li>Kate Howell, Ben Teresa, Barbara Brown Wilson, Michele Claibourn, Hannah Worhrle, and Michael Salguiero provided substantive expertise and conceptual guidance.</li>
-  <li>Michele Claibourn, Jacob Goldstein-Greenwood, Connor White, and Beth Mitchell prepared the court filing data.</li>
+  <li>Michele Claibourn, Jacob Goldstein-Greenwood, Connor White, and Elizabeth Mitchell prepared the court filing data.</li>
   <li>Michele Claibourn, Jacob Goldstein-Greenwood, and Elizabeth Mitchell programmed and created the Virginia Evictor Catalog platform.</li>
   <li>Hannah Worhrle, Michael Salgueiro, and Atticus Johnson provided additional project management, coordination, and communications support.</li>
   <li>The data work was funded with support from the 4-VA Collaborative Research Grant program at UVA, The Richmond Memorial Health Foundation, and The VCU Center for Community Engaged Research.</li>
 </ul>
 
-<p>The work undergirding the Virginia Evictor Catalog is publicly available on Github.</p>
+<p>The work undergirding the Virginia Evictor Catalog is publicly available on <a href="https://github.com/virginiaequitycenter/va-evictions" target="_blank">Github</a>.</p>
+</div>

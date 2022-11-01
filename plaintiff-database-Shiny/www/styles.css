@@ -206,6 +206,29 @@ div.dt-buttons {
   font-size: 1.1rem;
 }
 
+.page-content {
+  max-width: 1000px;
+  margin-right: auto;
+  margin-left: auto;
+  padding: 0 1rem;
+}
+
+.page-content h1 {
+  text-align: center;
+}
+
+.page-content h2 {
+  font-size: 1.25rem;
+}
+
+.page-content h3 {
+  font-size: 1.1rem;
+}
+
+.page-content li {
+  margin-bottom: 5px;
+}
+
 #footer {
   color: #ffffff;
   text-align: center;

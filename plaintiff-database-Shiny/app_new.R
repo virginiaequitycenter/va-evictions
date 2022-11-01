@@ -83,7 +83,7 @@ ui <- htmlTemplate(filename = "app-template.html", main =
           fluidRow(
             column(12,
               tags$h1(class="page-title", "Who is Filing Evictions in Virginia?"),
-              tags$p(class = "page-description", "This site provides data about plaintiffs filing unlawful detainers (evictions) with the Virginia State District Courts from January 2018 through October 2022. Each row in the table below represents a plaintiff filing in a specific court jurisdiction."),
+              tags$p(class = "page-description", "The Virginia Evictors Catalogue provides data about plaintiffs filing unlawful detainers (evictions) with the Virginia State District Courts from January 2018 through October 2022. Each row in the table below represents a plaintiff filing in a specific court jurisdiction."),
               
               bs_button("How to search the catalogue", button_type = "info", class = "collapsible") %>%
                 bs_attach_collapse("yeah"),
