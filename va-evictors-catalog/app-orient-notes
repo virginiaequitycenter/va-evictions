@@ -1,9 +1,73 @@
 <ul class="orient-list">
-<li class="orient-list-item">Filter the table to a court jurisdictions by selecting the court name under Select Court Jurisdiction. Select multiple jurisdictions by clicking on additional court names while holding down the control/commmand key. To select all jurisdictions, click the first court name and then the last court name while holding down the shift key.</li>
+<li class="orient-list-item">
+The table and visuals in the tabs below show court data based on the selections made in the two boxes labeled “Select Court Jurisdiction” and “Select Time Period.”
+</li>
+<li class="orient-list-item">
+Filter the table for specific court jurisdictions by selecting the court name(s) in the box labeled “Select Court Jurisdiction.” 
+</li>
+<ul class="orient-list">
+<li class="orient-list-item">
+The table defaults to selecting all VA court jurisdictions.
+</li>
+<li class="orient-list-item">
+Select multiple jurisdictions by clicking on court names while holding down the control (Windows) or command key (Mac).
+</li>
+<li class="orient-list-item">
+To select all jurisdictions, click the first court name and then the last court name while holding down the shift key. 
+</li>
+</ul>
 
-<li class="orient-list-item">To display the sum of filings for this period, select "Totals for Full Period" under  Totals to Display; to display the sum of filings within each month during this time period, select "Totals by Month". When selecting totals by month, the table can be further filtered to a specific period by typing the year-month into the field above the Time Frame of Cases column in the table (for example, "2020-1" will filter the table to cases filed during January, 2020).</li>
+<li class="orient-list-item">
+Select an option in the box labeled “Select Time Period” to show the selected time period fo the aggregated eviction filings in the table and visuals.
+</li>
 
-<li class="orient-list-item">In the table of data, sort by the number of filings, filings removing serial eviction filings, or filings resulting in eviction judgments by clicking the up/down arows next to the column heading.
+<ul class="orient-list">
+<li class="orient-list-item">
+The visuals will change depending on the time period selected.
+</li>
+<li class="orient-list-item">
+To display the sum of filings for all years in the catalog, select “Totals across All Years.”
+</li>
+<li class="orient-list-item">
+To display the sum of filings within each year represented in the catalog, select "Totals by Year."
+</li>
+<li class="orient-list-item">
+To display the sum of filings within each month represented in the catalog, select "Totals by Month." 
+</li>
+<li class="orient-list-item">
+When selecting "Totals by Month," the table can be further filtered by typing the year-month into the field above the “Time Frame” column in the table (for example, "2020-1" will filter the table to cases filed during January, 2020). 
+</li>
+</ul>
 
-<li class="orient-list-item">Filter the table by plaintiff by typing the plaintiff name into the field above Plaintff Name. This can also be used to find individual plaintiffs with variations on the same name by typing only part of a plaintiff name or to see if an individual plaintiff filed evictions across multliple court jurisdictions.</li>
+<li class="orient-list-item">
+Sort the data table by clicking on the up/down arrows next to the column headings (i.e. “Filings”, “Evictions”, etc.).
+</li>
+
+<li class="orient-list-item">
+Filter the table by plaintiff by typing the plaintiff name into the field below “Plaintiff Name.” 
+</li>
+<ul class="orient-list">
+<li class="orient-list-item">
+This can be used to see if an individual plaintiff filed evictions across multiple court jurisdictions. 
+</li>
+<li class="orient-list-item">
+Type only part of a plaintiff name to see if a plaintiff has name variations across court filings.
+</li>
+</ul>
+<li class="orient-list-item">
+Use the search box to search all fields of the table, or search individual columns using the field below each column heading.
+</li>
+
+<li class="orient-list-item">
+Download the table data in csv format (can be opened in Excel) by clicking the “Download” button above the table. 
+</li>
+<ul class="orient-list">
+<li class="orient-list-item">
+The downloaded file will contain only the data filtered from the selected options in “Select Court Jurisdiction” and “Select Time Period.” Any filtering done using the search fields will not be reflected.
+</li>
+
+</ul>
+<li class="orient-list-item">
+Download an image file (png) of the “Visuals” tab by clicking on the camera icon found about the chart.
+</li>
 <ul>

@@ -86,7 +86,7 @@ ui <- htmlTemplate(filename = "app-template.html", main =
           fluidRow(
             column(12,
               tags$h1(class="page-title", "Who is Filing Evictions in Virginia?"),
-              tags$p(class = "page-description", "The Virginia Evictors Catalog provides data about plaintiffs filing unlawful detainers (evictions) with the Virginia State District Courts from January 2018 through October 2022. Each row in the table below represents a plaintiff filing in a specific court jurisdiction."),
+              tags$p(class = "page-description", "The Virginia Evictors Catalog provides data about plaintiffs filing unlawful detainers (evictions) with the Virginia State District Courts from January 2018 through September 2022. Each row in the table below represents a plaintiff filing in a specific court jurisdiction."),
               
               bs_button("How to search the catalog", button_type = "info", class = "collapsible") %>%
                 bs_attach_collapse("yeah"),
@@ -111,7 +111,7 @@ ui <- htmlTemplate(filename = "app-template.html", main =
                                       size = 5,
                                       selectize = FALSE
                   ),
-                  helpText("Note: Select one or more court jurisdictions to show in the table and in the visuals. Select multiple jurisdictions by clicking on court names while holding down the control (Windows) or command key (Mac).")
+                  helpText("Note: Select one or more court jurisdictions to show in the table and visuals. Select multiple jurisdictions by clicking on court names while holding down the control (Windows) or command key (Mac).")
               )
             ),
             column(6,
@@ -123,13 +123,13 @@ ui <- htmlTemplate(filename = "app-template.html", main =
                               selected = "All"
                   ),
                   # helpText("Note: For the sum of all filings for a plaintiff in the catalog, select \"Totals across All Years\"; for the sum within each year or month, select \"Totals by Year\" or \"Totals by Month\"."),
-                  helpText("Note: Select a time period for which to show the aggregated eviction filings in the table and in the visuals. When selecting totals by month, the table can be further filtered to a specific period by typing the year-month into the search field below the \"Time Frame of Cases\" column in the table (for example, \"2020-1\" will filter the table to cases filed during January, 2020).")
+                  helpText("Note: Select a time period for the aggregated eviction filings in the table and visuals. When selecting \"Totals by Month\", the table can be further filtered by typing the year-month into the search field below the \"Time Frame\" column in the table (for example, \"2020-1\" will filter the table to cases filed during January, 2020).")
               )
             )),
           fluidRow(
             column(12,
             tabsetPanel(type = 'pills',
-              tabPanel('Table', icon = icon('table'), DTOutput('plaintiff_table')),
+              tabPanel('Table', icon = icon('table'), downloadButton("downloadBtn", "Download"), DTOutput('plaintiff_table')),
               tabPanel('Visuals', icon = icon('chart-bar'),
                       textOutput("viztitle"),
                       plotlyOutput('viz', width = '100%', height = '700')
@@ -149,6 +149,14 @@ ui <- htmlTemplate(filename = "app-template.html", main =
              uiOutput('about')
          )
       )
+      # ,
+      # tabPanel("Contact Us",
+      #          fluidPage(
+      #            tags$h1("Contact Us"),
+      #            tags$p("Please fill out the form below with your comments and/or questions. The form can also be found"),
+      #            tags$a(href= "", "here."),
+      #            htmlOutput("frame")
+      #          ))
   )
 )
 
@@ -159,6 +167,13 @@ server <- function(input, output, session) {
   observeEvent(input$title, {
     updateNavbarPage(session, "home", "VA Evictors Catalog")
   })
+  
+  #add google form to iframe
+  # output$frame <- renderUI({
+  #   my_test <- tags$iframe(src="", height=600, width=535)
+  #   print(my_test)
+  #   my_test
+  # })
   
   # create data for data table
   df <- reactive({
@@ -172,6 +187,13 @@ server <- function(input, output, session) {
       #mutate(outcome_cases = !!sym(input$var))
   })
   
+  # function for download button
+  output$downloadBtn <- downloadHandler(
+    filename = "va-evictors-catalog.csv",
+    content = function(file) {
+      write.csv(df(), file)
+    }
+  )
   
   # output datatable
   output$plaintiff_table <- DT::renderDT(
@@ -180,7 +202,6 @@ server <- function(input, output, session) {
     #cases_filed_col_no <- which(colnames(df()) == 'cases_filed') -1
     
     datatable(df(), 
-              extensions = 'Buttons',
               rownames = F,
               # caption = 'Sources: Ben Schoenfeld (virginiacourtdata.org)',
               class = 'display nowrap',
@@ -189,14 +210,7 @@ server <- function(input, output, session) {
                              scrollX = T,
                              pageLength = 20,
                              order = list(2, 'desc'), # for order, column indexing starts at 0 (3rd column visually is indexed as 2)
-                             dom = 'lBfrtip',
-                             buttons =
-                              list(list(
-                                extend = 'collection',
-                                buttons = c('csv'),
-                                text = 'Download'
-                               ))
-                              ), 
+                             dom = 'lfrtip'), 
               colnames = c('Court Jurisdiction', 'Plaintiff Name', 
                            'Filings', 'Evictions', #'Serial-adjusted # Filings', 
                            'Time Frame', 'Defendant Zip Codes')
