@@ -5,6 +5,7 @@ library(paletteer)
 library(scales)
 #install.packages("nord")
 library(nord)
+library(DT)
 show_col(nord_palettes$lake_superior)
 pal_lake_superior <- c("#c87d4b", "#324b64")
 
@@ -18,10 +19,14 @@ plaintiff_dat <- read.csv('plaintiff-aggregated-data.txt', colClasses = 'charact
 plaintiff_dat <- plaintiff_dat %>% 
   mutate(cases_filed = as.numeric(cases_filed),
          cases_filed_excluding_all_but_final_serial = as.numeric(cases_filed_excluding_all_but_final_serial),
-         plaintiff_judgments = as.numeric(plaintiff_judgments)) %>% 
+         plaintiff_judgments = as.numeric(plaintiff_judgments),
+         eviction_percent = round((plaintiff_judgments/cases_filed)*100,1),
+         serial_cases = cases_filed - cases_filed_excluding_all_but_final_serial) %>% 
   relocate(filing_years, .before = def_zips)
 
 # plaintiff_dat$pla_1_zip <- ifelse(is.na(plaintiff_dat$pla_1_zip), 'NA', plaintiff_dat$pla_1_zip)
+
+datatable(plaintiff_dat)
 
 # data by year
 #yearly_plaintiff_dat <- read.csv('plaintiff-database-Shiny/yearly-plaintiff-aggregated-data.txt', colClasses = 'character')
