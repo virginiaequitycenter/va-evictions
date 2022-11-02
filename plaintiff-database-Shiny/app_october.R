@@ -1,8 +1,7 @@
 # Shiny app: Plaintiff database
 # Author: Jacob Goldstein-Greenwood / jacobgg@virginia.edu / GitHub: jacob-gg
 # Author: Michele Claibourn / mclaibourn@virginia.edu / GitHub: mclaibourn
-# Author: Elizabeth Mitchell / beth@virginia.edu
-# Last revised: 2022-11-1
+# Last revised: 2022-04-11
 
 ################################################# CANARY #################################################
 canary_message <- HTML(paste0('<br><font color="red">NOTE: the database contains data that has been ',
@@ -18,12 +17,13 @@ library(tidyverse)
 library(shinyalert)
 library(bslib)
 library(plotly)
-library(bsplus)
+
+# Set required password
+# password <- 'tenant'
 
 # Load user notes
 data_notes <- HTML(readLines('app-data-notes'))
 orient_notes <- HTML(readLines('app-orient-notes'))
-about_notes <- HTML(readLines('app-project-notes'))
 
 # Preprocess ----
 # Note: consider reading in defuzzed data and aggregating in app...
@@ -69,96 +69,89 @@ attributes(monthly_plaintiff_dat$plaintiff_judgments)  <- list(labels = "Number 
 # palette
 pal_lake_superior <- c("#c87d4b", "#324b64")
 
-
-# User interface ----
-ui <- htmlTemplate(filename = "app-template.html", main = 
-    navbarPage(
-      theme = bs_theme(version = 4), 
-      collapsible = TRUE,
-      fluid = TRUE,
-      id = "home",
-      title = actionLink("title","Virginia Evictors Catalogue"),
-      tabPanel("VA Evictors Catalogue", 
-        fluidPage(
-          fluidRow(
-            column(12,
-              tags$h1(class="page-title", "Who is Filing Evictions in Virginia?"),
-              tags$p(class = "page-description", "The Virginia Evictors Catalogue provides data about plaintiffs filing unlawful detainers (evictions) with the Virginia State District Courts from January 2018 through October 2022. Each row in the table below represents a plaintiff filing in a specific court jurisdiction."),
-              
-              bs_button("How to search the catalogue", button_type = "info", class = "collapsible") %>%
-                bs_attach_collapse("yeah"),
-              bs_collapse(
-                id = "yeah", 
-                content = tags$div(class = "well", 
-                                   tags$div(
-                                     htmlOutput('orient'), class = "orient"
-                                   ))
-              )
-            )
-              
-          ),
-          
-          fluidRow(
-            column(6,
-              wellPanel(
-                  selectInput('court', 'Select Court Jurisdiction',
-                                      multiple = TRUE,
-                                      choices = unique(plaintiff_dat$court_name),
-                                      selected = unique(plaintiff_dat$court_name),
-                                      size = 5,
-                                      selectize = FALSE
-                  ),
-                  helpText("Note: Select multiple jurisdictions by clicking on court names while holding down the control (Windows) or command key (Mac).")
-              )
-            ),
-            column(6,
-              wellPanel(
-                  radioButtons("time", 'Totals to Display',
-                              choices = list("Totals across All Years" = "All", 
-                                            "Totals by Year" = "Year",
-                                            "Totals by Month" = "Month"), 
-                              selected = "All"
-                  ),
-                  # helpText("Note: For the sum of all filings for a plaintiff in the catalogue, select \"Totals across All Years\"; for the sum within each year or month, select \"Totals by Year\" or \"Totals by Month\"."),
-                  helpText("Note: When selecting totals by month, the table can be further filtered to a specific period by typing the year-month into the search field below the \"Time Frame of Cases\" column in the table (for example, \"2020-1\" will filter the table to cases filed during January, 2020).")
-              )
-            )),
-          fluidRow(
-            column(12,
-            tabsetPanel(type = 'pills',
-              tabPanel('Table', icon = icon('table'), DTOutput('plaintiff_table')),
-              tabPanel('Visuals', icon = icon('chart-bar'),
-                      textOutput("viztitle"),
-                      plotlyOutput('viz', width = '100%', height = '700')
-              ),
-            ),
-            )
-          )
-        )
-      ),
-      tabPanel("Data Notes", 
-        fluidPage(
-            uiOutput('notes')
-        )
-      ),
-      tabPanel("About the Project", 
-         fluidPage(
-             uiOutput('about')
-         )
-      )
-  )
+# Title code
+title2 <- tags$div(style = "display: inline; position: relative;",
+                   (tags$a(img(src = "eclogo.png", height='60'),href="https://virginiaequitycenter.org/", target="_blank")),
+                   HTML("&nbsp;"),
+                   h1('Housing Justice Atlas: Eviction Filers', style="display: inline;"),
+                   HTML("&nbsp;"),
+                   (tags$a(img(src="rvalogo.jpg", height='50'),href="https://rampages.us/rvaevictionlab/", target="_blank")
+                   )
 )
 
+# User interface ----
+ui <- fluidPage(theme = bs_theme(version = 5),
+                tags$head(
+                  tags$style(
+                    ".title {margin: auto; width: 1000px;}"
+                  )
+                ),
+                tags$div(class="title", title2),
+                
+                tags$br(),
+                tags$hr(),
+                #mainPanel(canary_message),
+                
+                fluidRow(
+                  column(12,
+                  htmlOutput('orient')
+                )),
+                
+                tags$hr(),
+                
+                fluidRow(#theme = bs_theme(bg = "#B8BCC2", fg = "#202123"),
+                  column(4,
+                         wellPanel(
+                           selectInput('court', 'Select Court Jurisdiction',
+                                       multiple = TRUE,
+                                       choices = unique(plaintiff_dat$court_name),
+                                       selected = unique(plaintiff_dat$court_name),
+                                       size = 5,
+                                       selectize = FALSE)
+                         )),
+                  
+                  column(3,
+                         wellPanel(
+                           radioButtons("time", 'Totals to Display',
+                                        choices = list("Totals across All Years" = "All", 
+                                                       "Totals by Year" = "Year",
+                                                       "Totals by Month" = "Month"), 
+                                        selected = "All")
+                         )),
+                  
+                  # column(3,
+                  #        wellPanel(
+                  #          radioButtons("var", 'Outcome to Visualize',
+                  #                       choices = list("Number of Cases Filed" = "cases_filed",
+                  #                                      "Number of Non-Serial Cases Filed" = "cases_filed_excluding_all_but_final_serial",
+                  #                                      "Number of Eviction Judgments" = "plaintiff_judgments")
+                  #          ))
+                  # ),
+                  
+                  tags$hr(),
+                  
+                  tabsetPanel(type = 'tabs',
+                              tabPanel('Table', DTOutput('plaintiff_table')),
+                              
+                              tabPanel('Visuals', 
+                                       textOutput("viztitle"),
+                                       plotlyOutput('viz', width = '100%', height = '700')),
+                              
+                              tabPanel('Notes', uiOutput('notes'))),
+                  tags$hr()
+                ))
+
 # Server ----
-server <- function(input, output, session) {
+server <- function(input, output) {
   
-  # make navbarPage title element link to catalogue tab
-  observeEvent(input$title, {
-    updateNavbarPage(session, "home", "VA Evictors Catalogue")
-  })
+  # shinyalert(html = TRUE, text = tagList(
+  #   textInput("pass", "Password: ", ),
+  # ))
   
   # create data for data table
   df <- reactive({
+    
+    # req(input$pass == password)
     
     d <- switch(input$time,
                 "All" = plaintiff_dat,
@@ -176,30 +169,25 @@ server <- function(input, output, session) {
     # prep table
     #cases_filed_col_no <- which(colnames(df()) == 'cases_filed') -1
     
-    datatable(df(), 
-              extensions = 'Buttons',
-              rownames = F,
+    datatable(df(), rownames = F,
               # caption = 'Sources: Ben Schoenfeld (virginiacourtdata.org)',
               class = 'display nowrap',
               filter = 'top',
               options = list(searchHighlight = T,
                              scrollX = T,
                              pageLength = 20,
-                             order = list(2, 'desc'), # for order, column indexing starts at 0 (3rd column visually is indexed as 2)
-                             dom = 'lBfrtip',
-                             buttons =
-                              list(list(
-                                extend = 'collection',
-                                buttons = c('csv'),
-                                text = 'Download'
-                               ))
-                              ), 
+                             order = list(2, 'desc')), # for order, column indexing starts at 0 (3rd column visually is indexed as 2)
               colnames = c('Court Jurisdiction', 'Plaintiff Name', 
-                           'Filings', 'Evictions', 'Serial-adjusted # Filings', 
-                           'Time Frame', 'Defendant Zip Codes')
-              )
+                           '# Filings', '# Eviction Judgments', 'Serial-adjusted # Filings', 
+                           'Time Frame of Cases', 'ZIPs of Defendants'))
     # %>% formatStyle(columns = 'court_name', background = 'lightblue') <-- if column colors are desired
   )
+  
+  # Moved to output$viz 
+  # # output viz title
+  # output$viztitle <- renderText({
+  #   paste(attr(df()[,input$var], "labels"), "within Selected Court Jurisdictions (Totals across All Years)")
+  # })
 
   # output visuals
   output$viz <- renderPlotly({
@@ -241,8 +229,7 @@ server <- function(input, output, session) {
         theme_classic()
       
       ggplotly(p, tooltip = c("x", "label", "color", "court")) %>% 
-        layout(legend = list(orientation = "h", x = 0, y = 10)) %>% 
-        config(displayModeBar = TRUE)
+        layout(legend = list(orientation = "h", x = 0, y = 10))
       
     } else if (input$time == 'Year')  {
       output$viztitle <- renderText({
@@ -266,8 +253,7 @@ server <- function(input, output, session) {
         theme(legend.position = "bottom") 
 
       ggplotly(p, tooltip = c("x", "y"))%>% 
-        layout(legend = list(orientation = "h", x = 0, y = 10)) %>% 
-        config(displayModeBar = TRUE)
+        layout(legend = list(orientation = "h", x = 0, y = 10))
       
     } else {
       # output viz title
@@ -296,8 +282,7 @@ server <- function(input, output, session) {
               legend.position = "bottom") 
      
       ggplotly(p, tooltip = c("x", "y", "group"))%>% 
-        layout(legend = list(orientation = "h", x = 0, y = 10)) %>% 
-        config(displayModeBar = TRUE)
+        layout(legend = list(orientation = "h", x = 0, y = 10))
       
       # p <- df() %>%
       #   group_by(filing_month) %>%
@@ -318,11 +303,8 @@ server <- function(input, output, session) {
   # output orienting instructions
   output$orient <- renderUI(orient_notes)
   
-  # output data notes
+  # output notes
   output$notes <- renderUI(data_notes)
-  
-  # output about project
-  output$about <- renderUI(about_notes)
 }
 
 # Run app
