@@ -123,7 +123,7 @@ ui <- htmlTemplate(filename = "app-template.html", main =
                               selected = "All"
                   ),
                   # helpText("Note: For the sum of all filings for a plaintiff in the catalog, select \"Totals across All Years\"; for the sum within each year or month, select \"Totals by Year\" or \"Totals by Month\"."),
-                  helpText("Note: Select a time period for the aggregated eviction filings in the table and visuals. When selecting \"Totals by Month\", the table can be further filtered by typing the year-month into the search field below the \"Time Frame\" column in the table (for example, \"2020-1\" will filter the table to cases filed during January, 2020).")
+                  helpText("Note: Select a time period for the aggregated eviction filings in the table and visuals. When selecting \"Totals by Month\", the table can be further filtered by typing the year-month into the search field below the \"Time Frame\" column in the table (for example, \"2020-01\" will filter the table to cases filed during January, 2020).")
               )
             )),
           fluidRow(

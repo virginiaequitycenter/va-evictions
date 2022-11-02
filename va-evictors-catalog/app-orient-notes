@@ -35,7 +35,7 @@ To display the sum of filings within each year represented in the catalog, selec
 To display the sum of filings within each month represented in the catalog, select "Totals by Month." 
 </li>
 <li class="orient-list-item">
-When selecting "Totals by Month," the table can be further filtered by typing the year-month into the field above the “Time Frame” column in the table (for example, "2020-1" will filter the table to cases filed during January, 2020). 
+When selecting "Totals by Month," the table can be further filtered by typing the year-month into the field above the “Time Frame” column in the table (for example, "2020-01" will filter the table to cases filed during January, 2020). 
 </li>
 </ul>
 
