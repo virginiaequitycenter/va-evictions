@@ -80,15 +80,15 @@ ui <- htmlTemplate(filename = "app-template.html", main =
       collapsible = TRUE,
       fluid = TRUE,
       id = "home",
-      title = actionLink("title","Virginia Evictors Catalogue"),
-      tabPanel("VA Evictors Catalogue", 
+      title = actionLink("title","Virginia Evictors Catalog"),
+      tabPanel("VA Evictors Catalog", 
         fluidPage(
           fluidRow(
             column(12,
               tags$h1(class="page-title", "Who is Filing Evictions in Virginia?"),
-              tags$p(class = "page-description", "The Virginia Evictors Catalogue provides data about plaintiffs filing unlawful detainers (evictions) with the Virginia State District Courts from January 2018 through October 2022. Each row in the table below represents a plaintiff filing in a specific court jurisdiction."),
+              tags$p(class = "page-description", "The Virginia Evictors Catalog provides data about plaintiffs filing unlawful detainers (evictions) with the Virginia State District Courts from January 2018 through October 2022. Each row in the table below represents a plaintiff filing in a specific court jurisdiction."),
               
-              bs_button("How to search the catalogue", button_type = "info", class = "collapsible") %>%
+              bs_button("How to search the catalog", button_type = "info", class = "collapsible") %>%
                 bs_attach_collapse("yeah"),
               bs_collapse(
                 id = "yeah", 
@@ -104,26 +104,26 @@ ui <- htmlTemplate(filename = "app-template.html", main =
           fluidRow(
             column(6,
               wellPanel(
-                  selectInput('court', 'Select Court Jurisdiction',
+                  selectInput('court', 'Select Court Jurisdictions to Include',
                                       multiple = TRUE,
                                       choices = unique(plaintiff_dat$court_name),
                                       selected = unique(plaintiff_dat$court_name),
                                       size = 5,
                                       selectize = FALSE
                   ),
-                  helpText("Note: Select multiple jurisdictions by clicking on court names while holding down the control (Windows) or command key (Mac).")
+                  helpText("Note: Select one or more court jurisdictions to show in the table and in the visuals. Select multiple jurisdictions by clicking on court names while holding down the control (Windows) or command key (Mac).")
               )
             ),
             column(6,
               wellPanel(
-                  radioButtons("time", 'Totals to Display',
+                  radioButtons("time", 'Select a Time Period to Display',
                               choices = list("Totals across All Years" = "All", 
                                             "Totals by Year" = "Year",
                                             "Totals by Month" = "Month"), 
                               selected = "All"
                   ),
-                  # helpText("Note: For the sum of all filings for a plaintiff in the catalogue, select \"Totals across All Years\"; for the sum within each year or month, select \"Totals by Year\" or \"Totals by Month\"."),
-                  helpText("Note: When selecting totals by month, the table can be further filtered to a specific period by typing the year-month into the search field below the \"Time Frame of Cases\" column in the table (for example, \"2020-1\" will filter the table to cases filed during January, 2020).")
+                  # helpText("Note: For the sum of all filings for a plaintiff in the catalog, select \"Totals across All Years\"; for the sum within each year or month, select \"Totals by Year\" or \"Totals by Month\"."),
+                  helpText("Note: Select a time period for which to show the aggregated eviction filings in the table and in the visuals. When selecting totals by month, the table can be further filtered to a specific period by typing the year-month into the search field below the \"Time Frame of Cases\" column in the table (for example, \"2020-1\" will filter the table to cases filed during January, 2020).")
               )
             )),
           fluidRow(
@@ -155,9 +155,9 @@ ui <- htmlTemplate(filename = "app-template.html", main =
 # Server ----
 server <- function(input, output, session) {
   
-  # make navbarPage title element link to catalogue tab
+  # make navbarPage title element link to catalog tab
   observeEvent(input$title, {
-    updateNavbarPage(session, "home", "VA Evictors Catalogue")
+    updateNavbarPage(session, "home", "VA Evictors Catalog")
   })
   
   # create data for data table
@@ -210,7 +210,7 @@ server <- function(input, output, session) {
     if (input$time == 'All') {
       # output viz title
       output$viztitle <- renderText({
-        "Cases and Evictions within Selected Court Jurisdictions (Totals across All Years)"
+        "Cases and Evictions within Selected Court Jurisdictions (Totals by Selected Jurisdictions, All Years)"
       })
       
       p <- df() %>%
@@ -249,7 +249,7 @@ server <- function(input, output, session) {
       
     } else if (input$time == 'Year')  {
       output$viztitle <- renderText({
-        "Cases and Evictions within Selected Court Jurisdictions (Totals by Year across All Years)"
+        "Cases and Evictions within Selected Court Jurisdictions (Totals by Year, of Selected Jurisdictions)"
       })
       
       p <- df() %>% 
@@ -275,7 +275,7 @@ server <- function(input, output, session) {
     } else {
       # output viz title
       output$viztitle <- renderText({
-        "Cases and Evictions within Selected Court Jurisdictions (Totals by Month across All Years)"
+        "Cases and Evictions within Selected Court Jurisdictions (Totals by Month, of Selected Jurisdictions)"
       })
       
       p <- df() %>% 
