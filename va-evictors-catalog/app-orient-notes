@@ -6,10 +6,10 @@ The table and visuals in the tabs below show court data based on the selections 
 Filter the table for specific court jurisdictions by selecting the court name(s) in the box labeled “Select Court Jurisdiction.” 
 </li>
 <ul class="orient-list">
-<li class="orient-list-item">
+<li>
 The table defaults to selecting all VA court jurisdictions.
 </li>
-<li class="orient-list-item">
+<li>
 Select multiple jurisdictions by clicking on court names while holding down the control (Windows) or command key (Mac).
 </li>
 <li class="orient-list-item">
@@ -22,16 +22,16 @@ Select an option in the box labeled “Select Time Period” to show the selecte
 </li>
 
 <ul class="orient-list">
-<li class="orient-list-item">
+<li>
 The visuals will change depending on the time period selected.
 </li>
-<li class="orient-list-item">
+<li>
 To display the sum of filings for all years in the catalog, select “Totals across All Years.”
 </li>
-<li class="orient-list-item">
+<li>
 To display the sum of filings within each year represented in the catalog, select "Totals by Year."
 </li>
-<li class="orient-list-item">
+<li>
 To display the sum of filings within each month represented in the catalog, select "Totals by Month." 
 </li>
 <li class="orient-list-item">
@@ -47,7 +47,7 @@ Sort the data table by clicking on the up/down arrows next to the column heading
 Filter the table by plaintiff by typing the plaintiff name into the field below “Plaintiff Name.” 
 </li>
 <ul class="orient-list">
-<li class="orient-list-item">
+<li >
 This can be used to see if an individual plaintiff filed evictions across multiple court jurisdictions. 
 </li>
 <li class="orient-list-item">
