@@ -1,61 +1,53 @@
 <div class="page-content">
 <h1>Data Notes</h1>
 
-<h2>Notes on the data:</h2>
+<div class="page-description">
+The Virginia Evictors Catalog provides data about plaintiffs filing unlawful detainers (evictions) with the Virginia State District Courts from January 2018 through September 2022.
+</div>
 
-<p><b>This database contains data about plaintiffs in Virginia eviction cases filed from January 2018 through October 2022.</b></p>
-  
-  <p>The current data were web-scraped from the Virginia Online Case Information System and made available by Ben Schoenfeld @ <a href="https://virginiacourtdata.org/">virginiacourtdata.org</a>.</p>
-  
-<ul>
- <li>Each row in the database represents a plaintiff with a given ZIP Code. This means that if a plaintiff listed their ZIP Code as 12345 on some filings and as 98765 on others, they will appear twice in the database, once for each plaintiff-ZIP combination. Similarly, if a plaintiff had a ZIP Code listed for some cases but did not have a ZIP Code listed for others, they will appear twice in the database, once with an associated ZIP Code and once without.</li>
- 
-  <li>The data reflects only cases filed against <em>residential</em> defendants. We identified residential defendants using a self-developed regex pattern that you can read more about <a href="https://github.com/virginiaequitycenter/va-evictions">here</a>.
-</li>
+<h2>Data Source</h2>
 
-  <li>The database contains data that has been processed to deduplicate plaintiff names through fuzzy matching (outlined further below). This computationally intensive process has not yet been completed for the cities of Norfolk, Newport News, or Richmond.
-</li>
-</ul>
+<p>The data on eviction filings are taken from Virginia's <a href="https://eapps.courts.state.va.us/gdcourts/landing.do?landing=landing">General District Court Online Case Information System</a> and represent all unlawful detainer (eviction) cases filed in the state's Civil Courts.</p>
 
-<h2>Notes on selected variables:</h2>
+<p>Data from 2018 through 2021 were provided by Ben Schoenfeld as part of his <a href="https://virginiacourtdata.org/" target="_blank">Virginia Court Data Project</a>. Data from 2022 on are provided by the Civil Court Data Initiative (<a href="https://www.lsc.gov/initiatives/civil-court-data-initiative">CCDI</a>) through a partnership with <a href="https://www.lsc.gov/" target="_blank">Legal Services Corporation's</a>.</p>
 
-<h3>Defendant Zip Codes</h3>
+<p>The data presented here includes only eviction cases filed against <em>residential</em> defendants (tenants); cases filed against commercial tenants have been removed. In addition, the data here is organized around eviction filers; tenants who are defendants in eviction cases are not identified.</p>
+
+
+<h2>Variable Definitions</h2>
+<p>Each row in the database represents an evictor -- the plaintiff filing the eviction case. For each evictor, the data reports: </p>
   <ul>
-    <li>For a given plaintiff/ZIP combination, this variable reflects the ZIP Codes of all primary defendants listed in cases filed by that plaintiff</li>
-    <li>Defendant ZIP Codes are not repeated, so if a plaintiff filed four case against defendants in ZIP 12345, 12345 would only be listed once</li>
-    <li>NA for this variable indicates that a primary defendant in a case filed by the relevant plaintiff did not have a valid Virginia ZIP Code listed in the Online Case Information System  </li>
+  <li><b>Court Jurisdiction:</b> The general district court where the case was filed. Court jurisdictions are tied to localities (counties or cities) in Virginia. There are general district courts in every county and city, though some city/county areas share a court jurisdiction.</li>
+  <li><b>Plaintiff Name:</b> The entity filing an eviction case against a tenant with the court. In Virginia, eviction cases can be filed by "the landlord, his agent, attorney, or other person" (<a href="https://law.lis.virginia.gov/vacode/title8.01/chapter3/section8.01-126/" target="_blank">&sect;8.01-126</a>). Within the Virginia Evictors Catalog, the plaintiff is the evictor of record.</li>
+  <li><b>Filings:</b> The total number of eviction cases filed by the plaintiff in the selected time period. </li>
+  <li><b>Evictions:</b> The total number of cases filed by the plaintiff that ended in a judgment of eviction (a judgment for the plaintiff). Eviction cases may end in a judgment for the plaintiff (eviction), a judgment for the defendant, a dismissal, or the judgment may be pending.^[Less common outcomes include the defendant is not found or not served a summons, the case is transferred to another venue, the case is appealed, and "other" judgments.] Consequently, the filings may include cases that are still open or that are concluded without a judgment.</li>
+  <li><b>Time Frame:</b> The data on evictors can be viewed as total filings and evictions for the full time period (all years), by year, or by month across the full time period.</li>
+  <li><b>Defendant ZIP Codes:</b> The zip codes provided for the defendants (tenants) against whom the unlawful detainer/eviction is filed. The Online Case Information System does not provide full addresses of plaintiffs or defendants, only zip codes. ZIP codes of defendants are provided here to better understand *where* evictors are filing cases. Defendant ZIP Codes are not repeated, so if an evictor filed four cases against defendants in ZIP 12345, 12345 would only be listed once. Not all cases provide valid ZIP codes or ZIP codes within Virginia. These are represented as NA.</li>
   </ul>
 
-<h3>Serial-adjusted # Filings</h3>
-  <ul>
-    <li>We consider serial cases to be repeated cases filed by a given plaintiff against a given defendant in a given ZIP Code within a 12-month period</li>
-    <li>The serial-adjusted # filings variable reflects only the <em>final</em> case in each group of serial cases</li>
-  </ul>
-
-<h2>Notes on data cleaning:</h2>
+<h2>Data Processing</h2>
 <p>We have applied several cleaning procedures to improve data quality, including:</p>
-  <ul>
+<ul>
     <li>Removing duplicate case records</li>
+
     <li>Standardizing plaintiff and defendant names; for example:</li>
       <ul>
         <li>A court clerk might record a name as "FRESH FRUIT LLC" on Monday and as "FRESH FRUIT, LLC" on Tuesday, so we eliminate commas before business-identifying acronyms (LLC, LP, LLP, etc.)</li>
         <li>A plaintiff might be listed as "GOOD LIVING APTS" in one case and as "GOOD LIVING APARTMENTS" in another, so we expand common housing acronyms (APTS&#8594;APARTMENTS; MGMT&#8594;MANAGEMENT, etc.)</li>
       </ul>
-    <li>"Defuzzing" plaintiff names in order to reduce the number of alternative spellings/misspellings of the same name, which would otherwise reduce the accuracy of this database; for example:</li>
-      <ul>
-        <li>A plaintiff with ZIP Code 98765 might be listed as "BEACH, JENNIFER" in one case and as "BEACHH, JENNIFER" (a misspelling) in another</li>
-        <li>We use string-distance algorithms to identify likely "fuzzy matches" between plaintiff names with slight spelling differences that share the same court of filing and ZIP Code, and we use those matches to reduce the number of alternative spellings/misspellings in the data</li>
-        <li>This means that, e.g., "1010 BEACHFRONT APARTMENTS" and "1010 BEACHFFRONT APARTMENTS" would be correctly identified as the same entity when aggregating data up to the level of plaintiff (e.g., when determining cases-filed-per-plaintiff)</li>
-      </ul>
-  </ul>
-  
-<p>See the full data-cleaning code <a href="https://github.com/virginiaequitycenter/va-evictions">here</a>.</p>
+  <li>Identifying residential defendants using an internally-developed regex pattern and filtering out all non-residential defendants. You can view the full regex list <a href="https://github.com/jacob-gg/non-person-regex" target="_blank">here</a>.</li>
+</ul>
 
-<hr>
+<p>A given evictor/plaintiff name may contain many variations, alternative spellings, mispellings, and abbreviations across multiple eviction filings. As a consequence, the same evictor may appear in multiple rows with only slight differences in the names. Users interested in a particular landlord or evictor should consider doing searches of partial names in the Plaintiff Name column.</p> 
+
+<p>We are currently investigating approaches to deduplicate plaintiff names, including:</p>
+  <ul>
+    <li>"Defuzzing" plaintiff names in order to reduce the number of alternative spellings/misspellings of the same name, which would otherwise reduce the accuracy of this database. We've explored using string-distance algorithms to identify likely "fuzzy matches" between plaintiff names with slight spelling differences that share the same court of filing. This computationally intensive process has not yet been completed for all localities.</li>
+  <li>Matching from a list of all observed variants of a name to generate a common name. This labor intensive approach has been explored for only a handful of localities.</li>
+  </ul>
 
 <p>
-App and data cleaning/aggregation by: Jacob Goldstein-Greenwood (<a href="https://github.com/jacob-gg">jacob-gg</a>) and Michele Claibourn (<a href="https://github.com/mclaibourn">mclaibourn</a>). The code repository for this work is available on <a href="https://github.com/virginiaequitycenter/va-evictions">GitHub</a>.
+The code repository for this work is available on <a href="https://github.com/virginiaequitycenter/va-evictions">GitHub</a>.
 </p>
 
-<p><em>Last updated: 2022-04-28</em></p>
 </div>
