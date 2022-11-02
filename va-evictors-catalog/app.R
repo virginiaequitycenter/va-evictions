@@ -86,7 +86,7 @@ ui <- htmlTemplate(filename = "app-template.html", main =
           fluidRow(
             column(12,
               tags$h1(class="page-title", "Who is Filing Evictions in Virginia?"),
-              tags$p(class = "page-description", "The Virginia Evictors Catalog provides data about plaintiffs filing unlawful detainers (evictions) with the Virginia State District Courts from January 2018 through September 2022. Each row in the table below represents a plaintiff filing in a specific court jurisdiction."),
+              tags$p(class = "page-description", "The Virginia Evictors Catalog provides data about plaintiffs filing unlawful detainers (evictions) in Virginia's General District Courts from January 2018 through September 2022. Each row in the table below represents a plaintiff filing in a specific court jurisdiction."),
               
               bs_button("How to search the catalog", button_type = "info", class = "collapsible") %>%
                 bs_attach_collapse("yeah"),
@@ -212,7 +212,7 @@ server <- function(input, output, session) {
                              order = list(2, 'desc'), # for order, column indexing starts at 0 (3rd column visually is indexed as 2)
                              dom = 'lfrtip'), 
               colnames = c('Court Jurisdiction', 'Plaintiff Name', 
-                           'Filings', 'Evictions', #'Serial-adjusted # Filings', 
+                           'Filings', 'Eviction Judgements', #'Serial-adjusted # Filings', 
                            'Time Frame', 'Defendant Zip Codes')
               )
     # %>% formatStyle(columns = 'court_name', background = 'lightblue') <-- if column colors are desired
