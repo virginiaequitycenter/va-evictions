@@ -1,14 +1,14 @@
 name: plaintiff-database-Shiny
-title: plaintiff-database-Shiny
+title: va-evictors-catalog
 username:
 account: virginiaequitycenter
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 5756706
-bundleId: 6467744
+bundleId: 6468758
 url: https://virginiaequitycenter.shinyapps.io/plaintiff-database-shiny/
-when: 1667400499.41193
-lastSyncTime: 1667400499.41194
+when: 1667418769.61597
+lastSyncTime: 1667418769.61598
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: app_april.R|app_october.R|app_ui.R|app-project-notes.html|app-project-notes.md|apptest.R|quarterly-plaintiff-aggregated-data.txt|viztest.R
+ignoredFiles: app_april.R|app_october.R|quarterly-plaintiff-aggregated-data.txt|viztest.R
