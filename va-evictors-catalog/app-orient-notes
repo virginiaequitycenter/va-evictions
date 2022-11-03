@@ -56,7 +56,7 @@ When selecting "Totals by Month," the table can be further filtered by typing th
 <h2>Additional Sort and Filter Options</h2>
 <ul class="orient-list">
 <li class="orient-list-item">
-Sort the data table by clicking on the up/down arrows next to the column headings (i.e. “Filings”, “Evictions”, etc.).
+Sort the data table by clicking on the up/down arrows next to the column headings (i.e. “Cases Filed”, “Eviction Judgments”, etc.).
 </li>
 
 <li class="orient-list-item">
