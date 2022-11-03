@@ -1,9 +1,23 @@
+<div class="collapse-content">
+<h2>Overview</h2>
+  <ul class="orient-list">
+    <li class="orient-list-item">
+    The table and visualization in the tabs below show court data based on the selections made in the two boxes labeled “Select Court Jurisdictions” and “Select Time Period.”
+    </li>
+    <li class="orient-list-item">
+The visualization will update based on the time period selected.
+</li>
+   <li class="orient-list-item">
+Additional filters can be set by using the search fields in the table. These additional filters will not be represented when downloading the data.
+</li>
+   <li class="orient-list-item">
+See Data Notes for a full definition of each column in the table, as well as additional information on the data presented in the catalog.
+</li>
+  </ul>
+<h2>Selection Boxes</h2>
 <ul class="orient-list">
 <li class="orient-list-item">
-The table and visuals in the tabs below show court data based on the selections made in the two boxes labeled “Select Court Jurisdiction” and “Select Time Period.”
-</li>
-<li class="orient-list-item">
-Filter the table for specific court jurisdictions by selecting the court name(s) in the box labeled “Select Court Jurisdiction.” 
+Filter the table for specific court jurisdictions by selecting the court name(s) in the box labeled “Select Court Jurisdictions.” 
 </li>
 <ul class="orient-list">
 <li>
@@ -18,12 +32,12 @@ To select all jurisdictions, click the first court name and then the last court 
 </ul>
 
 <li class="orient-list-item">
-Select an option in the box labeled “Select Time Period” to show the selected time period fo the aggregated eviction filings in the table and visuals.
+Select an option in the box labeled “Select Time Period” to select the time period for showing the aggregated eviction filings in the table and visualization.
 </li>
 
 <ul class="orient-list">
 <li>
-The visuals will change depending on the time period selected.
+The visualization will update based on the time period selected.
 </li>
 <li>
 To display the sum of filings for all years in the catalog, select “Totals across All Years.”
@@ -38,7 +52,9 @@ To display the sum of filings within each month represented in the catalog, sele
 When selecting "Totals by Month," the table can be further filtered by typing the year-month into the field above the “Time Frame” column in the table (for example, "2020-01" will filter the table to cases filed during January, 2020). 
 </li>
 </ul>
-
+</ul>
+<h2>Additional Sort and Filter Options</h2>
+<ul class="orient-list">
 <li class="orient-list-item">
 Sort the data table by clicking on the up/down arrows next to the column headings (i.e. “Filings”, “Evictions”, etc.).
 </li>
@@ -57,17 +73,21 @@ Type only part of a plaintiff name to see if a plaintiff has name variations acr
 <li class="orient-list-item">
 Use the search box to search all fields of the table, or search individual columns using the field below each column heading.
 </li>
+</ul>
 
+<h2>Downloading the Table Data and Vizualizations</h2>
+<ul class="orient-list">
 <li class="orient-list-item">
 Download the table data in csv format (can be opened in Excel) by clicking the “Download” button above the table. 
 </li>
 <ul class="orient-list">
 <li class="orient-list-item">
-The downloaded file will contain only the data filtered from the selected options in “Select Court Jurisdiction” and “Select Time Period.” Any filtering done using the search fields will not be reflected.
+The downloaded file will contain only the data filtered from the selected options in “Select Court Jurisdictions” and “Select Time Period.” Any filtering done using the search fields will not be reflected.
 </li>
 
 </ul>
 <li class="orient-list-item">
-Download an image file (png) of the “Visuals” tab by clicking on the camera icon found about the chart.
+Download an image file (.png) of the chart in the “Visualize” tab by clicking on the camera icon found above the chart.
 </li>
 <ul>
+</div>

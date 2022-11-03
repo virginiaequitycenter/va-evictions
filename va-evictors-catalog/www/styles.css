@@ -216,19 +216,24 @@ div.dt-buttons {
   padding: 0 1rem;
 }
 
+.collapse-content {
+  max-width: 1000px;
+  padding: 0 1rem;
+}
+
 .page-content h1 {
   text-align: center;
 }
 
-.page-content h2 {
+.page-content h2, .collapse-content h2 {
   font-size: 1.25rem;
 }
 
-.page-content h3 {
+.page-content h3, .collapse-content h3 {
   font-size: 1.1rem;
 }
 
-.page-content li {
+.page-content li, .collapse-content li {
   margin-bottom: 5px;
 }
 
