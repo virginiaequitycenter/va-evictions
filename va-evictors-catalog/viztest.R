@@ -160,14 +160,14 @@ psum_year <- yearly_plaintiff_dat %>%
   group_by(filing_year) %>% 
   summarize(Cases = sum(cases_filed),
             Evictions = sum(plaintiff_judgments)) %>%
-  mutate(cases = "Cases", evictions = "Evictions") %>% 
+  mutate(cases = "Cases Filed", evictions = "Eviction Judgments") %>% 
 
   ggplot() +
   geom_col(aes(x = filing_year, y = Cases, fill = cases)) +
   geom_col(aes(x = filing_year, y = Evictions, fill = evictions),
            width = 0.70) +
   scale_fill_manual(values = pal_lake_superior[c(2,1)],
-                     labels = c("Cases", "Evictions"),
+                     labels = c("Cases Filed", "Eviction Judgments"),
                      name = "") +
   labs(x = "Year", y = "") +
   theme(legend.position = "bottom") 

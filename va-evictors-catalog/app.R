@@ -212,7 +212,7 @@ server <- function(input, output, session) {
                              order = list(2, 'desc'), # for order, column indexing starts at 0 (3rd column visually is indexed as 2)
                              dom = 'lfrtip'), 
               colnames = c('Court Jurisdiction', 'Plaintiff Name', 
-                           'Filings', 'Eviction Judgements', #'Serial-adjusted # Filings', 
+                           'Cases Filed', 'Eviction Judgments', #'Serial-adjusted # Filings', 
                            'Time Frame', 'Defendant Zip Codes')
               )
     # %>% formatStyle(columns = 'court_name', background = 'lightblue') <-- if column colors are desired
@@ -224,7 +224,7 @@ server <- function(input, output, session) {
     if (input$time == 'All') {
       # output viz title
       output$viztitle <- renderText({
-        "Cases and Eviction Judgements within Selected Court Jurisdictions (Totals by Selected Jurisdictions, All Years)"
+        "Cases Filed and Eviction Judgments within Selected Court Jurisdictions (Totals by Selected Jurisdictions, All Years)"
       })
       
       p <- df() %>%
@@ -236,8 +236,8 @@ server <- function(input, output, session) {
                   cases_eviction = sum(plaintiff_judgments)) %>% 
         pivot_longer(cols = -court_name, names_to = "Outcome", values_to = "Number",
                      names_prefix = "cases_") %>% 
-        mutate(Outcome = ifelse(Outcome == "filed", "Cases", "Eviction Judgements"),
-               Outcome = factor(Outcome, levels = c("Eviction Judgements", "Cases"))) %>% 
+        mutate(Outcome = ifelse(Outcome == "filed", "Cases Filed", "Eviction Judgments"),
+               Outcome = factor(Outcome, levels = c("Eviction Judgments", "Cases Filed"))) %>% 
         
         ggplot(aes(y = fct_reorder(court_name, Number), 
                    x = Number,
@@ -249,7 +249,7 @@ server <- function(input, output, session) {
                      color = "gray") +
         geom_point(size = 2) +
         scale_color_manual(values = pal_lake_superior,
-                           labels = c("Eviction Judgements", "Cases"),
+                           labels = c("Eviction Judgments", "Cases Filed"),
                            name = "") +
         scale_x_continuous(expand = expansion(mult = c(0,.05))) +
         labs(x = "", y = "") +
@@ -263,21 +263,21 @@ server <- function(input, output, session) {
       
     } else if (input$time == 'Year')  {
       output$viztitle <- renderText({
-        "Cases and Eviction Judgements within Selected Court Jurisdictions (Totals by Year, of Selected Jurisdictions)"
+        "Cases Filed and Eviction Judgments within Selected Court Jurisdictions (Totals by Year, of Selected Jurisdictions)"
       })
       
       p <- df() %>% 
         group_by(filing_year) %>% 
         summarize(Cases = sum(cases_filed),
                   Evictions = sum(plaintiff_judgments)) %>%
-        mutate(cases = "Cases", evictions = "Eviction Judgements") %>% 
+        mutate(cases = "Cases Filed", evictions = "Eviction Judgments") %>% 
         
         ggplot() +
         geom_col(aes(x = filing_year, y = Cases, fill = cases)) +
         geom_col(aes(x = filing_year, y = Evictions, fill = evictions),
                  width = 0.70) +
         scale_fill_manual(values = pal_lake_superior[c(2,1)],
-                          labels = c("Cases", "Eviction Judgements"),
+                          labels = c("Cases Filed", "Eviction Judgments"),
                           name = "") +
         labs(x = "Year", y = "") +
         theme(legend.position = "bottom") 
@@ -289,7 +289,7 @@ server <- function(input, output, session) {
     } else {
       # output viz title
       output$viztitle <- renderText({
-        "Cases and Eviction Judgements within Selected Court Jurisdictions (Totals by Month, of Selected Jurisdictions)"
+        "Cases Filed and Eviction Judgments within Selected Court Jurisdictions (Totals by Month, of Selected Jurisdictions)"
       })
       
       p <- df() %>% 
@@ -298,15 +298,15 @@ server <- function(input, output, session) {
                   cases_eviction = sum(plaintiff_judgments)) %>% 
         pivot_longer(cols = -filing_month, names_to = "Outcome", values_to = "Number",
                      names_prefix = "cases_") %>% 
-        mutate(Outcome = ifelse(Outcome == "filed", "Cases", "Eviction Judgements"),
-               Outcome = factor(Outcome, levels = c("Eviction Judgements", "Cases"))) %>%
+        mutate(Outcome = ifelse(Outcome == "filed", "Cases Filed", "Eviction Judgments"),
+               Outcome = factor(Outcome, levels = c("Eviction Judgments", "Cases Filed"))) %>%
         
         ggplot(aes(x = filing_month, y = Number, 
                    group = Outcome, color = Outcome)) +
         geom_point() +
         geom_line() +
         scale_color_manual(values = pal_lake_superior,
-                           labels = c("Eviction Judgements", "Cases"),
+                           labels = c("Eviction Judgments", "Cases Filed"),
                            name = "") +
         labs(x = "Year-Month", y = "") +
         theme(axis.text.x = element_text(angle = 45),
