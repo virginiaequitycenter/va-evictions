@@ -111,7 +111,7 @@ ui <- htmlTemplate(filename = "app-template.html", main =
                                       size = 5,
                                       selectize = FALSE
                   ),
-                  helpText("Note: Select one or more court jurisdictions to show in the table and visualizations. Select multiple jurisdictions by clicking on court names while holding down the control (Windows) or command key (Mac).")
+                  helpText("Note: Select one or more court jurisdictions to show in the table and visualizations. Select multiple jurisdictions by clicking on court names while holding down the control or command key.")
               )
             ),
             column(6,
@@ -122,7 +122,7 @@ ui <- htmlTemplate(filename = "app-template.html", main =
                                             "Totals by Month" = "Month"), 
                               selected = "All"
                   ),
-                  helpText("Note: Select a time period for showing the aggregated eviction filings in the table and visualization. The visualization will update based on the time period selected. When selecting \"Totals by Month\", the table can be further filtered by typing the year-month into the search field below the \"Time Frame\" column in the table (for example, \"2020-01\" will filter the table to cases filed during January, 2020).")
+                  helpText("Note: Select a time period to see the aggregated eviction filings in the table and visualization. The visualization will update based on the time period selected. When selecting \"Totals by Month\", the table can be further filtered by typing the year-month into the search field below the \"Time Frame\" column in the table (for example, \"2020-01\" will filter the table to cases filed during January, 2020).")
               )
             )),
           fluidRow(

@@ -2,13 +2,13 @@
 <h2>Overview</h2>
   <ul class="orient-list">
     <li class="orient-list-item">
-    The table and visualization in the tabs below show court data based on the selections made in the two boxes labeled “Select Court Jurisdictions” and “Select Time Period.”
+    The table and visualization tabs below show court data based on the selections made in the two boxes labeled “Select Court Jurisdictions” and “Select Time Period.”
     </li>
     <li class="orient-list-item">
 The visualization will update based on the time period selected.
 </li>
    <li class="orient-list-item">
-Additional filters can be set by using the search fields in the table. These additional filters will not be represented when downloading the data.
+Search fields in the table allow you to add additional filters.
 </li>
    <li class="orient-list-item">
 See Data Notes for a full definition of each column in the table, as well as additional information on the data presented in the catalog.
@@ -32,7 +32,7 @@ To select all jurisdictions, click the first court name and then the last court 
 </ul>
 
 <li class="orient-list-item">
-Select an option in the box labeled “Select Time Period” to select the time period for showing the aggregated eviction filings in the table and visualization.
+Aggregated eviction filings for time periods selected in the “Select Time Period” box will appear in the table and visualization tabs. 
 </li>
 
 <ul class="orient-list">
@@ -40,16 +40,13 @@ Select an option in the box labeled “Select Time Period” to select the time 
 The visualization will update based on the time period selected.
 </li>
 <li>
-To display the sum of filings for all years in the catalog, select “Totals across All Years.”
+Select “Totals across All Years” to see the sum of filings for all years in the catalog.
 </li>
 <li>
-To display the sum of filings within each year represented in the catalog, select "Totals by Year."
+Select "Totals by Year” to see the sum of filings within each year represented in the catalog.
 </li>
 <li>
-To display the sum of filings within each month represented in the catalog, select "Totals by Month." 
-</li>
-<li class="orient-list-item">
-When selecting "Totals by Month," the table can be further filtered by typing the year-month into the field above the “Time Frame” column in the table (for example, "2020-01" will filter the table to cases filed during January, 2020). 
+Select "Totals by Month" to see the sum of filings within each month represented in the catalog. Within this option, the table can be further filtered by typing the year-month into the search field below the “Time Frame” heading in the table (for example, "2020-01" will filter the table to cases filed during January, 2020). 
 </li>
 </ul>
 </ul>
@@ -67,22 +64,22 @@ Filter the table by plaintiff by typing the plaintiff name into the field below 
 This can be used to see if an individual plaintiff filed evictions across multiple court jurisdictions. 
 </li>
 <li class="orient-list-item">
-Type only part of a plaintiff name to see if a plaintiff has name variations across court filings.
+Some plaintiff names appear slightly differently across court filings. Type only part of a plaintiff name to see if it varies.
 </li>
 </ul>
 <li class="orient-list-item">
-Use the search box to search all fields of the table, or search individual columns using the field below each column heading.
+Use the search box in the upper right corner of the table to search all fields of the table, or search individual columns using the field below each column heading.
 </li>
 </ul>
 
-<h2>Downloading the Table Data and Vizualizations</h2>
+<h2>Downloading the Table Data and Visualizations</h2>
 <ul class="orient-list">
 <li class="orient-list-item">
-Download the table data in csv format (can be opened in Excel) by clicking the “Download” button above the table. 
+Download the table data in csv format by clicking the “Download” button above the table. CSV files can be opened using Excel or any other spreadsheet program.
 </li>
 <ul class="orient-list">
 <li class="orient-list-item">
-The downloaded file will contain only the data filtered from the selected options in “Select Court Jurisdictions” and “Select Time Period.” Any filtering done using the search fields will not be reflected.
+The downloaded file will contain only the data filtered from the selected options in “Select Court Jurisdictions” and “Select Time Period.” Any filtering done using the search fields will not apply to the downloaded data.
 </li>
 
 </ul>
