@@ -18,7 +18,7 @@ The Virginia Evictors Catalog provides data about plaintiffs filing unlawful det
 <p>Each row in the database represents an evictor -- the plaintiff filing the eviction case. For each evictor, the data reports: </p>
   <ul>
   <li><b>Court Jurisdiction:</b> The general district court where the case was filed. Court jurisdictions are tied to localities (counties or cities) in Virginia. There are general district courts in every county and city, though some city/county areas share a court jurisdiction.</li>
-  <li><b>Plaintiff Name:</b> The entity filing an eviction case against a tenant with the court. In Virginia, eviction cases can be filed by "the landlord, his agent, attorney, or other person" (<a href="https://law.lis.virginia.gov/vacode/title8.01/chapter3/section8.01-126/" target="_blank">&sect;8.01-126</a>). Within the Virginia Evictors Catalog, the plaintiff is the evictor of record.</li>
+  <li><b>Plaintiff Name:</b> The entity filing an eviction case against a tenant with the court. In Virginia, eviction cases can be filed by "the landlord, [their] agent, attorney, or other person" (<a href="https://law.lis.virginia.gov/vacode/title8.01/chapter3/section8.01-126/" target="_blank">&sect;8.01-126</a>). Within the Virginia Evictors Catalog, the plaintiff is the evictor of record.</li>
   <li><b>Cases Filed:</b> The total number of eviction cases filed by the plaintiff in the selected time period and jurisdiction. </li>
   <li><b>Eviction Judgments:</b> The total number of cases filed by the plaintiff that ended in a judgment of eviction (a judgment for the plaintiff). Eviction cases may end in a judgment for the plaintiff (eviction), a judgment for the defendant, a dismissal, or the judgment may be pending.<sup>1</sup> Consequently, the filings may include cases that are still open or that are concluded without a judgment.</li>
   <li><b>Time Frame:</b> The data on evictors can be viewed as total filings and evictions for the full time period (all years), by year, or by month across the full time period.</li>
@@ -43,7 +43,8 @@ The Virginia Evictors Catalog provides data about plaintiffs filing unlawful det
 <p>We are currently investigating approaches to deduplicate plaintiff names, including:</p>
   <ul>
     <li>"Defuzzing" plaintiff names in order to reduce the number of alternative spellings/misspellings of the same name, which would otherwise reduce the accuracy of this database. We've explored using string-distance algorithms to identify likely "fuzzy matches" between plaintiff names with slight spelling differences that share the same court of filing. This computationally intensive process has not yet been completed for all localities.</li>
-  <li>Matching from a list of all observed variants of a name to generate a common name. This labor intensive approach has been explored for only a handful of localities.</li>
+  <li>Matching from a list of all observed variants of a name to generate a common name. Manually creating a list of matches is labor intensive and has been explored for only a handful of localities.</li>
+  <li>Working with Legal Services Corporation to incorporate name matching approaches they've developed into future iterations of this work.</li>
   </ul>
 
 <p>
