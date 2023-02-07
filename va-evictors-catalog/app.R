@@ -1,77 +1,60 @@
-# Shiny app: Plaintiff database
-# Author: Jacob Goldstein-Greenwood / jacobgg@virginia.edu / GitHub: jacob-gg
-# Author: Michele Claibourn / mclaibourn@virginia.edu / GitHub: mclaibourn
-# Author: Elizabeth Mitchell / beth@virginia.edu
-# Last revised: 2022-11-1
+################################################################################
+# Virginia Evictors Catalog                                                    #
+# Author: Jacob Goldstein-Greenwood | jacobgg@virginia.edu | GitHub: jacob-gg  #
+# Author: Michele Claibourn | mclaibourn@virginia.edu | GitHub: mclaibourn     #
+# Author: Elizabeth Mitchell | beth@virginia.edu                               #
+# Last revised: 2023-02-07                                                     #
+################################################################################
 
-################################################# CANARY #################################################
-canary_message <- HTML(paste0('<br><font color="red">NOTE: the database contains data that has been ',
-                              ' processed to deduplicate plaintiff names through fuzzy matching.',
-                              ' This process has not yet been completed for the cities of Norfolk, ',
-                              ' Newport News, or Richmond.</font><br><br>'))
-##########################################################################################################
+# Packages ----
+required <- c('shiny', 'DT', 'tidyverse', 'shinyalert', 'bslib', 'plotly', 'bsplus', 'lubridate')
+handle_package <- function(pkg) {
+  if (grepl(x = pkg, pattern = '\\/')) { devtools::install_github(pkg) }
+  else if (!(pkg %in% installed.packages())) { install.packages(pkg) }
+  pkg <- sub(x = pkg, pattern = '.+\\/', replacement = '')
+  library(pkg, character.only = TRUE)
+}
+lapply(required, function(x) handle_package(x))
 
-# Packages
-library(shiny)
-library(DT)
-library(tidyverse)
-library(shinyalert)
-library(bslib)
-library(plotly)
-library(bsplus)
-
-# Load user notes
+# User notes ----
 data_notes <- HTML(readLines('app-data-notes'))
 orient_notes <- HTML(readLines('app-orient-notes'))
 about_notes <- HTML(readLines('app-project-notes'))
 
 # Preprocess ----
-# Note: consider reading in defuzzed data and aggregating in app...
-
-plaintiff_dat <- read.csv('plaintiff-aggregated-data.txt', colClasses = 'character')
-# Make certain variables numeric so that sorting (e.g, cases hi-->lo) works appropriately
-plaintiff_dat <- plaintiff_dat %>% mutate(cases_filed = as.numeric(cases_filed),
-                                          cases_filed_excluding_all_but_final_serial = as.numeric(cases_filed_excluding_all_but_final_serial),
-                                          plaintiff_judgments = as.numeric(plaintiff_judgments)) %>% 
-  relocate(filing_years, .before = def_zips) %>% 
-  select(-cases_filed_excluding_all_but_final_serial)
-# plaintiff_dat$pla_1_zip <- ifelse(is.na(plaintiff_dat$pla_1_zip), 'NA', plaintiff_dat$pla_1_zip)
-
+plaintiff_dat <- read.csv('data-plaintiff-aggregated.txt', colClasses = 'character')
+yearly_plaintiff_dat <- read.csv('data-yearly-plaintiff-aggregated.txt', colClasses = 'character')
+monthly_plaintiff_dat <- read.csv('data-monthly-plaintiff-aggregated.txt', colClasses = 'character')
+# Ensure some variables are numeric to guarantee correct behavior in ordering functions
+# In later app editions: Check behavior without this chunk; it may not be an issue without zero-pad-loss to protect against
+numerify <- function(dat) {
+  dat %>% dplyr::mutate(cases_filed = as.numeric(cases_filed),
+                        serial_filings = as.numeric(serial_filings),
+                        plaintiff_judgments = as.numeric(plaintiff_judgments))
+}
+plaintiff_dat <- numerify(plaintiff_dat) %>% relocate(filing_years, .before = defendant_zips) %>% select(-serial_filings)
+yearly_plaintiff_dat <- numerify(yearly_plaintiff_dat) %>% relocate(filed_year, .before = defendant_zips) %>% select(-serial_filings)
+monthly_plaintiff_dat <- numerify(monthly_plaintiff_dat) %>%  relocate(filing_month, .before = defendant_zips) %>% select(-serial_filings)
 # Add attributes
 attributes(plaintiff_dat$cases_filed)  <- list(labels = "Number of Cases Filed")
-#attributes(plaintiff_dat$cases_filed_excluding_all_but_final_serial)  <- list(labels = "Number of Non-Serial Cases Filed")
 attributes(plaintiff_dat$plaintiff_judgments)  <- list(labels = "Number of Evictions")
-
-# ADD SELECTION OF DATA BY YEAR
-yearly_plaintiff_dat <- read.csv('yearly-plaintiff-aggregated-data.txt', colClasses = 'character')
-yearly_plaintiff_dat <- yearly_plaintiff_dat %>% mutate(cases_filed = as.numeric(cases_filed),
-                                                          cases_filed_excluding_all_but_final_serial = as.numeric(cases_filed_excluding_all_but_final_serial),
-                                                          plaintiff_judgments = as.numeric(plaintiff_judgments)) %>% 
-  relocate(filing_year, .before = def_zips) %>% 
-  select(-cases_filed_excluding_all_but_final_serial)
-
-# Add attributes
 attributes(yearly_plaintiff_dat$cases_filed)  <- list(labels = "Number of Cases Filed")
-#attributes(yearly_plaintiff_dat$cases_filed_excluding_all_but_final_serial)  <- list(labels = "Number of Non-Serial Cases Filed")
 attributes(yearly_plaintiff_dat$plaintiff_judgments)  <- list(labels = "Number of Evictions")
-
-# ADD SELECTION OF DATA BY MONTH
-monthly_plaintiff_dat <- read.csv('monthly-plaintiff-aggregated-data.txt', colClasses = 'character')
-monthly_plaintiff_dat <- monthly_plaintiff_dat %>% mutate(cases_filed = as.numeric(cases_filed),
-                                                              cases_filed_excluding_all_but_final_serial = as.numeric(cases_filed_excluding_all_but_final_serial),
-                                                              plaintiff_judgments = as.numeric(plaintiff_judgments)) %>% 
-  relocate(filing_month, .before = def_zips) %>% 
-  select(-cases_filed_excluding_all_but_final_serial)
-# monthly_plaintiff_dat$pla_1_zip <- ifelse(is.na(monthly_plaintiff_dat$pla_1_zip), 'NA', monthly_plaintiff_dat$pla_1_zip)
-
-# Add attributes
 attributes(monthly_plaintiff_dat$cases_filed)  <- list(labels = "Number of Cases Filed")
-#attributes(monthly_plaintiff_dat$cases_filed_excluding_all_but_final_serial)  <- list(labels = "Number of Non-Serial Cases Filed")
 attributes(monthly_plaintiff_dat$plaintiff_judgments)  <- list(labels = "Number of Evictions")
 
-# palette
+# Palette ----
 pal_lake_superior <- c("#c87d4b", "#324b64")
 
+# Identify time span of current data
+id_time_span <- function(dat) {
+  min_month <- min(ym(dat$filing_month)) %>% format('%m') %>% as.numeric()
+  min_year <- min(ym(dat$filing_month)) %>% format('%Y')
+  max_month <- max(ym(dat$filing_month)) %>% format('%m') %>% as.numeric()
+  max_year <- max(ym(dat$filing_month)) %>% format('%Y')
+  list(paste0(month.name[min_month], ' ', min_year), paste0(month.name[max_month], ' ', max_year))
+}
+time_span <- id_time_span(monthly_plaintiff_dat)
 
 # User interface ----
 ui <- htmlTemplate(filename = "app-template.html", main = 
@@ -85,9 +68,9 @@ ui <- htmlTemplate(filename = "app-template.html", main =
         fluidPage(
           fluidRow(
             column(12,
-              tags$h1(class="page-title", "Who is Filing Evictions in Virginia?"),
-              tags$p(class = "page-description", "The Virginia Evictors Catalog provides data about plaintiffs filing unlawful detainers (evictions) in Virginia's General District Courts from January 2018 through September 2022. Each row in the table below represents a plaintiff filing in a specific court jurisdiction."),
-              
+              tags$h1(class = "page-title", "Who is Filing Evictions in Virginia?"),
+              tags$p(class = "page-description", paste0("The Virginia Evictors Catalog provides data about plaintiffs filing unlawful detainers (evictions) in Virginia's General District Courts from ",
+                                                        time_span[[1]], " through ", time_span[[2]], ". Each row in the table below represents a plaintiff filing in a specific court jurisdiction.")),
               bs_button("How to search the catalog", button_type = "info", class = "collapsible") %>%
                 bs_attach_collapse("yeah"),
               bs_collapse(
@@ -98,18 +81,16 @@ ui <- htmlTemplate(filename = "app-template.html", main =
                                    ))
               )
             )
-              
           ),
-          
           fluidRow(
             column(6,
               wellPanel(
                   selectInput('court', 'Select Court Jurisdictions to Include',
-                                      multiple = TRUE,
-                                      choices = unique(plaintiff_dat$court_name),
-                                      selected = unique(plaintiff_dat$court_name),
-                                      size = 5,
-                                      selectize = FALSE
+                              multiple = TRUE,
+                              choices = unique(plaintiff_dat$county),
+                              selected = unique(plaintiff_dat$county),
+                              size = 5,
+                              selectize = FALSE
                   ),
                   helpText("Note: Select one or more court jurisdictions to show in the table and visualizations. Select multiple jurisdictions by clicking on court names while holding down the control or command key.")
               )
@@ -117,10 +98,10 @@ ui <- htmlTemplate(filename = "app-template.html", main =
             column(6,
               wellPanel(
                   radioButtons("time", 'Select a Time Period to Display',
-                              choices = list("Totals across All Years" = "All", 
-                                            "Totals by Year" = "Year",
-                                            "Totals by Month" = "Month"), 
-                              selected = "All"
+                               choices = list("Totals across All Years" = "All", 
+                                              "Totals by Year" = "Year",
+                                              "Totals by Month" = "Month"), 
+                               selected = "All"
                   ),
                   helpText("Note: Select a time period to see the aggregated eviction filings in the table and visualization. The visualization will update based on the time period selected. When selecting \"Totals by Month\", the table can be further filtered by typing the year-month into the search field below the \"Time Frame\" column in the table (for example, \"2020-01\" will filter the table to cases filed during January, 2020).")
               )
@@ -130,8 +111,8 @@ ui <- htmlTemplate(filename = "app-template.html", main =
             tabsetPanel(type = 'pills',
               tabPanel('Table', icon = icon('table'), downloadButton("downloadBtn", "Download"), DTOutput('plaintiff_table')),
               tabPanel('Visualize', icon = icon('chart-bar'),
-                      textOutput("viztitle"),
-                      plotlyOutput('viz', width = '100%', height = '700')
+                       textOutput("viztitle"),
+                       plotlyOutput('viz', width = '100%', height = '700')
               ),
             ),
             )
@@ -148,7 +129,7 @@ ui <- htmlTemplate(filename = "app-template.html", main =
              uiOutput('about')
          )
       )
-      # ,
+      
       # tabPanel("Contact Us",
       #          fluidPage(
       #            tags$h1("Contact Us"),
@@ -156,37 +137,28 @@ ui <- htmlTemplate(filename = "app-template.html", main =
       #            tags$a(href= "", "here."),
       #            htmlOutput("frame")
       #          ))
+      
   )
 )
 
 # Server ----
 server <- function(input, output, session) {
   
-  # make navbarPage title element link to catalog tab
+  # Make navbarPage title element link to catalog tab
   observeEvent(input$title, {
     updateNavbarPage(session, "home", "VA Evictors Catalog")
   })
   
-  #add google form to iframe
-  # output$frame <- renderUI({
-  #   my_test <- tags$iframe(src="https://docs.google.com/forms/d/e/1FAIpQLSeANUSskUw_HDpMTEuD7pXcivT7uBXz0iCGzc0nhPsZZ9Yh6Q/viewform?usp=sharing", height=600, width=535)
-  #   print(my_test)
-  #   my_test
-  # })
-  
-  # create data for data table
+  # Pick and subset data for datatable
   df <- reactive({
-    
     d <- switch(input$time,
                 "All" = plaintiff_dat,
                 "Year" = yearly_plaintiff_dat,
                 "Month" = monthly_plaintiff_dat)
-    
-    d <- d %>% filter(court_name %in% input$court) #%>% 
-      #mutate(outcome_cases = !!sym(input$var))
+    d <- d %>% filter(county %in% input$court) #%>% 
   })
   
-  # function for download button
+  # Function for download button
   output$downloadBtn <- downloadHandler(
     filename = "va-evictors-catalog.csv",
     content = function(file) {
@@ -194,57 +166,50 @@ server <- function(input, output, session) {
     }
   )
   
-  # output datatable
+  # Render datatable
   output$plaintiff_table <- DT::renderDT(
-    
-    # prep table
-    #cases_filed_col_no <- which(colnames(df()) == 'cases_filed') -1
     
     datatable(df(), 
               rownames = F,
-              # caption = 'Sources: Ben Schoenfeld (virginiacourtdata.org)',
+              caption = 'Sources: Legal Services Corporation (lsc.gov)',
               class = 'display nowrap',
               filter = 'top',
               options = list(searchHighlight = T,
                              scrollX = T,
                              pageLength = 20,
-                             order = list(2, 'desc'), # for order, column indexing starts at 0 (3rd column visually is indexed as 2)
+                             order = list(2, 'desc'), # column indexing starts at 0 (3rd column visually is indexed as 2)
                              dom = 'lfrtip'), 
               colnames = c('Court Jurisdiction', 'Plaintiff Name', 
-                           'Cases Filed', 'Eviction Judgments', #'Serial-adjusted # Filings', 
-                           'Time Frame', 'Defendant Zip Codes')
+                           'Cases Filed', 'Eviction Judgments',
+                           'Time Frame', 'Known Virginia Defendant ZIP Codes')
               )
-    # %>% formatStyle(columns = 'court_name', background = 'lightblue') <-- if column colors are desired
   )
 
-  # output visuals
+  # Output visuals
   output$viz <- renderPlotly({
     
     if (input$time == 'All') {
-      # output viz title
       output$viztitle <- renderText({
         "Cases Filed and Eviction Judgments within Selected Court Jurisdictions (Totals by Selected Jurisdictions, All Years)"
       })
       
       p <- df() %>%
-        
-        mutate(court_name = str_remove(court_name, "General District Court"),
-               court_name = str_trim(court_name)) %>% 
-        group_by(court_name) %>% 
-        summarize(cases_filed = sum(cases_filed),
-                  cases_eviction = sum(plaintiff_judgments)) %>% 
-        pivot_longer(cols = -court_name, names_to = "Outcome", values_to = "Number",
+        mutate(county = str_remove(county, "General District Court"),
+               county = str_trim(county)) %>% 
+        group_by(county) %>% 
+        summarize(cases_filed = sum(cases_filed, na.rm = T),
+                  cases_eviction = sum(plaintiff_judgments, na.rm = T)) %>% 
+        pivot_longer(cols = -county, names_to = "Outcome", values_to = "Number",
                      names_prefix = "cases_") %>% 
         mutate(Outcome = ifelse(Outcome == "filed", "Cases Filed", "Eviction Judgments"),
                Outcome = factor(Outcome, levels = c("Eviction Judgments", "Cases Filed"))) %>% 
-        
-        ggplot(aes(y = fct_reorder(court_name, Number), 
+        ggplot(aes(y = fct_reorder(county, Number), 
                    x = Number,
                    color = Outcome,
                    label = Outcome,
-                   court = court_name)) +
+                   court = county)) +
         geom_segment(aes(x = 0, xend = Number, 
-                         y = fct_reorder(court_name, Number), yend = fct_reorder(court_name, Number)),
+                         y = fct_reorder(county, Number), yend = fct_reorder(county, Number)),
                      color = "gray") +
         geom_point(size = 2) +
         scale_color_manual(values = pal_lake_superior,
@@ -266,14 +231,13 @@ server <- function(input, output, session) {
       })
       
       p <- df() %>% 
-        group_by(filing_year) %>% 
+        group_by(filed_year) %>% 
         summarize(Cases = sum(cases_filed),
                   Evictions = sum(plaintiff_judgments)) %>%
         mutate(cases = "Cases Filed", evictions = "Eviction Judgments") %>% 
-        
         ggplot() +
-        geom_col(aes(x = filing_year, y = Cases, fill = cases)) +
-        geom_col(aes(x = filing_year, y = Evictions, fill = evictions),
+        geom_col(aes(x = filed_year, y = Cases, fill = cases)) +
+        geom_col(aes(x = filed_year, y = Evictions, fill = evictions),
                  width = 0.70) +
         scale_fill_manual(values = pal_lake_superior[c(2,1)],
                           labels = c("Cases Filed", "Eviction Judgments"),
@@ -281,12 +245,11 @@ server <- function(input, output, session) {
         labs(x = "Year", y = "") +
         theme(legend.position = "bottom") 
 
-      ggplotly(p, tooltip = c("x", "y"))%>% 
+      ggplotly(p, tooltip = c("x", "y")) %>% 
         layout(legend = list(orientation = "h", x = 0, y = 10)) %>% 
         config(displayModeBar = TRUE)
       
     } else {
-      # output viz title
       output$viztitle <- renderText({
         "Cases Filed and Eviction Judgments within Selected Court Jurisdictions (Totals by Month, of Selected Jurisdictions)"
       })
@@ -299,9 +262,7 @@ server <- function(input, output, session) {
                      names_prefix = "cases_") %>% 
         mutate(Outcome = ifelse(Outcome == "filed", "Cases Filed", "Eviction Judgments"),
                Outcome = factor(Outcome, levels = c("Eviction Judgments", "Cases Filed"))) %>%
-        
-        ggplot(aes(x = filing_month, y = Number, 
-                   group = Outcome, color = Outcome)) +
+        ggplot(aes(x = filing_month, y = Number, group = Outcome, color = Outcome)) +
         geom_point() +
         geom_line() +
         scale_color_manual(values = pal_lake_superior,
@@ -315,31 +276,17 @@ server <- function(input, output, session) {
         layout(legend = list(orientation = "h", x = 0, y = 10)) %>% 
         config(displayModeBar = TRUE)
       
-      # p <- df() %>%
-      #   group_by(filing_month) %>%
-      #   summarize(total = sum(outcome_cases)) %>%
-      #   ggplot(aes(x = filing_month, y = total, group = 1)) +
-      #   geom_point(color = "tan4") +
-      #   geom_line(color = "tan4") +
-      #   labs(x = "Year-Month", y = "") +
-      #   theme(axis.text.x = element_text(angle = 45))
-      # 
-      # ggplotly(p, tooltip = c("x", "color", "court")) %>% 
-      #   layout(legend = list(orientation = "h"))
-      
-      
     }
   })
   
-  # output orienting instructions
+  # Output orienting instructions
   output$orient <- renderUI(orient_notes)
-  
-  # output data notes
+  # Output data notes
   output$notes <- renderUI(data_notes)
-  
-  # output about project
+  # Output about project
   output$about <- renderUI(about_notes)
 }
 
 # Run app
 shinyApp(ui = ui, server = server)
+
