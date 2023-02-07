@@ -60,7 +60,7 @@ dat_list[['hearing']] <- hearing_aggregator(dat_list[['hearing']])
 cases <- Reduce(function(x, y) merge(x, y, by = case_id_var, all = TRUE), dat_list)
 
 # Extract years of case filings
-cases$filed_year <- extract_year(cases$filed_date, expect_modern = TRUE, return_numeric = FALSE)
+cases$filed_year <- extract_year(cases$filed_date, expect_modern = TRUE)
 
 ########################### Canary ###########################
 # Currently, we only keep cases from 2018-onward
