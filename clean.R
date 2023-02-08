@@ -2,7 +2,7 @@
 # Eviction case data cleaning script                         #
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn      #
 # GitHub: jacob-gg, mclaibourn                               #
-# Last revised: 2023-02-07                                   #
+# Last revised: 2023-02-08                                   #
 ##############################################################
 
 ######################## Instructions ########################
@@ -71,13 +71,13 @@ cases <- cases[cases$filed_year >= 2018, ]
 # Extract quarters of case filings
 cases$filed_quarter <- assign_quarter(cases$filed_date, return_QX = TRUE)
 
-# Standardize names
-cases$defendant_name <- standardize_name(cases$defendant_name, case_out = 'upper')
-cases$plaintiff_name <- standardize_name(cases$plaintiff_name, case_out = 'upper')
-
 # Correct punctuation spacing in names
 cases$defendant_name <- correct_punctuation_spacing(cases$defendant_name)
 cases$plaintiff_name <- correct_punctuation_spacing(cases$plaintiff_name)
+
+# Standardize names
+cases$defendant_name <- standardize_name(cases$defendant_name, case_out = 'upper')
+cases$plaintiff_name <- standardize_name(cases$plaintiff_name, case_out = 'upper')
 
 # Remove commas before business identifiers in plaintiff names
 # Drawn from: https://en.wikipedia.org/wiki/List_of_legal_entity_types_by_country#United_States
