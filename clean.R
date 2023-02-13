@@ -2,16 +2,17 @@
 # Eviction case data cleaning script                         #
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn      #
 # GitHub: jacob-gg, mclaibourn                               #
-# Last revised: 2023-02-08                                   #
+# Last revised: 2023-02-13                                   #
 ##############################################################
 
 ######################## Instructions ########################
-# 1. Check the modifiable user preset variables below
+# 1. Check the modifiable user-preset variables below
 # 2. With those set, the code should run all the way through
 #    using data in the general format provided by the LSC
 case_id_var <- 'c2dp_case_id'
 data_directory <- 'data'
 output_directory <- 'processed-data'
+additional_data_directories <- c('data-2023-02-13')
 ##############################################################
 
 # Packages
@@ -28,6 +29,15 @@ lapply(required, function(x) handle_package(x))
 keywords <- c('case', 'defendant', 'hearing', 'judgment', 'plaintiff')
 files <- dir(data_directory)
 dat_list <- lapply(seq_along(keywords), function(x) read.csv(paste0(data_directory, '/', files[grepl(x = files, pattern = keywords[x])])))
+
+########################### Canary ###########################
+# Update full data with LSC update going one year back from 2023-02
+update_files <- dir(additional_data_directories)
+update_dat_list <- lapply(seq_along(keywords), function(x) read.csv(paste0(additional_data_directories, '/', files[grepl(x = update_files, pattern = keywords[x])])))
+needs_updating <- update_dat_list[[which(keywords == 'case')]][[case_id_var]][update_dat_list[[which(keywords == 'case')]][[case_id_var]] %in% dat_list[[which(keywords == 'case')]][[case_id_var]]]
+dat_list <- lapply(seq_along(dat_list), function(x) eval(parse(text = paste0("dat_list[[", x, "]][(dat_list[[", x, "]][[case_id_var]] %in% needs_updating) == F, ]"))))
+dat_list <- lapply(seq_along(dat_list), function(x) rbind(dat_list[[x]], update_dat_list[[x]]))
+##############################################################
 
 # For variable names that are duplicated across data frames, prefix them with the name of their source data frame
 var_names <- unlist(sapply(dat_list, function(x) colnames(x)), use.names = F)
@@ -85,12 +95,6 @@ cases$plaintiff_name <- standardize_name(cases$plaintiff_name, case_out = 'upper
 cases$plaintiff_name <- stringi::stri_replace_all(cases$plaintiff_name,
                                                   regex = ', (?=(P?LL?C|LL?L?P|CO( ?OP|RP)?|CP|LTD|INC|PB?C|FSB|NA|L3C)$)',
                                                   replacement = ' ')
-
-# Trim middle initials
-# max_nchar_names <- max(c(max(nchar(cases$defendant_name), max(nchar(cases$plaintiff_name)))))
-# pattern <- paste0('(?<=^[A-Za-z ]{1,', max_nchar_names, '}, [A-Za-z ]{1,', max_nchar_names, '}) [A-Za-z]{1}$')
-# cases$defendant_name <- stringi::stri_replace_all(cases$defendant_name, regex = pattern, replacement = '')
-# cases$plaintiff_name <- stringi::stri_replace_all(cases$plaintiff_name, regex = pattern, replacement = '')
 
 # Expand common housing acronyms
 cases$defendant_name <- expand_shorthand(cases$defendant_name, type = 'housing', case_out = 'upper')
