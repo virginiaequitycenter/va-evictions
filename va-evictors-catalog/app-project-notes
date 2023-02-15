@@ -5,9 +5,14 @@
 
 <p>The Virginia Evictor Catalog provides information about property owners, or their representatives, who have filed tenant evictions across the Commonwealth. It compiles and processes publicly available data from Virginia State District Courts to reflect the names of the plaintiffs, the jurisdiction that they filed in, the number of filings associated with them, the number of eviction judgments resulting from those filings, the time frame of filings, and the zip codes of defendants. The catalog is intended to aid organizers, policy makers, policy advocates, and service providers by providing insight into who is responsible for the highest number of court-based evictions and eviction filings, and where they are happening.</p>
 
-<h2>Project Team</h2>
+<h2>Project Team</h2> 
+<div class="project-logos">
+    <a href="https://virginiaequitycenter.org/" target="_blank"><img class="logos ec-logo" src="EquityCenter-Logo_Typed_Black.png" alt="UVA Equity Center" height="65"></img></a>
+    <a href="https://rampages.us/rvaevictionlab/" target="_blank"><img class="logos" src="rvalogo-removebg.png" alt="RVA Eviction Lab" height="60"></img></a>
+    <a href="https://data.library.virginia.edu/statlab/" target="_blank"><img class="logos" src="StatLab_logo_white_background.png" alt="UVA Library StatLab" height="65"></img></a>
+</div>
 
-<p>The Virginia Evictor catalog is part of the Virginia Housing Justice Atlas project, a collaborative effort between the RVA Eviction Lab in the Wilder School of Government and Public Affairs at Virginia Commonwealth University and the The Equity Center at the University of Virginia.</p>
+<p>The Virginia Evictor catalog is part of the Virginia Housing Justice Atlas project, a collaborative effort between the RVA Eviction Lab in the Wilder School of Government and Public Affairs at Virginia Commonwealth University, the Equity Center at the University of Virginia, and the UVA Library Research Data Services StatLab.</p>
 
 <p>The Housing Justice Atlas is being steered by an advisory committee made up of representatives from housing justice organizations in the Richmond and Charlottesville areas. Advisory Committee members include the Virginia Poverty Law Center, Housing Opportunities Made Equal, the Legal Aid Justice Center, the Central Virginia Legal Aid Society, the Charlottesville Office of Human Rights, Piedmont Housing Alliance, Cultivate Charlottesville, Public Housing Association of Residents, Charlottesville DSA, Richmond Tenants Union, Advocates for Richmond Youth, Virginia Community Voice, and the Charlottesville Low Income Housing Coalition.</p>
 

@@ -12,11 +12,11 @@ body {
   word-wrap: break-word;
 }
 
-  @media screen and (max-width: 42em) {
-    .container-fluid {
-      padding: 0.5rem;
-    }
+@media screen and (max-width: 42em) {
+  .container-fluid {
+    padding: 0.5rem;
   }
+}
 
 header, footer {
   background-color: #212529;
@@ -235,6 +235,12 @@ div.dt-buttons {
 
 .page-content li, .collapse-content li {
   margin-bottom: 5px;
+}
+
+.project-logos {
+  display: flex;
+  justify-content: space-evenly;
+  padding: 20px;
 }
 
 #footer {
