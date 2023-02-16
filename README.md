@@ -1,46 +1,22 @@
-[NOTE: README is out of date and needs a full update before February launch.]
+_Last updated: 2023-02-16_
 
-_Repo last updated: 2022-03-02_
+The [Virginia Evictors Catalog](https://virginiaequitycenter.shinyapps.io/va-evictors-catalog/) provides data on plaintiffs filing unlawful detainers (evictions) in Virginia's General District Courts.
 
-This repository contains code for cleaning and summarizing Virginia eviction data. The data are filings scraped from the [Virginia court system](www.courts.state.va.us) by [Ben Schoenfeld](https://github.com/bschoenfeld). Anonymized data are available through [virginiacourtdata.org](https://virginiacourtdata.org/). In our work, we use de-anonymized data, and accordingly, we do not currently include the data in this repository.
+This repository contains code for cleaning and standardizing case data and for building the app. Raw case data are provided by the non-profit [Legal Services Corporation](https://www.lsc.gov/). (An earlier version of this app used data gathered by [Ben Schoenfeld](https://github.com/bschoenfeld).)
 
-Contents:
+An overview of the data-cleaning and standardization process is on the app's [_Data Notes_ page](https://virginiaequitycenter.shinyapps.io/va-evictors-catalog/). The process draws heavily on the [ECtools](https://github.com/virginiaequitycenter/ECtools) package, developed by UVA Library Research Data Services and The Equity Center.
 
-- clean-eviction-data.R cleans and aggregates data from court data folders containing child tables (Cases.csv, Defendants.csv, etc.), and it exports two cleaned comma-separated data files to a code-generated folder called processed-date:
-    - cases.txt: a comma-separated data file containing all cleaned cases from all years (with a `filing_year` variable delineating year)
-    - cases_residential_only.txt: a comma-separated data file containing cleaned cases from all years, excluding cases tagged as having a non-residential primary defendant (`filing_year` again delineates year)
-    - clean-eviction-data.R also exports a small text file, cleaning-notes.txt, containing information on the cleaning process (e.g., how many duplicate case records were identified and removed for each year; how many serial cases were identified and tagged for each year; etc.)
+The case records comprising the data reflected in the app are public; however, to protect defendants from being named against their will or wishes, we do not currently include the raw data in this repository.
 
-- non-residential-defendant-regex.R contains the regex pattern used for identifying non-residential defendants in the case data; it is called as part of clean-eviction-data.R (see `non_person_regex` [here](https://github.com/jacob-gg/manager) for more information and tests of the pattern)
+---
 
-- defuzz-plaintiff-names.R contains code for "defuzzing" plaintiff names locality-by-locality, thereby reducing the number of alternative spellings of the same name, misspellings, etc.; this process is done by fuzzy matching each plaintiff names to others listed across cases and picking from possible fuzzy matches
-  - non-residential-plaintiff-regex.R contains a regex pattern that used for separating non-residential and residential plaintiffs, as we apply a more-conservative defuzzing process to residential ones than to non-residential ones
+Full contributor acknowledgments are on the app's [_About the Project_ page](https://virginiaequitycenter.shinyapps.io/va-evictors-catalog/).
 
-- summarize-eviction-data.R summarizes the cleaned data by VA court and by VA ZIP code; it exports:
-    - Four _long_ comma-separated data files where 1 row = 1 court/ZIP code for _one year_
-        - by_court.txt contains court-wise summary data based on cases.txt (all cases), with a `year` variable delineating year
-        - by_zip.txt contains ZIP-wise summary data based on cases.txt (all cases), with a `year` variable delineating year
-        - by_court_residential_only.txt contains court-wise summary data based on cases_residential_only.txt (cases with residential defendants), with a `year` variable delineating year
-        - by_zip_residential_only.txt contains ZIP-wise summary data based on cases_residential_only.txt (cases with residential defendants), with a `year` variable delineating year
-    - Two _wide_ comma-separated data files where 1 row = 1 court/ZIP code for _multiple years_; these comma-separated data files contain additional showing *percent change* year to year in filings, evictions, and defaults
-        - by_court_wide.txt
-        - by_court_residential_only.txt
-    - The resulting data files are placed in a code-generated folder called eviction-summaries
+- Code: Jacob Goldstein-Greenwood,<sup>&#963;</sup> Michele Claibourn,<sup>&#9677;</sup> and Elizabeth Mitchell<sup>&#9677;</sup>
+- Subject-matter expertise and conceptual guidance: Kate Howell,<sup>&#9708;</sup> Ben Teresa,<sup>&#9708;</sup> Barbara Brown Wilson,<sup>&#9677;</sup> Michele Claibourn,<sup>&#9677;</sup> Hannah Woehrle,<sup>&#9708;</sup> and Michael Salguiero<sup>&#9677; (formerly)</sup>
+- Additional project support, coordination, and communications assistance: Hannah Woehrle,<sup>&#9708;</sup> Connor White,<sup>&#9708;</sup> Michael Salguerio,<sup>&#9677; (formerly)</sup> and Atticus Johnson<sup>&#9708;</sup>
 
-- process-data-for-plaintiff-database.R takes case data (generally, case data that has been defuzzed with defuzz-plaintiff-names.R) and aggregates for display in the plaintiff Shiny app/database
 
-- plaintiff-database-Shiny/ contains the plaintiff Shiny app/database
-
-Team:  
-Jacob Goldstein-Greenwood &#9677; (primary code author)  
-Michele Claibourn &#9677; (code author)  
-Kathryn Howell &#9708;  
-Michael Salgueiro &#9677;  
-Benjamin Teresa &#9708;  
-Connor White &#9708;  
-Barbara Wilson &#9677;  
-Hannah Woehrle &#9708;  
-Elizabeth Mitchell &#9677;
-
-&#9708; - [RVA Eviction Lab](https://rampages.us/rvaevictionlab/)  
-&#9677; - [UVa Equity Center](https://virginiaequitycenter.org/)
+&#9677; - [The Equity Center at UVA](https://virginiaequitycenter.org/)  
+&#963; - [UVA Library Research Data Services](https://data.library.virginia.edu/)  
+&#9708; - [RVA Eviction Lab at VCU](https://rampages.us/rvaevictionlab/)  

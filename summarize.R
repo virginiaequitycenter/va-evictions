@@ -2,7 +2,7 @@
 # Summarize cleaned eviction data for Shiny app              #
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn      #
 # GitHub: jacob-gg, mclaibourn                               #
-# Last revised: 2023-02-06                                   #
+# Last revised: 2023-02-16                                   #
 ##############################################################
 
 ######################## Instructions ########################

@@ -2,7 +2,7 @@
 # Eviction case data cleaning script                         #
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn      #
 # GitHub: jacob-gg, mclaibourn                               #
-# Last revised: 2023-02-13                                   #
+# Last revised: 2023-02-16                                   #
 ##############################################################
 
 ######################## Instructions ########################
@@ -73,9 +73,9 @@ cases <- Reduce(function(x, y) merge(x, y, by = case_id_var, all = TRUE), dat_li
 cases$filed_year <- extract_year(cases$filed_date, expect_modern = TRUE)
 
 ########################### Canary ###########################
-# Currently, we only keep cases from 2018-onward
+# For the 2023-02 app update, we only include cases from 2018-2022
 cases$filed_year <- as.numeric(cases$filed_year)
-cases <- cases[cases$filed_year >= 2018, ]
+cases <- cases[cases$filed_year >= 2018 & cases$filed_year <= 2022, ]
 ##############################################################
 
 # Extract quarters of case filings
