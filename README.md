@@ -17,9 +17,9 @@ Names in the case data have both formatting inconsistencies and errors. If left 
   - Removing leading and trailing spaces in names
   - Converting dashes and forward slashes to single spaces
   - Eliminating the following characters: . ; ( ) [ ] { } # : _
-  - Removing commas trailing at the ends of names
-  - Converting @ signs and ampersands to "at" and "and" (and ensuring that spaces are present around those strings)
-  - Converting all instances of greater than one space ("   ") to single spaces (" ")
+  - Removing trailing commas at the ends of names
+  - Converting "@"" signs and ampersands ("&") to "at" and "and" (and ensuring that spaces surround those strings)
+  - Converting all instances of more than one space ("   ") to single spaces (" ")
   - (At the extreme, the name-standardization process means that both ` _MAGNOLIA-&-FIR_ #COMPANY#     L.L.C.,` and `{MAGNOLIA} /AND/ (F)(I)(R) [COMPANY]... LLC, ` can be identified as the same name.)
 
 
@@ -35,7 +35,7 @@ Cleaned data are then exported and aggregated up to the level of plaintiff, plai
 
 Code for the data cleaning and standardization process is in `clean.R`; code for aggregating cleaned data is in `summarize.R`; code for the app is in the `va-evictors-catalog` directory (see `app.R`).
 
-</details><br>
+</details>
 
 The case records comprising the data reflected in the app are public; however, to protect defendants from being named against their will or wishes, we do not currently include the raw case data in this repository.
 
