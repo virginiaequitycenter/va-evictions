@@ -6,7 +6,7 @@ This repository contains code for cleaning, standardizing, and aggregating case 
 
 Details about the data cleaning and standardization process are on the app's [_Data Notes_ page](https://virginiaequitycenter.shinyapps.io/va-evictors-catalog/) and are duplicated in the expandable section below. The process draws heavily on the [ECtools](https://github.com/virginiaequitycenter/ECtools) package, developed by UVA Library Research Data Services and The Equity Center.
 
-<details><summary>Data cleaning and standardization process notes</summary><br/>
+<details><summary>Data cleaning and standardization process</summary><br/>
 Case data are provided periodically by the Legal Services Corporation. Data on plaintiffs, defendants, hearings, etc. are provided separately; we aggregate all the data for a given case and identify a "primary" plaintiff name, plaintiff address, defendant name, and defendant address for each case based on the _first-listed_ plaintiff/defendant in each court record. We perform this step because many cases have multiple plaintiffs and/or defendants listed.<br><br>
 
 Names in the case data have both formatting inconsistencies and errors. If left unaddressed, these would radically hamper our ability to identify multiple cases filed by the same defendant (e.g., "ABC REAL ESTATE CO" and "ABC REAL-ESTATE COMPANY" would be treated as separate plaintiffs). We apply several cleaning steps to standardize the data format and address common errors:
@@ -19,7 +19,7 @@ Names in the case data have both formatting inconsistencies and errors. If left 
   - Eliminating the following characters: . ; ( ) [ ] { } # : _
   - Removing trailing commas at the ends of names
   - Converting "@"" signs and ampersands ("&") to "at" and "and" (and ensuring that spaces surround those strings)
-  - Converting all instances of more than one space ("   ") to single spaces (" ")
+  - Converting all instances of more than one space ("&nbsp;&nbsp;&nbsp;") to single spaces (" ")
   - (At the extreme, the name-standardization process means that both ` _MAGNOLIA-&-FIR_ #COMPANY#     L.L.C.,` and `{MAGNOLIA} /AND/ (F)(I)(R) [COMPANY]... LLC, ` can be identified as the same name.)
 
 
