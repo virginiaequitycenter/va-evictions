@@ -9,11 +9,7 @@
 # Packages ----
 library(shiny)
 library(DT)
-library(dplyr)
-library(ggplot2)
-library(tidyr)
-library(stringr)
-library(forcats)
+library(tidyverse)
 library(shinyalert)
 library(bslib)
 library(plotly)
