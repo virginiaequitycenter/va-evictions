@@ -2,7 +2,7 @@
 # Summarize cleaned eviction data for Shiny app              #
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn      #
 # GitHub: jacob-gg, mclaibourn                               #
-# Last revised: 2023-02-16                                   #
+# Last revised: 2023-02-22                                   #
 ##############################################################
 
 ######################## Instructions ########################
@@ -68,4 +68,3 @@ plaintiff_aggregated_monthly <- cases %>%
 write.csv(plaintiff_aggregated, file = paste0(output_data_directory, '/data-plaintiff-aggregated.txt'), row.names = FALSE)
 write.csv(plaintiff_aggregated_yearly, file = paste0(output_data_directory, '/data-yearly-plaintiff-aggregated.txt'), row.names = FALSE)
 write.csv(plaintiff_aggregated_monthly, file = paste0(output_data_directory, '/data-monthly-plaintiff-aggregated.txt'), row.names = FALSE)
-

@@ -2,7 +2,7 @@
 # Eviction case data cleaning script                         #
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn      #
 # GitHub: jacob-gg, mclaibourn                               #
-# Last revised: 2023-02-16                                   #
+# Last revised: 2023-02-22                                   #
 ##############################################################
 
 ######################## Instructions ########################
@@ -144,4 +144,3 @@ out <- c('run_date' = as.character(Sys.Date()),
          'n_duplicate_case_ids_removed' = length(duplicated_case_ids),
          'duplicate_case_ids_removed' = paste0(duplicated_case_ids, collapse = ', '))
 writeLines(con = paste0('log.txt'), text = paste0(names(out), ': ', out))
-

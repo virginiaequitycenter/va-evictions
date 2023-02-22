@@ -1,5 +1,5 @@
-run_date: 2023-02-16
-time_finished: 13:51
+run_date: 2023-02-22
+time_finished: 14:27
 n_residential_cases: 530756
 n_cases: 535672
 min_year_residential_cases: 2018

@@ -3,18 +3,22 @@
 # Author: Jacob Goldstein-Greenwood | jacobgg@virginia.edu | GitHub: jacob-gg  #
 # Author: Michele Claibourn | mclaibourn@virginia.edu | GitHub: mclaibourn     #
 # Author: Elizabeth Mitchell | beth@virginia.edu | GitHub: eam5                #
-# Last revised: 2023-02-16                                                     #
+# Last revised: 2023-02-22                                                     #
 ################################################################################
 
 # Packages ----
-required <- c('shiny', 'DT', 'tidyverse', 'shinyalert', 'bslib', 'plotly', 'bsplus', 'lubridate')
-handle_package <- function(pkg) {
-  if (grepl(x = pkg, pattern = '\\/')) { devtools::install_github(pkg) }
-  else if (!(pkg %in% installed.packages())) { install.packages(pkg) }
-  pkg <- sub(x = pkg, pattern = '.+\\/', replacement = '')
-  library(pkg, character.only = TRUE)
-}
-lapply(required, function(x) handle_package(x))
+library(shiny)
+library(DT)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(stringr)
+library(forcats)
+library(shinyalert)
+library(bslib)
+library(plotly)
+library(bsplus)
+library(lubridate)
 
 # User notes ----
 data_notes <- HTML(readLines('app-data-notes'))
