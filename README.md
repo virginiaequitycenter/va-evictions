@@ -1,15 +1,15 @@
-_Last updated: 2023-02-21_  
+_Last updated: 2023-02-22_  
 
 The [Virginia Evictors Catalog](https://virginiaequitycenter.shinyapps.io/va-evictors-catalog/) provides data on plaintiffs filing unlawful detainers (evictions) in Virginia's General District Courts.
 
 This repository contains code for cleaning, standardizing, and aggregating case data and for building the app. Raw case data are provided by the non-profit [Legal Services Corporation](https://www.lsc.gov/). (An earlier version of this app used data gathered by [Ben Schoenfeld](https://github.com/bschoenfeld).)
 
-Details about the data cleaning and standardization process are on the app's [_Data Notes_ page](https://virginiaequitycenter.shinyapps.io/va-evictors-catalog/) and are duplicated in the expandable section below. The process draws heavily on the [ECtools](https://github.com/virginiaequitycenter/ECtools) package, developed by UVA Library Research Data Services and The Equity Center.
+Details about the data cleaning and standardization process are in the expandable section below. The process draws heavily on the [ECtools](https://github.com/virginiaequitycenter/ECtools) package, developed by UVA Library Research Data Services and The Equity Center.
 
 <details><summary>Data cleaning and standardization process</summary><br/>
 Case data are provided periodically by the Legal Services Corporation. Data on plaintiffs, defendants, hearings, etc. are provided separately; we aggregate all the data for a given case and identify a "primary" plaintiff name, plaintiff address, defendant name, and defendant address for each case based on the _first-listed_ plaintiff/defendant in each court record. We perform this step because many cases have multiple plaintiffs and/or defendants listed.<br><br>
 
-Names in the case data have both formatting inconsistencies and errors. If left unaddressed, these would radically hamper our ability to identify multiple cases filed by the same defendant (e.g., "ABC REAL ESTATE CO" and "ABC REAL-ESTATE COMPANY" would be treated as separate plaintiffs). We apply several cleaning steps to standardize the data format and address common errors:
+Names in the case data have both formatting inconsistencies and errors. If left unaddressed, these would radically hamper our ability to identify multiple cases filed by the same defendant (e.g., "ABC REAL ESTATE, LLC" and "ABC REAL-ESTATE LLC" would be treated as separate plaintiffs). We apply several cleaning steps to standardize the data format and address common errors:
 
 - We correct punctuation-spacing errors in names by ensuring that spaces do not precede but do follow commas, semicolons, and colons (e.g., "SMITH ,MARY" &#8594; "SMITH, MARY")
 
@@ -22,6 +22,8 @@ Names in the case data have both formatting inconsistencies and errors. If left 
   - Converting all instances of more than one space ("&nbsp;&nbsp;&nbsp;") to single spaces (" ")
   - (At the extreme, the name-standardization process means that both ` _MAGNOLIA-&-FIR_ #COMPANY#     L.L.C.,` and `{MAGNOLIA} /AND/ (F)(I)(R) [COMPANY]... LLC, ` can be identified as the same name.)
 
+
+- We remove commas preceding business-identifying acronyms like LLC, LP, INC, etc. (e.g., "PEACH, LLC" &#8594; "PEACH LLC")
 
 - We expand common housing related shorthands when identified in plaintiff and defendant names, which you can view [here](https://github.com/virginiaequitycenter/ECtools/blob/main/inst/extdata/housing.csv).
 
