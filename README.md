@@ -23,9 +23,9 @@ Names in the case data have both formatting inconsistencies and errors. If left 
   - (At the extreme, the name-standardization process means that both ` _MAGNOLIA-&-FIR_ #COMPANY#     L.L.C.,` and `{MAGNOLIA} /AND/ (F)(I)(R) [COMPANY]... LLC, ` can be identified as the same name.)
 
 
-- We remove commas preceding business-identifying acronyms like LLC, LP, INC, etc. (e.g., "PEACH, LLC" &#8594; "PEACH LLC")
+- We remove commas preceding business-identifying acronyms like LLC, LP, INC, etc. (e.g., "PEACH, LLC" &#8594; "PEACH LLC").
 
-- We expand common housing related shorthands when identified in plaintiff and defendant names, which you can view [here](https://github.com/virginiaequitycenter/ECtools/blob/main/inst/extdata/housing.csv).
+- We expand common housing-related shorthands and abbreviations when identified in plaintiff and defendant names; you can view the shorthands and their expansions [here](https://github.com/virginiaequitycenter/ECtools/blob/main/inst/extdata/housing.csv).
 
 After the cleaning and standardization processes above, we then remove duplicate records by identifying cases that have the same filing date, plaintiff name, defendant name, defendant ZIP Code, judgment (outcome), judgment costs, attorney fees, and principal/other amounts. (We retain one record for each set of duplicate case.)
 
