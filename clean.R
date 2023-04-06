@@ -2,7 +2,7 @@
 # Eviction case data cleaning script                         #
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn      #
 # GitHub: jacob-gg, mclaibourn                               #
-# Last revised: 2023-02-22                                   #
+# Last revised: 2023-04-06                                   #
 ##############################################################
 
 ######################## Instructions ########################
@@ -68,6 +68,16 @@ dat_list[['hearing']] <- hearing_aggregator(dat_list[['hearing']])
 
 # Merge
 cases <- Reduce(function(x, y) merge(x, y, by = case_id_var, all = TRUE), dat_list)
+
+########################### Canary ###########################
+# Richmond city cases vary in their court listing; some are associated
+# with each of the following: Richmond City General District Court;
+# Richmond-Civil General District Court. For now, we convert all
+# to the former. Note: We currently *do not* update FIPS, which
+# also vary (760 and 763), as we do not use FIPS as a grouping
+# variable in the cleaning, summarizing, or app code.
+cases[cases$county == 'Richmond-Civil General District Court', 'county'] <- 'Richmond City General District Court'
+##############################################################
 
 # Extract years of case filings
 cases$filed_year <- extract_year(cases$filed_date, expect_modern = TRUE)
