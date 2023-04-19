@@ -20,6 +20,11 @@ data_notes <- HTML(readLines('app-data-notes'))
 orient_notes <- HTML(readLines('app-orient-notes'))
 about_notes <- HTML(readLines('app-project-notes'))
 
+# User notes - Spanish----
+data_notes_sp <- HTML(readLines('app-data-notes-sp'))
+orient_notes_sp <- HTML(readLines('app-orient-notes-sp'))
+about_notes_sp <- HTML(readLines('app-project-notes-sp'))
+
 # Preprocess ----
 plaintiff_dat <- read.csv('data-plaintiff-aggregated.txt', colClasses = 'character')
 yearly_plaintiff_dat <- read.csv('data-yearly-plaintiff-aggregated.txt', colClasses = 'character')
@@ -55,9 +60,17 @@ id_time_span <- function(dat) {
 }
 time_span <- id_time_span(monthly_plaintiff_dat)
 
+navbarPageWithInputs <- function(..., inputs) {
+  navbar <- navbarPage(...)
+  form <- tags$form(class = "form-inline", inputs)
+  navbar[[4]][[1]][[1]]$children[[1]]$children[[1]] <-  htmltools::tagAppendChild(
+    navbar[[4]][[1]][[1]]$children[[1]]$children[[1]], form)
+  navbar
+}
+
 # User interface ----
 ui <- htmlTemplate(filename = "app-template.html", main = 
-                     navbarPage(
+                     navbarPageWithInputs(
                        theme = bs_theme(version = 4), 
                        collapsible = TRUE,
                        fluid = TRUE,
@@ -65,6 +78,11 @@ ui <- htmlTemplate(filename = "app-template.html", main =
                        title = actionLink("title","Virginia Evictors Catalog"),
                        tabPanel("VA Evictors Catalog", 
                                 fluidPage(
+                                  # fluidRow(
+                                  #   column(12,
+                                  #   selectInput('language', 'Language', choices = c("English", "Español"), selected = "English")
+                                  #   )
+                                  # ),
                                   fluidRow(
                                     column(12,
                                            tags$h1(class = "page-title", "Who is Filing Evictions in Virginia?"),
@@ -124,7 +142,8 @@ ui <- htmlTemplate(filename = "app-template.html", main =
                                 fluidPage(
                                   uiOutput('about')
                                 )
-                       )
+                       ),
+                       inputs = selectInput('language', NULL, c("English", "Español"), selected = "English")
                        
                        # tabPanel("Contact Us",
                        #          fluidPage(
