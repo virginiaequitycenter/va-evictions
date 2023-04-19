@@ -1,0 +1,52 @@
+<div class="page-content">
+<h1>Catálogo Virginia Evictors</h1>
+
+<h2>Project Description</h2>
+
+<p>The Virginia Evictors Catalog provides information about property owners, or their representatives, who have filed tenant evictions across the Commonwealth. It compiles and processes publicly available data from Virginia State District Courts to reflect the names of the plaintiffs, the jurisdiction that they filed in, the number of filings associated with them, the number of eviction judgments resulting from those filings, the number of serial filings, the time frame of filings, and the ZIP codes of defendants. The catalog is intended to aid organizers, policy makers, policy advocates, and service providers by providing insight into who is responsible for the highest number of court-based evictions and eviction filings, and where they are happening.</p>
+
+<h2>Project Team</h2>
+<div class="project-logos">
+    <a href="https://virginiaequitycenter.org/" target="_blank"><img class="logos ec-logo" src="EquityCenter-Logo_Typed_Black.png" alt="UVA Equity Center" height="65"></img></a>
+    <a href="https://rampages.us/rvaevictionlab/" target="_blank"><img class="logos" src="rvalogo-removebg.png" alt="RVA Eviction Lab" height="60"></img></a>
+    <a href="https://data.library.virginia.edu/statlab/" target="_blank"><img class="logos" src="StatLab_logo_white_background.png" alt="UVA Library StatLab" height="65"></img></a>
+</div>
+
+<p>The Virginia Evictors Catalog is part of the Virginia Housing Justice Atlas project, a collaborative effort between the RVA Eviction Lab in the Wilder School of Government and Public Affairs at Virginia Commonwealth University, the Equity Center at the University of Virginia, and the UVA Library StatLab.</p>
+
+<p>The Housing Justice Atlas is steered by an advisory committee made up of representatives from housing justice organizations in the Richmond and Charlottesville areas. Advisory Committee members include the Virginia Poverty Law Center, Housing Opportunities Made Equal, the Legal Aid Justice Center, the Central Virginia Legal Aid Society, the Charlottesville Office of Human Rights, Piedmont Housing Alliance, Cultivate Charlottesville, Public Housing Association of Residents, Charlottesville DSA, Richmond Tenants Union, Advocates for Richmond Youth, Virginia Community Voice, and the Charlottesville Low Income Housing Coalition.</p>
+
+<p>The project team includes:</p>
+
+<ul>
+<li>Michele Claibourn, Director of Equitable Analysis, The Equity Center and Assistant Professor, Batten School of Leadership and Public Policy</li>
+<li>Kate Howell, Co-Director, RVA Eviction Lab and Associate Professor, Urban/Regional Studies & Planning, Wilder School of Government and Public Affairs</li>
+<li>Jacob Goldstein-Greenwood, Research Data Scientist, StatLab, UVA Library Research Data Services and former Data Fellow, The Equity Center</li>
+<li>Atticus Johnson, Research Assistant, RVA Eviction Lab</li>
+<li>Elizabeth Mitchell, Research Programs Manager, The Equity Center</li>
+<li>Ben Teresa, Co-Director, RVA Eviction Lab and Associate Professor, Urban/Regional Studies & Planning, Wilder School of Government and Public Affairs</li>
+<li>Connor White, Data Analyst RVA Eviction Lab</li>
+<li>Barbara Brown Wilson, Faculty Director, The Equity Center and Associate Professor, Urban + Environmental Planning, University of Virginia School of Architecture</li>
+<li>Hannah Woehrle, Wilder Fellow, RVA Eviction Lab</li>
+</ul>
+
+
+<h2>Project Contributions</h2>
+
+<p>This project was built by many hands.</p>
+
+<ul>
+  <li>Community partners and the Housing Justice Atlas Advisory Committee members spurred this work by sharing their deep knowledge, ongoing needs, and future goals.</li>
+  <li>The data on which the project relies were initially collected by Ben Schoenfeld as scraped from the Virginia Online Case Information System and made available at <a href="https://virginiacourtdata.org/" target="_blank">virginiacourtdata.org</a>.</li>
+  <li>Current and ongoing data are provided by <a href="https://www.lsc.gov/" target="_blank">Legal Services Corporation</a>.</li>
+  <li>Kate Howell, Ben Teresa, Barbara Brown Wilson, Michele Claibourn, Hannah Woehrle, and Michael Salguiero provided substantive expertise and conceptual guidance.</li>
+  <li>Michele Claibourn, Jacob Goldstein-Greenwood, Connor White, and Elizabeth Mitchell prepared the court filing data.</li>
+  <li>Michele Claibourn, Jacob Goldstein-Greenwood, and Elizabeth Mitchell programmed and created the Virginia Evictors Catalog platform.</li>
+  <li>Jacob Goldstein-Greenwood wrote the code for cleaning and standardizing the data, and he developed the <a href="https://github.com/virginiaequitycenter/ECtools" target="_blank">ECtools</a> package on which that code relies.</li>
+  <li>Hannah Woehrle, Michael Salgueiro, and Atticus Johnson provided additional project management, coordination, and communications support.</li>
+  <li>The data work was funded with support from the 4-VA Collaborative Research Grant program at UVA, The Richmond Memorial Health Foundation, and The VCU Center for Community Engaged Research.</li>
+</ul>
+
+<p>The work undergirding the Virginia Evictors Catalog is publicly available on <a href="https://github.com/virginiaequitycenter/va-evictions" target="_blank">GitHub</a>.</p>
+
+</div>
