@@ -123,7 +123,12 @@ main_page_panel <-  fluidPage(
     fluidRow(
       column(12,
         tabsetPanel(type = "pills",
-          tabPanel(i18n$t("Table"), icon = icon("table"), downloadButton("downloadBtn", i18n$t("Download")), DTOutput("plaintiff_table")),
+          tabPanel(
+            i18n$t("Table"),
+            icon = icon("table"),
+            downloadButton("downloadBtn",
+            i18n$t("Download")),
+            DTOutput("plaintiff_table")),
           tabPanel(i18n$t("Visualize"), icon = icon("chart-bar"), textOutput("viztitle"), plotlyOutput("viz", width = "100%", height = "700")),
         ),
       )
@@ -214,7 +219,7 @@ server <- function(input, output, session) {
 
   # Render datatable
   output$plaintiff_table <- DT::renderDT(
-    datatable(df(), 
+    datatable(df(),
               rownames = F,
               caption = i18n$t("Sources: Legal Services Corporation (lsc.gov)"),
               class = "display nowrap",
@@ -232,6 +237,20 @@ server <- function(input, output, session) {
               colnames = c(i18n$t("Court Jurisdiction"), i18n$t("Plaintiff Name"), 
                            i18n$t("Cases Filed"), i18n$t("Eviction Judgments"), i18n$t("Serial Filings"),
                            i18n$t("Time Frame"), i18n$t("Known Virginia Defendant ZIP Codes"))
+              # callback = JS("
+              #   var tips = ['The general district court where the case was filed. Court jurisdictions are tied to localities (counties or cities) in Virginia. There are general district courts in every county and city, though some city/county areas share a court jurisdiction.',
+              #    'The entity filing an eviction case against a tenant with the court. In Virginia, eviction cases can be filed by \"the landlord, [their] agent, attorney, or other person.\" Within the Virginia Evictors Catalog, the plaintiff is the evictor of record.', 
+              #    'The total number of eviction cases filed by the plaintiff in the selected time period and jurisdiction.',
+              #   'The total number of cases filed by the plaintiff that ended in a judgment of eviction (a judgment for the plaintiff). Eviction cases may end in a judgment for the plaintiff (eviction), a judgment for the defendant, a dismissal, or the judgment may be pending. Consequently, the filings may include cases that are still open or that are concluded without a judgment.', 
+              #     'We consider serial cases to be repeated cases filed by a given plaintiff against a given defendant in a given ZIP code within a 12-month period.',
+              #     'The data on evictors can be viewed as total filings and evictions for the full time period (all years), by year, or by month across the full time period.',
+              #     'The ZIP codes provided for the defendants (tenants) against whom the unlawful detainer/eviction is filed. The Online Case Information System does not provide full addresses of plaintiffs or defendants, only ZIP codes.'
+              #     ],
+              #       header = table.columns().header();
+              #   for (var i = 0; i < tips.length; i++) {
+              #     $(header[i]).attr('title', tips[i]);
+              #   }
+              #   ")
     )
   )
 

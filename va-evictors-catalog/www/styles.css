@@ -48,6 +48,7 @@ body {
 .lang_select .shiny-input-container:not(.shiny-input-container-inline) div .selectize-control {
   margin-bottom: 0;
 } 
+
 header, footer {
   background-color: #212529;
   position: relative;
@@ -59,7 +60,6 @@ header, footer {
     -webkit-align-items: center;
     justify-content: space-between;
     -webkit-justify-content: space-between;
-    
 }
 
 .header, .footer {
