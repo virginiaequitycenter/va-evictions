@@ -10,3 +10,10 @@
 <a href="https://github.com/virginiaequitycenter/va-evictions" target="_blank"><img src="GitHub-Mark-Light-64px.png" alt="Source on GitHub" width = "26" height = "26"/></a>
 </div>
 </footer>
+<!-- Script for tooltips -->
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+<script>
+  $(function () {
+  $('[data-toggle="tooltip"]').tooltip()
+})
+</script>
