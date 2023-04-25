@@ -3,23 +3,22 @@
 # Author: Jacob Goldstein-Greenwood | jacobgg@virginia.edu | GitHub: jacob-gg  #
 # Author: Michele Claibourn | mclaibourn@virginia.edu | GitHub: mclaibourn     #
 # Author: Elizabeth Mitchell | beth@virginia.edu | GitHub: eam5                #
-# Last revised: 2023-04-19                                                     #
+# Last revised: 2023-04-25
+# Last Deployed: -
 ################################################################################
 
 # Packages ----
 library(shiny)
 library(DT)
-library(scales)
 library(tidyverse)
-library(shinyalert)
 library(bslib)
-library(plotly)
 library(bsplus)
+library(plotly)
 library(shiny.i18n)
 
 # Set language translations
-i18n <- Translator$new(translation_csvs_path = "translations/")
-i18n$set_translation_language("English") # here you select the default translation to display
+i18n <- Translator$new(translation_csvs_path = "translations/") # set path to translation csv
+i18n$set_translation_language("English") # select the default translation to display
 
 # User notes ----
 data_notes <- HTML(readLines("html/app-data-notes"))
@@ -73,7 +72,6 @@ time_span <- id_time_span(monthly_plaintiff_dat)
 
 # Main page panel. Language picker is stored here due to limitations of the navbarPage
 main_page_panel <-  fluidPage(
-  fontawesome::fa_html_dependency(),
     shiny.i18n::usei18n(i18n),
     fluidRow(
       column(12,
@@ -94,9 +92,7 @@ main_page_panel <-  fluidPage(
           id = "orient-collapse",
           content = tags$div(class = "well",
                             tags$div(
-                              htmlOutput("orient"), class = "orient"
-                            ))
-        )
+                              htmlOutput("orient"), class = "orient")))
     )),
     fluidRow(
       column(6,
@@ -106,8 +102,7 @@ main_page_panel <-  fluidPage(
                       choices = unique(plaintiff_dat$county),
                       selected = unique(plaintiff_dat$county),
                       size = 5,
-                      selectize = FALSE
-          ),
+                      selectize = FALSE),
           helpText("Note: Select one or more court jurisdictions to show in the table and visualizations. Select multiple jurisdictions by clicking on court names while holding down the control or command key.")
         )
       ),
@@ -131,7 +126,7 @@ main_page_panel <-  fluidPage(
             downloadButton("downloadBtn",
             i18n$t("Download")),
             DTOutput("plaintiff_table")),
-          tabPanel(i18n$t("Visualize"), icon = icon("chart-bar"), textOutput("viztitle"), plotlyOutput("viz", width = "100%", height = "700")),
+          tabPanel(i18n$t("Visualize"), icon = icon("chart-bar"), textOutput("viztitle"), plotlyOutput("viz", width = "100%", height = "700"))
         ),
       )
     )
@@ -149,7 +144,7 @@ ui <- bootstrapPage(
       theme = bs_theme(version = 4),
       collapsible = TRUE,
       fluid = TRUE,
-      id = "my-page",
+      id = "main-page",
       title = i18n$t("Virginia Evictors Catalog"),
     #  windowTitle = "Virginia Evictors Catalog",
     #  title = actionLink("title",i18n$t("Virginia Evictors Catalog")),
@@ -199,7 +194,7 @@ server <- function(input, output, session) {
   # NOT WORKING WITH SHINY I18N
   # Make navbarPage title element link to catalog tab
   # observeEvent(input$title, {
-  #   updateNavbarPage(session, "my-page", i18n$t("Home"))
+  #   updateNavbarPage(session, "main-page", i18n$t("Home"))
   # })
 
   # Pick and subset data for datatable
@@ -222,19 +217,22 @@ server <- function(input, output, session) {
   # Render datatable
   output$plaintiff_table <- DT::renderDT({
     datatable(df(),
-              rownames = F,
+              rownames = FALSE,
               caption = i18n$t("Sources: Legal Services Corporation (lsc.gov)"),
               class = "display nowrap",
               filter = "top",
-              options = list(searchHighlight = TRUE,
-                  scrollX = TRUE,
-                  pageLength = 20,
-                  order = list(2, "desc"), # column indexing starts at 0 (3rd column visually is indexed as 2)
-                  dom = "lfrtip",
-                  language = if (input$selected_language == "Español"){
+              options = list(
+                searchHighlight = TRUE,
+                scrollX = TRUE,
+                pageLength = 20,
+                order = list(2, "desc"), # column indexing starts at 0 (3rd column visually is indexed as 2)
+                dom = "lfrtip",
+                language = if (input$selected_language == "Español") {
                   # Data table translation options: https://datatables.net/plug-ins/i18n/#Translations
                   list(url = "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-MX.json")
-                  } else NULL),
+                } else {
+                  NULL
+                }),
               colnames = c(i18n$t("Court Jurisdiction"), i18n$t("Plaintiff Name"), 
                            i18n$t("Cases Filed"), i18n$t("Eviction Judgments"), i18n$t("Serial Filings"),
                            i18n$t("Time Frame"), i18n$t("Known Virginia Defendant ZIP Codes")),
@@ -271,12 +269,12 @@ server <- function(input, output, session) {
       p <- df() %>%
         mutate(county = str_remove(county, "General District Court"),
                county = str_trim(county)) %>%
-        group_by(county) %>% 
-        summarize(cases_filed = sum(cases_filed, na.rm = T),
-                  cases_eviction = sum(plaintiff_judgments, na.rm = T)) %>% 
-        pivot_longer(cols = -county, names_to = "Outcome", values_to = "Number", names_prefix = "cases_") %>% 
+        group_by(county) %>%
+        summarize(cases_filed = sum(cases_filed, na.rm = TRUE),
+                  cases_eviction = sum(plaintiff_judgments, na.rm = TRUE)) %>%
+        pivot_longer(cols = -county, names_to = "Outcome", values_to = "Number", names_prefix = "cases_") %>%
         mutate(Outcome = ifelse(Outcome == "filed", "Cases Filed", "Eviction Judgments"),
-               Outcome = factor(Outcome, levels = c("Eviction Judgments", "Cases Filed"))) %>% 
+               Outcome = factor(Outcome, levels = c("Eviction Judgments", "Cases Filed"))) %>%
         ggplot(aes(y = fct_reorder(county, Number),
                    x = Number,
                    color = Outcome,
@@ -288,21 +286,21 @@ server <- function(input, output, session) {
         scale_color_manual(values = pal_lake_superior,
                            labels = c("Eviction Judgments", "Cases Filed"),
                            name = "") +
-        scale_x_continuous(expand = expansion(mult = c(0,.05))) +
+        scale_x_continuous(expand = expansion(mult = c(0, 0.05))) +
         labs(x = "", y = "") +
         theme(axis.text.y = element_text(size = 1), legend.position = "top") +
         theme_classic()
-      
-      ggplotly(p, tooltip = c("x", "label", "text")) %>% 
-        layout(legend = list(orientation = "h", x = 0, y = 10)) %>% 
+
+      ggplotly(p, tooltip = c("x", "label", "text")) %>%
+        layout(legend = list(orientation = "h", x = 0, y = 10)) %>%
         config(displayModeBar = TRUE)
-      
+
     } else if (input$time == "Year")  {
       output$viztitle <- renderText({
         "Cases Filed and Eviction Judgments within Selected Court Jurisdictions (Totals by Year, of Selected Jurisdictions)"
       })
-      
-      p <- df() %>% 
+
+      p <- df() %>%
         group_by(filed_year) %>%
         summarize(`Cases Filed` = sum(cases_filed),
                   `Eviction Judgments` = sum(plaintiff_judgments)) %>%
@@ -311,7 +309,7 @@ server <- function(input, output, session) {
         ggplot() +
         geom_col(aes(x = Year, y = `Cases Filed`, fill = cases)) +
         geom_col(aes(x = Year, y = `Eviction Judgments`, fill = evictions), width = 0.70) +
-        scale_fill_manual(values = pal_lake_superior[c(2,1)], labels = c("Cases Filed", "Eviction Judgments"), name = "") +
+        scale_fill_manual(values = pal_lake_superior[c(2, 1)], labels = c("Cases Filed", "Eviction Judgments"), name = "") +
         labs(x = "Year", y = "") +
         theme(legend.position = "bottom")
 
@@ -331,35 +329,28 @@ server <- function(input, output, session) {
         pivot_longer(cols = -filing_month, names_to = "Outcome", values_to = "Number",
                      names_prefix = "cases_") %>% 
         mutate(Outcome = ifelse(Outcome == "filed", "Cases Filed", "Eviction Judgments"),
-               Outcome = factor(Outcome, levels = c("Eviction Judgments", "Cases Filed"))
-              #  filing_month = as.Date(paste(filing_month, "-01", sep=""))
-               ) %>%
+               Outcome = factor(Outcome, levels = c("Eviction Judgments", "Cases Filed"))) %>%
         rename(Month = filing_month) %>%
         ggplot() +
-        # VA Eviction Moratorium 03-16-2020 to 06-31-2022
-        # Mar 16, 2020 - Jun 28, 2020
-        # Aug 10, 2020 - Sep 7, 2020
-        # Jan 1, 2021 - Jun 30, 2021
-        # Aug 10, 2021 - Jun 30, 2022
-        geom_rect(aes(xmin = "2020-03", xmax = "2022-07"),
+        # VA Eviction Moratorium 03-16-2020 to 06-31-2022 (https://evictionlab.org/eviction-tracking/virginia/)
+        geom_rect(aes(xmin = "2020-03", xmax = "2022-06"),
                   ymin = 0, ymax = 17000, alpha = .15, fill = "#467BB0") +
-        annotate("text", x = "2021-05", y = 15000, label = paste(
+        annotate("text", x = "2021-05", y = 14500, label = paste(
         "State-Wide Eviction Moratorium",
         "Mar 16, 2020 - Jun 28, 2020",
         "Aug 10, 2020 - Sep 7, 2020",
         "Jan 1, 2021 - Jun 30, 2021",
-        "Aug 10, 2021 - Jun 30, 2022",
+        "Aug 10, 2021 - Jun 30, 2022", "",
+        "Federal Eviction Moratorium (CDC Order)",
+        "Sep 4, 2020 - Aug 26, 2021",
         sep = "\n"), size = 3) +
-        # annotate("rect", xmin = "2020-03", xmax = "2022-07", ymin = 0, ymax = 16000,
-        #          alpha = .15,fill = "#467BB0") +
         geom_point(aes(x = Month, y = Number, group = Outcome, color = Outcome)) +
         geom_line(aes(x = Month, y = Number, group = Outcome, color = Outcome)) +
         scale_color_manual(values = pal_lake_superior, labels = c("Eviction Judgments", "Cases Filed"), name = "") +
-        # scale_x_date(date_breaks = "months", date_labels = "%b %Y") +
         labs(x = "Year-Month", y = "") +
-        theme(axis.text.x = element_text(angle = 45), legend.position = "bottom") 
+        theme(axis.text.x = element_text(angle = 45), legend.position = "bottom")
 
-      gg <- ggplotly(p, tooltip = c("x", "y", "group"))%>% 
+      gg <- ggplotly(p, tooltip = c("x", "y", "group")) %>%
         layout(legend = list(orientation = "h", x = 0, y = 10)) %>%
         config(displayModeBar = TRUE)
 
@@ -374,4 +365,3 @@ server <- function(input, output, session) {
 
 # Run app
 shinyApp(ui = ui, server = server)
-
