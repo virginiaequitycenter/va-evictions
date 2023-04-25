@@ -30,7 +30,6 @@
 <li>Hannah Woehrle, Wilder Fellow, RVA Eviction Lab</li>
 </ul>
 
-
 <h2>Project Contributions</h2>
 
 <p>This project was built by many hands.</p>
@@ -47,6 +46,10 @@
   <li>The data work was funded with support from the 4-VA Collaborative Research Grant program at UVA, The Richmond Memorial Health Foundation, and The VCU Center for Community Engaged Research.</li>
 </ul>
 
-<p>The work undergirding the Virginia Evictors Catalog is publicly available on <a href="https://github.com/virginiaequitycenter/va-evictions" target="_blank">GitHub</a>.</p>
+<p><em>Citation</em></p>
+<p>The Equity Center, RVA Eviction Lab, and UVA Library StatLab. "Virginia Evictors Catalog." https://virginiaequitycenter.shinyapps.io/va-evictors-catalog/</p>
+
+<p><em>Code</em></p>
+<p>The work supporting the Virginia Evictors Catalog is publicly available on <a href="https://github.com/virginiaequitycenter/va-evictions" target="_blank">GitHub</a>.</p>
 
 </div>
