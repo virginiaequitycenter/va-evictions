@@ -59,7 +59,6 @@ dat_list <- lapply(seq_along(dat_list), function(z) {
 duplicated_case_ids <- unique(dat_list[[which(keywords == 'case')]][[case_id_var]][duplicated(dat_list[[which(keywords == 'case')]][[case_id_var]])])
 dat_list <- lapply(seq_along(dat_list), function(x) eval(parse(text = paste0("dat_list[[", x, "]][(dat_list[[", x, "]][[case_id_var]] %in% duplicated_case_ids) == F, ]"))))
 names(dat_list) <- keywords
-##############################################################
 
 # Aggregate
 source('functions_aggregation.R')
