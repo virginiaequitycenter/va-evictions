@@ -2,7 +2,7 @@
 # Eviction case data cleaning script                         #
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn      #
 # GitHub: jacob-gg, mclaibourn                               #
-# Last revised: 2023-04-06                                   #
+# Last revised: 2023-04-27                                   #
 ##############################################################
 
 ######################## Instructions ########################
@@ -10,9 +10,9 @@
 # 2. With those set, the code should run all the way through
 #    using data in the general format provided by the LSC
 case_id_var <- 'c2dp_case_id'
-data_directory <- 'data'
+data_directory <- 'data/original'
+data_updates_directory <- 'data/updates'
 output_directory <- 'processed-data'
-additional_data_directories <- c('data-2023-02-13')
 ##############################################################
 
 # Packages
@@ -30,14 +30,18 @@ keywords <- c('case', 'defendant', 'hearing', 'judgment', 'plaintiff')
 files <- dir(data_directory)
 dat_list <- lapply(seq_along(keywords), function(x) read.csv(paste0(data_directory, '/', files[grepl(x = files, pattern = keywords[x])])))
 
-########################### Canary ###########################
-# Update full data with LSC update going one year back from 2023-02
-update_files <- dir(additional_data_directories)
-update_dat_list <- lapply(seq_along(keywords), function(x) read.csv(paste0(additional_data_directories, '/', files[grepl(x = update_files, pattern = keywords[x])])))
-needs_updating <- update_dat_list[[which(keywords == 'case')]][[case_id_var]][update_dat_list[[which(keywords == 'case')]][[case_id_var]] %in% dat_list[[which(keywords == 'case')]][[case_id_var]]]
-dat_list <- lapply(seq_along(dat_list), function(x) eval(parse(text = paste0("dat_list[[", x, "]][(dat_list[[", x, "]][[case_id_var]] %in% needs_updating) == F, ]"))))
-dat_list <- lapply(seq_along(dat_list), function(x) rbind(dat_list[[x]], update_dat_list[[x]]))
-##############################################################
+# Update original data with LSC periodic updates (updated dispositions, etc.)
+#   This function relies on the existence of the dat_list, case_id_var, and keywords objects
+updated_data_folders <- dir(data_updates_directory)
+update_data <- function(folder) {
+  update_files <- dir(paste0(data_updates_directory, '/', folder))
+  update_dat_list <- lapply(seq_along(keywords), function(x) read.csv(paste0(data_updates_directory, '/', folder, '/', update_files[grepl(x = update_files, pattern = keywords[x])])))
+  needs_updating <- update_dat_list[[which(keywords == 'case')]][[case_id_var]][update_dat_list[[which(keywords == 'case')]][[case_id_var]] %in% dat_list[[which(keywords == 'case')]][[case_id_var]]]
+  dat_list <- lapply(seq_along(dat_list), function(x) eval(parse(text = paste0("dat_list[[", x, "]][(dat_list[[", x, "]][[case_id_var]] %in% needs_updating) == F, ]"))))
+  dat_list <- lapply(seq_along(dat_list), function(x) rbind(dat_list[[x]], update_dat_list[[x]]))
+  dat_list
+}
+for (i in 1:length(updated_data_folders)) { dat_list <- update_data(updated_data_folders[i]) }
 
 # For variable names that are duplicated across data frames, prefix them with the name of their source data frame
 var_names <- unlist(sapply(dat_list, function(x) colnames(x)), use.names = F)
@@ -50,9 +54,8 @@ dat_list <- lapply(seq_along(dat_list), function(z) {
 })
 
 # Handle duplicated case IDs and set names of data list elements
-########################### Canary ###########################
-# As of 2022-02-06, there's >= 1 duplicated case ID in the data; these lines handle that/those, albeit in a brutish way
-# This will be updated to a more principled, multi-outcome system down the line
+#   These lines handle duplicated cases in a fairly unprincipled way (dropping cases with duplicated IDs)
+#   This will be updated to a more principled, multi-outcome system down the line
 duplicated_case_ids <- unique(dat_list[[which(keywords == 'case')]][[case_id_var]][duplicated(dat_list[[which(keywords == 'case')]][[case_id_var]])])
 dat_list <- lapply(seq_along(dat_list), function(x) eval(parse(text = paste0("dat_list[[", x, "]][(dat_list[[", x, "]][[case_id_var]] %in% duplicated_case_ids) == F, ]"))))
 names(dat_list) <- keywords
@@ -70,45 +73,32 @@ dat_list[['hearing']] <- hearing_aggregator(dat_list[['hearing']])
 cases <- Reduce(function(x, y) merge(x, y, by = case_id_var, all = TRUE), dat_list)
 
 ########################### Canary ###########################
-# Richmond city cases vary in their court listing; some are associated
-# with each of the following: Richmond City General District Court;
-# Richmond-Civil General District Court. For now, we convert all
-# to the former. Note: We currently *do not* update FIPS, which
-# also vary (760 and 763), as we do not use FIPS as a grouping
-# variable in the cleaning, summarizing, or app code.
+# Richmond city cases vary in their court listing; some are associated with each of the
+# following: Richmond City General District Court; Richmond-Civil General District Court. For now,
+# we convert all to the former. Note: We currently *do not* update FIPS, which also vary (760 and 763),
+# as we do not use FIPS as a grouping variable in the cleaning, summarizing, or app code.
 cases[cases$county == 'Richmond-Civil General District Court', 'county'] <- 'Richmond City General District Court'
 ##############################################################
 
 # Extract years of case filings
 cases$filed_year <- extract_year(cases$filed_date, expect_modern = TRUE)
 
-########################### Canary ###########################
-# For the 2023-02 app update, we only include cases from 2018-2022
-cases$filed_year <- as.numeric(cases$filed_year)
-cases <- cases[cases$filed_year >= 2018 & cases$filed_year <= 2022, ]
-##############################################################
-
 # Extract quarters of case filings
 cases$filed_quarter <- assign_quarter(cases$filed_date, return_QX = TRUE)
 
-# Correct punctuation spacing in names
+####################### Notes on names #######################
+# We use LSC cleaned_party_name for plantiff names, but we still apply our standardization and cleaning
+# process to defendant names (for purposes of, e.g., IDing serial cases and cases against residential defendants),
+# and we convert LSC cleaned_party_name entries to uppercase
+##############################################################
+# Uppercase LSC clean_party_name (plaintiff name) entries and save as plaintiff_name
+cases$plaintiff_name <- toupper(cases$clean_party_name)
+# Correct punctuation spacing in defendant names
 cases$defendant_name <- correct_punctuation_spacing(cases$defendant_name)
-cases$plaintiff_name <- correct_punctuation_spacing(cases$plaintiff_name)
-
-# Standardize names
+# Standardize defendant names
 cases$defendant_name <- standardize_name(cases$defendant_name, case_out = 'upper')
-cases$plaintiff_name <- standardize_name(cases$plaintiff_name, case_out = 'upper')
-
-# Remove commas before business identifiers in plaintiff names
-# Drawn from: https://en.wikipedia.org/wiki/List_of_legal_entity_types_by_country#United_States
-# LC, LLC, PLLC, LP, LLP, LLLP, CO, CO OP, COOP, CORP, CP, LTD, INC, PB, PBD, FSB, NA, L3C
-cases$plaintiff_name <- stringi::stri_replace_all(cases$plaintiff_name,
-                                                  regex = ', (?=(P?LL?C|LL?L?P|CO( ?OP|RP)?|CP|LTD|INC|PB?C|FSB|NA|L3C)$)',
-                                                  replacement = ' ')
-
-# Expand common housing acronyms
+# Expand common housing acronyms in defendant names
 cases$defendant_name <- expand_shorthand(cases$defendant_name, type = 'housing', case_out = 'upper')
-cases$plaintiff_name <- expand_shorthand(cases$plaintiff_name, type = 'housing', case_out = 'upper')
 
 # Extract ZIP Codes
 cases$defendant_zip <- extract_zip(cases$defendant_address, if_multiple = 'first', must_follow_state = TRUE)
@@ -129,12 +119,10 @@ cases <- id_serials(cases)
 
 # Identify non-residential defendants
 cases$defendant_non_residential <- identify_non_residential(cases$defendant_name)
-########################### Canary ###########################
 # Un-flag cases with "OCCUPANT(S)" in the primary defendant name (likely residential, e.g., "ANY AND ALL OCCUPANTS")
 cases$defendant_non_residential <- ifelse(grepl(x = cases$defendant_name, pattern = '(?i)\\boccupants?\\b'), FALSE, cases$defendant_non_residential)
 # Un-flag cases with "ESTATE OF" in the defendant names (likely residential, e.g., "ESTATE OF JANE SMITH")
 cases$defendant_non_residential <- ifelse(grepl(x = cases$defendant_name, pattern = '(?i)\\bestate of?\\b'), FALSE, cases$defendant_non_residential)
-##############################################################
 
 # Write out resulting data
 if (dir.exists(output_directory) == FALSE) { dir.create(output_directory) }
@@ -154,3 +142,12 @@ out <- c('run_date' = as.character(Sys.Date()),
          'n_duplicate_case_ids_removed' = length(duplicated_case_ids),
          'duplicate_case_ids_removed' = paste0(duplicated_case_ids, collapse = ', '))
 writeLines(con = paste0('log.txt'), text = paste0(names(out), ': ', out))
+
+##############################################################
+################### Miscellaneous old code ###################
+# Remove commas before business identifiers in plaintiff names
+# Drawn from: https://en.wikipedia.org/wiki/List_of_legal_entity_types_by_country#United_States
+# LC, LLC, PLLC, LP, LLP, LLLP, CO, CO OP, COOP, CORP, CP, LTD, INC, PB, PBD, FSB, NA, L3C
+# cases$plaintiff_name <- stringi::stri_replace_all(cases$plaintiff_name,
+#                                                   regex = ', (?=(P?LL?C|LL?L?P|CO( ?OP|RP)?|CP|LTD|INC|PB?C|FSB|NA|L3C)$)',
+#                                                   replacement = ' ')
