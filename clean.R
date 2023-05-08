@@ -2,7 +2,7 @@
 # Eviction case data cleaning script                         #
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn      #
 # GitHub: jacob-gg, mclaibourn                               #
-# Last revised: 2023-04-27                                   #
+# Last revised: 2023-05-08                                   #
 ##############################################################
 
 ######################## Instructions ########################
@@ -33,10 +33,10 @@ dat_list <- lapply(seq_along(keywords), function(x) read.csv(paste0(data_directo
 # Update original data with LSC periodic updates (updated dispositions, etc.)
 #   This function relies on the existence of the dat_list, case_id_var, and keywords objects
 updated_data_folders <- dir(data_updates_directory)
-update_data <- function(folder) {
+update_data <- function(folder, kywd = keywords) {
   update_files <- dir(paste0(data_updates_directory, '/', folder))
-  update_dat_list <- lapply(seq_along(keywords), function(x) read.csv(paste0(data_updates_directory, '/', folder, '/', update_files[grepl(x = update_files, pattern = keywords[x])])))
-  needs_updating <- update_dat_list[[which(keywords == 'case')]][[case_id_var]][update_dat_list[[which(keywords == 'case')]][[case_id_var]] %in% dat_list[[which(keywords == 'case')]][[case_id_var]]]
+  update_dat_list <- lapply(seq_along(kywd), function(x) read.csv(paste0(data_updates_directory, '/', folder, '/', update_files[grepl(x = update_files, pattern = kywd[x])])))
+  needs_updating <- update_dat_list[[which(kywd == 'case')]][[case_id_var]][update_dat_list[[which(kywd == 'case')]][[case_id_var]] %in% dat_list[[which(kywd == 'case')]][[case_id_var]]]
   dat_list <- lapply(seq_along(dat_list), function(x) eval(parse(text = paste0("dat_list[[", x, "]][(dat_list[[", x, "]][[case_id_var]] %in% needs_updating) == F, ]"))))
   dat_list <- lapply(seq_along(dat_list), function(x) rbind(dat_list[[x]], update_dat_list[[x]]))
   dat_list
@@ -150,3 +150,4 @@ writeLines(con = paste0('log.txt'), text = paste0(names(out), ': ', out))
 # cases$plaintiff_name <- stringi::stri_replace_all(cases$plaintiff_name,
 #                                                   regex = ', (?=(P?LL?C|LL?L?P|CO( ?OP|RP)?|CP|LTD|INC|PB?C|FSB|NA|L3C)$)',
 #                                                   replacement = ' ')
+# Rendered (at least temporarily) obsolete by the switch to using plaintiff names cleaned by LSC

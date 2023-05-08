@@ -26,7 +26,7 @@ defendant_aggregator <- function(dat) {
 
 plaintiff_aggregator <- function(dat) {
   case_id_var <- colnames(dat)[grepl(x = colnames(dat), pattern = 'id')]
-  name_var <- colnames(dat)[grepl(x = colnames(dat), pattern = '^name$')] # `^name$` instead of `name` to distinguish `name` from `clean_party_name`
+  name_var <- colnames(dat)[grepl(x = colnames(dat), pattern = 'plaintiff_name')] # `plaintiff_name` instead of `name` to distinguish from `clean_party_name`
   address_var <- colnames(dat)[grepl(x = colnames(dat), pattern = 'address')]
   order_var <- colnames(dat)[grepl(x = colnames(dat), pattern = 'order')]
   
