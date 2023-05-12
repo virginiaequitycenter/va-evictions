@@ -1,4 +1,4 @@
-_Last updated: 2023-04-27_  
+_Last updated: 2023-05-12_
 
 The [Virginia Evictors Catalog](https://virginiaequitycenter.shinyapps.io/va-evictors-catalog/) provides data on plaintiffs filing unlawful detainers (evictions) in Virginia's General District Courts.
 
@@ -9,25 +9,9 @@ Details about the data cleaning and standardization process are in the expandabl
 <details><summary>Data cleaning and standardization process</summary><br/>
 Case data are provided periodically by the Legal Services Corporation. Data on plaintiffs, defendants, hearings, etc. are provided separately; we aggregate all the data for a given case and identify a "primary" plaintiff name, plaintiff address, defendant name, and defendant address for each case based on the _first-listed_ plaintiff/defendant in each court record. We perform this step because many cases have multiple plaintiffs and/or defendants listed.<br><br>
 
-Names in the case data have both formatting inconsistencies and errors. If left unaddressed, these would radically hamper our ability to identify multiple cases filed by the same defendant (e.g., "ABC REAL ESTATE, LLC" and "ABC REAL-ESTATE LLC" would be treated as separate plaintiffs). We apply several cleaning steps to standardize the data format and address common errors:
+Names in the case data have both formatting inconsistencies and errors. If left unaddressed, these would radically hamper our ability to identify multiple cases filed by the same defendant (e.g., "ABC REAL ESTATE, LLC" and "ABC REAL-ESTATE LLC" would be treated as separate plaintiffs). Plaintiff names are cleaned and standardized by the Legal Services Corporation using their <a href="https://pypi.org/project/cleancourt/" target="_blank">CleanCourt</a> Python library; standardization of defendant names and other data-cleaning processes are implemented using the <a href="https://github.com/virginiaequitycenter/ECtools" target="_blank">ECtools</a> package built by UVA Library StatLab. For plaintiff names, the Legal Services Corporation identifies probably misspellings/alternative spellings of the same entity using term frequency–inverse document frequency and cosine similarity measures to reduce a set of messy plaintiff names a cleaned set (e.g., identifying "ABC ENTERPRISES" and "ABC ENTERPRESES" as the same entity and labelling them both as "ABC ENTERPRISES").
 
-- We correct punctuation-spacing errors in names by ensuring that spaces do not precede but do follow commas, semicolons, and colons (e.g., "SMITH ,MARY" &#8594; "SMITH, MARY")
-
-- We standardizing name formatting by:
-  - Removing leading and trailing spaces in names
-  - Converting dashes and forward slashes to single spaces
-  - Eliminating the following characters: . ; ( ) [ ] { } # : _
-  - Removing trailing commas at the ends of names
-  - Converting "@"" signs and ampersands ("&") to "at" and "and" (and ensuring that spaces surround those strings)
-  - Converting all instances of more than one space ("&nbsp;&nbsp;&nbsp;") to single spaces (" ")
-  - (At the extreme, the name-standardization process means that both ` _MAGNOLIA-&-FIR_ #COMPANY#     L.L.C.,` and `{MAGNOLIA} /AND/ (F)(I)(R) [COMPANY]... LLC, ` can be identified as the same name.)
-
-
-- We remove commas preceding business-identifying acronyms like LLC, LP, INC, etc. (e.g., "PEACH, LLC" &#8594; "PEACH LLC").
-
-- We expand common housing-related shorthands and abbreviations when identified in plaintiff and defendant names; you can view the shorthands and their expansions [here](https://github.com/virginiaequitycenter/ECtools/blob/main/inst/extdata/housing.csv).
-
-After the cleaning and standardization processes above, we then remove duplicate records by identifying cases that have the same filing date, plaintiff name, defendant name, defendant ZIP Code, judgment (outcome), judgment costs, attorney fees, and principal/other amounts. (We retain one record for each set of duplicate case.)
+With cleaned and standardized names in hand, we then remove duplicate records by identifying cases that have the same filing date, plaintiff name, defendant name, defendant ZIP Code, judgment (outcome), judgment costs, attorney fees, and principal/other amounts. (We retain one record for each set of duplicate case.)
 
 We then identify "serial cases," which we consider to be repeated cases filed by a given plaintiff against a given defendant in a given ZIP Code within a 12-month period.
 
@@ -51,5 +35,5 @@ Full contributor acknowledgments are on the app's [_About the Project_ page](htt
 
 
 &#9677; - [The Equity Center at UVA](https://virginiaequitycenter.org/)  
-&#963; - [UVA Library Research Data Services](https://data.library.virginia.edu/)  
+&#963; - [UVA Library Research Data Services/StatLab](https://data.library.virginia.edu/)  
 &#9708; - [RVA Eviction Lab at VCU](https://rampages.us/rvaevictionlab/)  
