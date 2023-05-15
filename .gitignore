@@ -1,8 +1,0 @@
-.Rhistory
-*.DS_Store
-*.Rproj.user
-*.Rproj
-data/
-processed-data/
-data*/
-misc/
