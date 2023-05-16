@@ -24,7 +24,7 @@
 <p>We have applied several cleaning procedures to improve data quality, including:</p>
 <ul>
     <li>Removing duplicate case records.</li>
-    <li>Standardizing plaintiff and defendant names. <em>Note: Plaintiff names are standardized by the Legal Services Corporation using their <a href="https://pypi.org/project/cleancourt/" target="_blank">CleanCourt</a> Python library; standardization of defendant names and other data-cleaning processes are implemented using the <a href="https://github.com/virginiaequitycenter/ECtools" target="_blank">ECtools</a> package built by UVA Library StatLab</em>.</li>
+    <li>Standardizing plaintiff and defendant names. <em>Note: Plaintiff names are standardized by the Legal Services Corporation using their <a href="https://pypi.org/project/cleancourt/" target="_blank">CleanCourt</a> Python library; standardization of defendant names and other data-cleaning processes are implemented using the <a href="https://github.com/virginiaequitycenter/ECtools" target="_blank">ECtools</a> R package built by UVA Library StatLab</em>.</li>
     <ul>
     <li>For example:</li>
       <ul>

@@ -2,7 +2,7 @@
 # Eviction case data cleaning script                         #
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn      #
 # GitHub: jacob-gg, mclaibourn                               #
-# Last revised: 2023-05-08                                   #
+# Last revised: 2023-05-16                                   #
 ##############################################################
 
 ######################## Instructions ########################
@@ -77,6 +77,11 @@ cases <- Reduce(function(x, y) merge(x, y, by = case_id_var, all = TRUE), dat_li
 # we convert all to the former. Note: We currently *do not* update FIPS, which also vary (760 and 763),
 # as we do not use FIPS as a grouping variable in the cleaning, summarizing, or app code.
 cases[cases$county == 'Richmond-Civil General District Court', 'county'] <- 'Richmond City General District Court'
+##############################################################
+
+########################### Canary ###########################
+# For May 2023 update, only work with cases through March 31, 2023:
+cases <- cases[cases$filed_date <= '2023-03-31', ]
 ##############################################################
 
 # Extract years of case filings
