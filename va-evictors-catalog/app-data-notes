@@ -24,27 +24,23 @@
 <p>We have applied several cleaning procedures to improve data quality, including:</p>
 <ul>
     <li>Removing duplicate case records.</li>
-    <li>Standardizing plaintiff and defendant names; for example:</li>
+    <li>Standardizing plaintiff and defendant names. <em>Note: Plaintiff names are standardized by the Legal Services Corporation using their <a href="https://pypi.org/project/cleancourt/" target="_blank">CleanCourt</a> Python library; standardization of defendant names and other data-cleaning processes are implemented using the <a href="https://github.com/virginiaequitycenter/ECtools" target="_blank">ECtools</a> R package built by UVA Library StatLab</em>.</li>
+    <ul>
+    <li>For example:</li>
       <ul>
-        <li>A court clerk might record a name as "FRESH FRUIT LLC" on Monday and as "FRESH FRUIT, LLC" on Tuesday, so we eliminate commas before business-identifying acronyms (LLC, LP, LLP, etc.).</li>
-        <li>A plaintiff might be listed as "GOOD LIVING APTS" in one case and as "GOOD LIVING APARTMENTS" in another, so we expand common housing acronyms (APTS &#8594; APARTMENTS; MGMT &#8594; MANAGEMENT, etc.).</li>
-        <li>We employ many additional steps to address inconsistencies and common data-entry errors; you can read more about those steps in the <em>Data cleaning and standardization process</em> section <a href="https://github.com/virginiaequitycenter/va-evictions" target="_blank">here</a>.</li>
+        <li>A court clerk might record a name as "FRESH FRUIT L.L.C." on Monday and as "FRESH FRUIT LLC" on Tuesday, so miscellaneous punctuation marks are trimmed from names.</li>
+        <li>A name might be listed as "GOOD LIVING APTS" in one case and as "GOOD LIVING APARTMENTS" in another, so names are standardized to only use one form of commonly abbreviated housing terms (APTS/APARTMENTS; MGMT/MANAGEMENT; etc.).</li>
+        <li>You can read more in the <em>Data cleaning and standardization process</em> section <a href="https://github.com/virginiaequitycenter/va-evictions" target="_blank">here</a>.</li>
       </ul>
+    </ul>
   <li>Identifying residential defendants using a custom-developed regex pattern and filtering out all non-residential defendants. You can view the full regex <a href="https://github.com/jacob-gg/non-person-regex" target="_blank">here</a>.</li>
 </ul>
 
-<p>A given evictor/plaintiff name may contain many variations, alternative spellings, misspellings, and abbreviations across multiple eviction filings. We have tried to address and account for many of these instances, but the same evictor may still appear in multiple rows with only slight differences in the names. Users interested in a particular landlord or evictor should consider doing searches of partial names in the Plaintiff Name column.</p>
+<p>The Legal Services Corporation identifies probable misspellings/alternative spellings of the same plaintiff across court records using language processing methods (e.g., identifying "ABC ENTERPRISES" and "ABC ENTERPRESES" as the same entity and labelling them both as "ABC ENTERPRISES"). However, as a given evictor/plaintiff name may contain many variations, alternative spellings, misspellings, and abbreviations across multiple eviction filings, the same evictor may still appear in multiple rows with only slight differences in the names. Users interested in a particular landlord or evictor should consider doing searches of partial names in the Plaintiff Name column.</p>
 
-<p>We are currently investigating approaches to deduplicate plaintiff names, including:</p>
-  <ul>
-    <li>"Defuzzing" plaintiff names in order to reduce the number of alternative spellings/misspellings of the same name, which would otherwise reduce the accuracy of this database. We've explored using string-distance algorithms to identify likely "fuzzy matches" between plaintiff names with slight spelling differences that share the same court of filing. This computationally intensive process has not yet been completed for all localities.</li>
-  <li>Matching from a list of all observed variants of a name to generate a common name. Manually creating a list of matches is labor intensive and has been explored for only a handful of localities.</li>
-  <li>Working with Legal Services Corporation to incorporate name matching approaches they've developed into future iterations of this work.</li>
-  </ul>
+<p>We are currently investigating additional approaches to deduplicate and standardize plaintiff names, including matching alternative spellings based on a list of all observed variants of a name to generate a common name. Manually creating a list of matches is labor intensive and has been explored for only a handful of localities.</li>
 
-<p>
-The code repository for this work is available on <a href="https://github.com/virginiaequitycenter/va-evictions" target="_blank">GitHub</a>. For any questions, please reach out to us <a href="https://docs.google.com/forms/d/e/1FAIpQLSeANUSskUw_HDpMTEuD7pXcivT7uBXz0iCGzc0nhPsZZ9Yh6Q/viewform?usp=sharing" target="_blank">here</a>.
-</p>
+<p>The code repository for this work is available on <a href="https://github.com/virginiaequitycenter/va-evictions" target="_blank">GitHub</a>. For any questions, please reach out to us <a href="https://docs.google.com/forms/d/e/1FAIpQLSeANUSskUw_HDpMTEuD7pXcivT7uBXz0iCGzc0nhPsZZ9Yh6Q/viewform?usp=sharing" target="_blank">here</a>.</p>
 
 <h2>Footnotes</h2>
 <ol>
