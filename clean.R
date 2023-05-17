@@ -2,7 +2,7 @@
 # Eviction case data cleaning script                         #
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn      #
 # GitHub: jacob-gg, mclaibourn                               #
-# Last revised: 2023-05-16                                   #
+# Last revised: 2023-05-17                                   #
 ##############################################################
 
 ######################## Instructions ########################
@@ -79,16 +79,18 @@ cases <- Reduce(function(x, y) merge(x, y, by = case_id_var, all = TRUE), dat_li
 cases[cases$county == 'Richmond-Civil General District Court', 'county'] <- 'Richmond City General District Court'
 ##############################################################
 
-########################### Canary ###########################
-# For May 2023 update, only work with cases through March 31, 2023:
-cases <- cases[cases$filed_date <= '2023-03-31', ]
-##############################################################
-
 # Extract years of case filings
 cases$filed_year <- extract_year(cases$filed_date, expect_modern = TRUE)
 
 # Extract quarters of case filings
 cases$filed_quarter <- assign_quarter(cases$filed_date, return_QX = TRUE)
+
+########################### Canary ###########################
+# For May 2023 update, only work with cases from 2018 through March 31, 2023:
+cases <- cases[cases$filed_date <= '2023-03-31', ]
+cases$filed_year <- as.numeric(cases$filed_year)
+cases <- cases[cases$filed_year >= 2018, ]
+##############################################################
 
 ####################### Notes on names #######################
 # We use LSC cleaned_party_name for plantiff names, but we still apply our standardization and cleaning
