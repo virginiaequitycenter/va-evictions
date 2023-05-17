@@ -23,9 +23,9 @@
 <li>Kate Howell, Co-Director, RVA Eviction Lab and Associate Professor, Urban/Regional Studies & Planning, Wilder School of Government and Public Affairs</li>
 <li>Jacob Goldstein-Greenwood, Research Data Scientist, StatLab, UVA Library Research Data Services and former Data Fellow, The Equity Center</li>
 <li>Atticus Johnson, Research Assistant, RVA Eviction Lab</li>
-<li>Elizabeth Mitchell, Research Programs Manager, The Equity Center</li>
+<li>Elizabeth Mitchell, Equitable Analysis Data Scientist, The Equity Center</li>
 <li>Ben Teresa, Co-Director, RVA Eviction Lab and Associate Professor, Urban/Regional Studies & Planning, Wilder School of Government and Public Affairs</li>
-<li>Connor White, Data Analyst RVA Eviction Lab</li>
+<li>Connor White, Data Analyst, RVA Eviction Lab</li>
 <li>Barbara Brown Wilson, Faculty Director, The Equity Center and Associate Professor, Urban + Environmental Planning, University of Virginia School of Architecture</li>
 <li>Hannah Woehrle, Wilder Fellow, RVA Eviction Lab</li>
 </ul>
@@ -47,6 +47,11 @@
   <li>The data work was funded with support from the 4-VA Collaborative Research Grant program at UVA, The Richmond Memorial Health Foundation, and The VCU Center for Community Engaged Research.</li>
 </ul>
 
-<p>The work undergirding the Virginia Evictors Catalog is publicly available on <a href="https://github.com/virginiaequitycenter/va-evictions" target="_blank">GitHub</a>.</p>
+
+<p><em>Citation</em></p>
+<p>The Equity Center, RVA Eviction Lab, and UVA Library StatLab. <em>Virginia Evictors Catalog</em>. UVA Karsh Institute of Democracy Center for the Redress of Inequity Through Community-Engaged Scholarship, RVA Eviction Lab in the Wilder School of Government and Public Affairs at VCU, UVA Library Research Data Services StatLab. https://virginiaequitycenter.shinyapps.io/va-evictors-catalog/. Accessed [TODAYS DATE].</p>
+
+<p><em>Code</em></p>
+<p>The work supporting the Virginia Evictors Catalog is publicly available on <a href="https://github.com/virginiaequitycenter/va-evictions" target="_blank">GitHub</a>.</p>
 
 </div>

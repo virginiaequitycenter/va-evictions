@@ -18,6 +18,37 @@ body {
   }
 }
 
+.lang_select {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: -15px;
+  margin-bottom: -30px;
+  font-size: .9rem;
+}
+
+.lang_select .shiny-input-container:not(.shiny-input-container-inline) {
+  max-width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: 0;
+}
+
+.lang_select .shiny-input-container:not(.shiny-input-container-inline) label {
+  /* display: inline-block; */
+  margin-bottom: 0;
+  margin-right: .5rem;
+}
+
+.lang_select .shiny-input-container:not(.shiny-input-container-inline) div {
+  flex-grow: .25;
+}
+
+.lang_select .shiny-input-container:not(.shiny-input-container-inline) div .selectize-control {
+  margin-bottom: 0;
+} 
+
 header, footer {
   background-color: #212529;
   position: relative;
@@ -29,21 +60,20 @@ header, footer {
     -webkit-align-items: center;
     justify-content: space-between;
     -webkit-justify-content: space-between;
-    
 }
 
-#header, #footer {
+.header, .footer {
       padding: 0.5rem 1rem;
     }
     
   @media screen and (max-width: 42em) {
-    #header, #footer, .navbar {
+    .header, .footer, .navbar {
       padding: 0.5rem;
     }
   }
 
 @media screen and (max-width: 42em) {
-    #header a .logos {
+    .header a .logos {
       height: 28px; } }
 
 .ec-logo {
@@ -213,7 +243,7 @@ div.dt-buttons {
   max-width: 1000px;
   margin-right: auto;
   margin-left: auto;
-  padding: 0 1rem;
+  padding: 0 1rem 3rem;
 }
 
 .collapse-content {
@@ -223,6 +253,7 @@ div.dt-buttons {
 
 .page-content h1 {
   text-align: center;
+  padding-bottom: 1rem;
 }
 
 .page-content h2, .collapse-content h2 {
@@ -243,21 +274,21 @@ div.dt-buttons {
   padding: 20px;
 }
 
-#footer {
+.footer {
   color: #ffffff;
   text-align: center;
  }
  
-#footer a .logos {
+.footer a .logos {
   height: 65px;
   padding: 10px;
 }
 
 /* @media screen and (min-width: 42em) and (max-width: 64em) {
-    #footer #logos img {
+    .footer #logos img {
       height: 55px; } }*/
   @media screen and (max-width: 42em) {
-    #footer a .logos {
+    .footer a .logos {
       height: 45px; padding: 5px;} }
 
 .footer-content {
@@ -267,7 +298,7 @@ div.dt-buttons {
   max-width: 35%;
 }
 
-#footer a {
+.footer a {
   color:#ffffff;
   padding: 0 10px;
 }
