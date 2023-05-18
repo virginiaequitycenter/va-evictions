@@ -259,7 +259,7 @@ server <- function(input, output, session) {
                      names_prefix = "cases_") %>% 
         mutate(ymax = max(Number),
                label = paste(
-                 "<span style='font-weight:700;'>State-Wide Eviction Moratorium</span>",
+                 "<span style='font-weight:700;'>State-Wide Eviction Moratoriums</span>",
                  "Mar 16, 2020 - Jun 28, 2020",
                  "Aug 10, 2020 - Sep 7, 2020",
                  "Jan 1, 2021 - Jun 30, 2021",
@@ -292,22 +292,22 @@ server <- function(input, output, session) {
         ggplot() +
         # Federal Eviction Moratorium (CDC Order)
         geom_rect(aes(xmin = as.Date("2020-09-04", "%Y-%m-%d"), xmax = as.Date("2021-08-26", "%Y-%m-%d"),
-                      ymin = 0, ymax = (max(Number)+(.05*(max(Number))))), alpha = .2, fill = "#004E5E") +
+                      ymin = 0, ymax = (max(Number)+(.05*(max(Number))))), alpha = .1, fill = "#004E5E") +
         # VA Eviction Moratorium 03-16-2020 to 06-31-2022 (https://evictionlab.org/eviction-tracking/virginia/)
         geom_rect(aes(xmin = as.Date("2020-03-16", "%Y-%m-%d"), xmax = as.Date("2020-06-28", "%Y-%m-%d"),
-                      ymin = 0, ymax = (max(Number)+(.05*(max(Number))))), alpha = .25, fill = "#A9A9A9") +
+                      ymin = 0, ymax = (max(Number)+(.05*(max(Number))))), alpha = .15, fill = "#A9A9A9") +
         geom_rect(aes(xmin = as.Date("2020-08-10", "%Y-%m-%d"), xmax = as.Date("2020-09-07", "%Y-%m-%d"),
-                      ymin = 0, ymax = (max(Number)+(.05*(max(Number))))), alpha = .25, fill = "#A9A9A9") +
+                      ymin = 0, ymax = (max(Number)+(.05*(max(Number))))), alpha = .15, fill = "#A9A9A9") +
         geom_rect(aes(xmin = as.Date("2021-01-01", "%Y-%m-%d"), xmax = as.Date("2021-06-30", "%Y-%m-%d"),
-                      ymin = 0, ymax = (max(Number)+(.05*(max(Number))))), alpha = .25, fill = "#A9A9A9") +
+                      ymin = 0, ymax = (max(Number)+(.05*(max(Number))))), alpha = .15, fill = "#A9A9A9") +
         geom_rect(aes(xmin = as.Date("2021-08-10", "%Y-%m-%d"), xmax = as.Date("2022-06-30", "%Y-%m-%d"),
-                      ymin = 0, ymax = (max(Number)+(.05*(max(Number))))), alpha = .25, fill = "#A9A9A9") +
+                      ymin = 0, ymax = (max(Number)+(.05*(max(Number))))), alpha = .15, fill = "#A9A9A9") +
         geom_text(data = label_df, aes(x = as.Date("2021-05-01", "%Y-%m-%d"), y = (ymax-(.075*(ymax))), label = label),
                   size = 3.3, check_overlap = TRUE) +
-        geom_point(aes(x = Month, y = Number, group = Outcome, color = Outcome,
+        suppressWarnings(geom_point(aes(x = Month, y = Number, group = Outcome, color = Outcome,
                        text = paste('Month:', format(Month, "%b %Y"),
                                     '<br>Number: ', Number,
-                                    '<br>Outcome: ', Outcome))) +
+                                    '<br>Outcome: ', Outcome)))) +
         geom_line(aes(x = Month, y = Number, group = Outcome, color = Outcome)) +
         scale_x_date(date_breaks = "months", date_labels =  "%b %Y", expand = c(0.01,0.01)) +
         scale_y_continuous(
