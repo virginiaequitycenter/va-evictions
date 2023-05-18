@@ -14,6 +14,7 @@ library(shinyalert)
 library(bslib)
 library(plotly)
 library(bsplus)
+library(lubridate)
 
 # User notes ----
 data_notes <- HTML(readLines('app-data-notes'))
