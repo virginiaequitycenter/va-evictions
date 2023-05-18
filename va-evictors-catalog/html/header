@@ -1,0 +1,8 @@
+<header class="header">
+<span class="site-name">
+    <a id="site-link" href="#" class="action-button shiny-bound-input">Housing Justice Atlas</a> </span>
+<div id="logos">
+    <a href="https://virginiaequitycenter.org/" target="_blank"><img class="logos ec-logo" src="EquityCenter-Logo_Typed_White.png" alt="UVA Equity Center" height="40"></img></a>
+    <a href="https://rampages.us/rvaevictionlab/" target="_blank"><img class="logos" src="rvalogo-removebg.png" alt="RVA Eviction Lab" height="35"></img></a>
+</div>
+</header>
