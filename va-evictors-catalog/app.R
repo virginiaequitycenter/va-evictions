@@ -148,7 +148,7 @@ server <- function(input, output, session) {
 
   # Make navbarPage title element link to catalog tab
   observeEvent(input$title, {
-    updateNavbarPage(session, "home", "Home")
+    updateNavbarPage(session, "main-page", "Home")
   })
 
   # Pick and subset data for datatable
