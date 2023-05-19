@@ -16,7 +16,6 @@ library(bslib)
 library(plotly)
 library(bsplus)
 library(scales)
-library(ggpattern)
 
 # Read in HTML ----
 data_notes <- HTML(readLines("html/app-data-notes"))
