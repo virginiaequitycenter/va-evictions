@@ -3,7 +3,7 @@
 # Author: Jacob Goldstein-Greenwood | jacobgg@virginia.edu | GitHub: jacob-gg  #
 # Author: Michele Claibourn | mclaibourn@virginia.edu | GitHub: mclaibourn     #
 # Author: Elizabeth Mitchell | beth@virginia.edu | GitHub: eam5                #
-# Last revised: 2023-05-19                                                     #
+# Last revised: 2023-08-04                                                     #
 # Last deployed: 2023-05-19                                                     #
 ################################################################################
 
@@ -16,14 +16,28 @@ library(bslib)
 library(plotly)
 library(bsplus)
 library(scales)
+library(shiny.i18n)
+
+# Set language translations
+i18n <- Translator$new(translation_csvs_path = "translations/") # set path to translation csv
+i18n$set_translation_language("English") # select the default translation to display
 
 # Read in HTML ----
 data_notes <- HTML(readLines("html/app-data-notes"))
 orient_notes <- HTML(readLines("html/app-orient-notes"))
+selection_note_time <- HTML(readLines("html/selection-note-time"))
 about_notes <- HTML(readLines("html/app-project-notes"))
 news_page <- HTML(readLines("html/app-news"))
 header <- HTML(readLines("html/header"))
 footer <- HTML(readLines("html/footer"))
+
+# User notes  Spanish Language ----
+data_notes_sp <- HTML(readLines("html/app-data-notes-sp"))
+orient_notes_sp <- HTML(readLines("html/app-orient-notes-sp"))
+selection_note_time_sp <- HTML(readLines("html/selection-note-time-sp"))
+about_notes_sp <- HTML(readLines("html/app-project-notes-sp"))
+news_page_sp <- HTML(readLines("html/news-sp"))
+footer_sp <- HTML(readLines("html/footer-sp"))
 
 # Preprocess ----
 plaintiff_dat <- read.csv("data-plaintiff-aggregated.txt", colClasses = "character")
@@ -60,6 +74,76 @@ id_time_span <- function(dat) {
 }
 time_span <- id_time_span(monthly_plaintiff_dat)
 
+# Main page panel. Language picker is stored here due to limitations of the navbarPage
+main_page_panel <-  fluidPage(
+    shiny.i18n::usei18n(i18n),
+    fluidRow(
+      column(12,
+        div(class = "lang_select",
+          selectInput("selected_language",
+                      i18n$t("Select language"),
+                      choices = i18n$get_languages(),
+                      selected = i18n$get_key_translation()))
+    )),
+    fluidRow(
+      column(12,
+        tags$h1(class = "page-title", i18n$t("Who is Filing Evictions in Virginia?")),
+        tags$p(class = "page-description", 
+          tags$span(i18n$t("The Virginia Evictors Catalog provides data about plaintiffs filing unlawful detainers (evictions) in Virginia's General District Courts from ")),
+          tags$span(time_span[[1]]),
+          tags$span(i18n$t(" through ")),
+          tags$span(paste0(time_span[[2]],". ")),
+          tags$span(i18n$t("Each row in the table below represents a plaintiff filing in a specific court jurisdiction."))
+        ),
+        bs_button(i18n$t("How to search the catalog"), button_type = "info", class = "collapsible") %>%
+          bs_attach_collapse("orient-collapse"),
+        bs_collapse(
+          id = "orient-collapse",
+          content = tags$div(class = "well",
+                            tags$div(
+                              htmlOutput("orient"), class = "orient")))
+    )),
+    fluidRow(
+      column(6,
+        wellPanel(
+          selectInput("court", i18n$t("Select Court Jurisdictions to Include"),
+                      multiple = TRUE,
+                      choices = unique(plaintiff_dat$county),
+                      selected = unique(plaintiff_dat$county),
+                      size = 5,
+                      selectize = FALSE),
+          helpText(i18n$t("Note: Select one or more court jurisdictions to show in the table and visualizations. Select multiple jurisdictions by clicking on court names while holding down the control or command key."))
+        )
+      ),
+      column(6,
+        wellPanel(
+          radioButtons("time", i18n$t("Select a Time Period to Display"),
+                      choices = c("Totals across All Years" = "All",
+                                      "Totals by Year" = "Year",
+                                      "Totals by Month" = "Month"),
+                      selected = "All"
+          ),
+          helpText(htmlOutput("selection_note_time"))
+        )
+      )),
+    fluidRow(
+      column(12,
+        tabsetPanel(type = "pills",
+          tabPanel(
+            i18n$t("Table"),
+            icon = icon("table"),
+            downloadButton("downloadBtn",
+            i18n$t("Download")),
+            DTOutput("plaintiff_table")),
+          tabPanel(i18n$t("Visualize"), 
+            icon = icon("chart-bar"), 
+            textOutput("viztitle"), 
+            plotlyOutput("viz", width = "100%", height = "700"))
+        ),
+      )
+    )
+  )
+
 # User interface ----
 ui <- bootstrapPage(
   lang = "en",
@@ -73,61 +157,18 @@ ui <- bootstrapPage(
       collapsible = TRUE,
       fluid = TRUE,
       id = "main-page",
-      title = actionLink("title", "Virginia Evictors Catalog"),
-      tabPanel("Home",
-              fluidPage(
-                fluidRow(
-                  column(12,
-                    tags$h1(class = "page-title", "Who is Filing Evictions in Virginia?"),
-                    tags$p(class = "page-description", paste0("The Virginia Evictors Catalog provides data about plaintiffs filing unlawful detainers (evictions) in Virginia's General District Courts from ",
-                                                              time_span[[1]], " through ", time_span[[2]], ". Each row in the table below represents a plaintiff filing in a specific court jurisdiction.")),
-                    bs_button("How to search the catalog", button_type = "info", class = "collapsible") %>%
-                      bs_attach_collapse("orient-collapse"),
-                    bs_collapse(
-                      id = "orient-collapse",
-                      content = tags$div(
-                        class = "well",
-                        tags$div(
-                          htmlOutput("orient"), class = "orient")))
-                )), # end fluidRow
-                fluidRow(
-                  column(6,
-                    wellPanel(
-                      selectInput("court", "Select Court Jurisdictions",
-                                  multiple = TRUE,
-                                  choices = unique(plaintiff_dat$county),
-                                  selected = unique(plaintiff_dat$county),
-                                  size = 5,
-                                  selectize = FALSE),
-                      helpText("Note: Select one or more court jurisdictions to show in the table and visualizations. Select multiple jurisdictions by clicking on court names while holding down the control or command key.")
-                    )
-                  ),
-                  column(6,
-                    wellPanel(
-                      radioButtons("time", "Select a Time Period to Display",
-                                  choices = list("Totals across All Years" = "All",
-                                                  "Totals by Year" = "Year",
-                                                  "Totals by Month" = "Month"),
-                                  selected = "All"),
-                      helpText("Note: Select a time period to see the aggregated eviction filings in the table and visualization. The visualization will update based on the time period selected. When selecting \"Totals by Month\", the table can be further filtered by typing the year-month into the search field below the \"Time Frame\" column in the table (for example, \"2020-01\" will filter the table to cases filed during January, 2020).")
-                    )
-                )), # end fluidRow
-                fluidRow(
-                  column(12,
-                    tabsetPanel(type = "pills",
-                                tabPanel("Table", icon = icon("table"), downloadButton("downloadBtn", "Download"), DTOutput("plaintiff_table")),
-                                tabPanel("Visualize", icon = icon("chart-bar"), textOutput("viztitle"), plotlyOutput("viz", width = "100%", height = "700")),
-                    ),
-                )) # end fluidRow
-              ) # end fluidPage
-      ), # end tabPanel
-      tabPanel("Data Notes",
+      title = i18n$t("Virginia Evictors Catalog"),
+    #  windowTitle = "Virginia Evictors Catalog",
+      tabPanel(i18n$t("Home"),
+        main_page_panel
+      ),
+      tabPanel(i18n$t("Data Notes"),
         fluidPage(uiOutput("notes"))
       ),
-      tabPanel("About the Project",
+      tabPanel(i18n$t("About the Project"),
         fluidPage(uiOutput("about"))
       ),
-      tabPanel("In the News",
+      tabPanel(i18n$t("In the News"),
         fluidPage(uiOutput("news"))
       )
     ), # end navbarPage
@@ -138,17 +179,41 @@ ui <- bootstrapPage(
 # Server ----
 server <- function(input, output, session) {
 
+  i18n_r <- reactive({
+      i18n
+    })
   # Render HTML content
   output$header <- renderUI(header)
-  output$footer <- renderUI(footer)
-  output$orient <- renderUI(orient_notes)
-  output$notes <- renderUI(data_notes)
-  output$about <- renderUI(about_notes)
-  output$news <- renderUI(news_page)
 
-  # Make navbarPage title element link to catalog tab
-  observeEvent(input$title, {
-    updateNavbarPage(session, "main-page", "Home")
+  observeEvent(input$selected_language, {
+    # This print is just for demonstration
+    print(paste("Language change!", input$selected_language))
+    # Here is where we update language in session
+    shiny.i18n::update_lang(input$selected_language)
+    # Update radio button choices with langauge change
+    updateRadioButtons(session, "time",
+                      label = i18n_r()$t("Select a Time Period to Display"),
+                      choices = setNames(c("Totals across All Years" = "All",
+                                        "Totals by Year" = "Year",
+                                        "Totals by Month" = "Month"),
+                                        i18n_r()$t(c("Totals across All Years","Totals by Year","Totals by Month"))),
+                      selected=input$time)
+    # update various html docs in app
+    if (input$selected_language == "Español"){
+      output$orient <- renderUI(orient_notes_sp)
+      output$selection_note_time <- renderUI(selection_note_time_sp)
+      output$notes <- renderUI(data_notes_sp)
+      output$about <- renderUI(about_notes_sp)
+      output$news <- renderUI(news_page_sp)
+      output$footer <- renderUI(footer_sp)
+    } else {
+      output$orient <- renderUI(orient_notes)
+      output$selection_note_time <- renderUI(selection_note_time)
+      output$notes <- renderUI(data_notes)
+      output$about <- renderUI(about_notes)
+      output$news <- renderUI(news_page)
+      output$footer <- renderUI(footer)
+    }
   })
 
   # Pick and subset data for datatable
@@ -169,29 +234,53 @@ server <- function(input, output, session) {
   )
 
   # Render datatable
-  output$plaintiff_table <- DT::renderDT(
+  output$plaintiff_table <- DT::renderDT({
     datatable(df(),
               rownames = FALSE,
-              caption = 'Sources: Legal Services Corporation (lsc.gov)',
+              caption = i18n$t("Sources: Legal Services Corporation (lsc.gov)"),
               class = 'display nowrap',
               filter = 'top',
               options = list(searchHighlight = TRUE,
                              scrollX = TRUE,
                              pageLength = 20,
                              order = list(2, 'desc'), # column indexing starts at 0 (3rd column visually is indexed as 2)
-                             dom = 'lfrtip'),
-              colnames = c('Court Jurisdiction', 'Plaintiff Name',
-                           'Cases Filed', 'Eviction Judgments', 'Serial Filings',
-                           'Time Frame', 'Known Virginia Defendant ZIP Codes')
+                             dom = 'lfrtip',
+              language = if (input$selected_language == "Español") {
+                  # Data table translation options: https://datatables.net/plug-ins/i18n/#Translations
+                  list(url = "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-MX.json")
+                } else {
+                  NULL
+                }),
+              colnames = c(i18n$t("Court Jurisdiction"), i18n$t("Plaintiff Name"), 
+                           i18n$t("Cases Filed"), i18n$t("Eviction Judgments"), i18n$t("Serial Filings"),
+                           i18n$t("Time Frame"), i18n$t("Known Virginia Defendant ZIP Codes"))
+              #NEED TO FIX BELOW TO CALL TO A UNIQUE TABLE ID/DATA TABLE ID CHANGES WITH EACH REACTIVE INPUT
+              # callback = JS("
+              #   var tips = ['The general district court where the case was filed. Court jurisdictions are tied to localities (counties or cities) in Virginia.',
+              #    'The entity filing an eviction case against a tenant with the court. In Virginia, eviction cases can be filed by \"the landlord, [their] agent, attorney, or other person.\"', 
+              #    'The total number of eviction cases filed by the plaintiff in the selected time period and jurisdiction.',
+              #   'The total number of cases filed by the plaintiff that ended in an eviction judgment (a judgment for the plaintiff).', 
+              #     'We consider serial cases to be repeated cases filed by a given plaintiff against a given defendant in a given ZIP code within a 12-month period.',
+              #     'Time period(s) of total filings and evictions. Shown as all years, by year, or by month based on selection above.',
+              #     'The ZIP codes provided for the defendants (tenants) against whom the unlawful detainer/eviction is filed.'
+              #     ],
+              #     header = $('#plaintiff_table th');
+              #   for (var i = 0; i < tips.length; i++) {
+              #     $(header[i]).append('<svg version=\"1.1\" id=\"tooltip-icon\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\" viewBox=\"0 0 16 16\" width=\"16px\" height=\"16px\" style=\"enable-background:new 0 0 16 16;margin-left:10px;margin-bottom:3px;\" xml:space=\"preserve\"><path d=\"M14.5,8c0-3.59-2.91-6.5-6.5-6.5S1.5,4.41,1.5,8s2.91,6.5,6.5,6.5S14.5,11.59,14.5,8z M0,8c0-4.42,3.58-8,8-8 s8,3.58,8,8s-3.58,8-8,8S0,12.42,0,8z M5.31,5.17C5.55,4.47,6.22,4,6.96,4h1.82c1.09,0,1.97,0.88,1.97,1.97 c0,0.71-0.38,1.36-0.99,1.71L8.75,8.26C8.74,8.67,8.41,9,8,9C7.58,9,7.25,8.67,7.25,8.25V7.83c0-0.27,0.14-0.52,0.38-0.65l1.38-0.79 C9.16,6.3,9.25,6.14,9.25,5.97c0-0.26-0.21-0.47-0.47-0.47H6.96c-0.11,0-0.2,0.07-0.23,0.17L6.71,5.71C6.57,6.1,6.14,6.3,5.75,6.16 S5.16,5.59,5.3,5.21L5.31,5.17L5.31,5.17z M7,11c0-0.55,0.45-1,1-1s1,0.45,1,1s-0.45,1-1,1S7,11.55,7,11z\"/></svg>');
+              #     $(header[i]).find('svg').attr('data-toggle', 'tooltip');
+              #     $(header[i]).find('svg').attr('data-placement', 'top');
+              #     $(header[i]).find('svg').attr('title', tips[i]);
+              #   }
+              #   ")
     )
-  )
+  }, server = TRUE)
 
   # Output visuals
   output$viz <- renderPlotly({
 
     if (input$time == 'All') {
       output$viztitle <- renderText({
-        "Cases Filed and Eviction Judgments within Selected Court Jurisdictions (Totals by Selected Jurisdictions, All Years)"
+        i18n$t("Cases Filed and Eviction Judgments within Selected Court Jurisdictions (Totals by Selected Jurisdictions, All Years)")
       })
 
       p <- df() %>%
@@ -225,7 +314,7 @@ server <- function(input, output, session) {
 
     } else if (input$time == "Year")  {
       output$viztitle <- renderText({
-        "Cases Filed and Eviction Judgments within Selected Court Jurisdictions (Totals by Year, of Selected Jurisdictions)"
+        i18n$t("Cases Filed and Eviction Judgments within Selected Court Jurisdictions (Totals by Year, of Selected Jurisdictions)")
       })
 
       p <- df() %>%
@@ -247,7 +336,7 @@ server <- function(input, output, session) {
 
     } else {
       output$viztitle <- renderText({
-        "Cases Filed and Eviction Judgments within Selected Court Jurisdictions (Totals by Month, of Selected Jurisdictions)"
+        i18n$t("Cases Filed and Eviction Judgments within Selected Court Jurisdictions (Totals by Month, of Selected Jurisdictions)")
       })
 
       # Need separate df for moratorium label, to keep geom_text from plotting overlapping text

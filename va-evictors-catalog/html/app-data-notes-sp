@@ -1,0 +1,54 @@
+<div class="page-content">
+<h1>Notas acerca de los datos</h1>
+
+<h2>Fuentes de datos</h2>
+
+<p>Los datos sobre las presentaciones de desalojo se toman del <a href="https://eapps.courts.state.va.us/gdcourts/landing.do?landing=landing">Sistema de Información de Casos en Línea del Tribunal General de Distrito de Virginia</a> y representan todos los casos de detención ilegal (desalojo) presentados en los Tribunales Civiles del estado. Los datos son proporcionados por Civil Court Data Initiative (<a href="https://www.lsc.gov/initiatives/civil-court-data-initiative">CCDI</a>) a través de una asociación con <a href="https://www.lsc.gov/" target="_blank">Legal Services Corporation</a>.</p>
+
+<p>Los datos presentados aquí incluyen solo casos de desalojo presentados contra demandados residenciales (inquilinos); se han eliminado los casos presentados contra inquilinos comerciales. Además, los datos aquí están organizados en torno a los solicitantes de desalojo; no se identifican los inquilinos que son demandados en casos de desalojo.</p>
+
+
+<h2>Definición de variables</h2>
+<p>Cada fila en la base de datos representa un desalojador: el demandante que presenta el caso de desalojo. Para cada desalojador, los datos informan: </p>
+  <ul>
+  <li><b>Jurisdicción del tribunal:</b> El tribunal de distrito general donde se presentó el caso. Las jurisdicciones de los tribunales están vinculadas a las localidades (condados o ciudades) de Virginia. Hay tribunales generales de distrito en cada condado y ciudad, aunque algunas áreas de ciudades/condados comparten la jurisdicción de un tribunal.</li>
+  <li><b>Nombre del demandante:</b> La entidad que presenta un caso de desalojo contra un inquilino ante el tribunal. En Virginia, los casos de desalojo pueden ser presentados por "el arrendador, [su] agente, abogado u otra persona" (<a href="https://law.lis.virginia.gov/vacode/title8.01/chapter3/section8.01-126/" target="_blank">&sect;8.01-126</a>). Dentro del Catálogo de desalojadores de Virginia, el demandante es el desalojador registrado.</li>
+  <li><b>Casos presentados:</b> El número total de casos de desalojo presentados por el demandante en el período de tiempo y la jurisdicción seleccionados.</li>
+  <li><b>Sentencias de desalojo:</b> El número total de casos presentados por el demandante que terminaron en una sentencia de desalojo (una sentencia para el demandante). Los casos de desalojo pueden terminar en una sentencia para el actor (desalojo), una sentencia para el demandado, un sobreseimiento o la sentencia puede estar pendiente.<sup>1</sup> En consecuencia, los expedientes pueden incluir casos que aún están abiertos o que se concluyen sin sentencia.</li>
+  <li><b>Presentaciones en serie:</b> Consideramos que los casos en serie son casos repetidos presentados por un demandante determinado contra un demandado determinado en un código postal determinado dentro de un período de 12 meses.</li>
+  <li><b>Marco de tiempo:</b> Los datos sobre los desalojadores se pueden ver como presentaciones y desalojos totales para el período de tiempo completo (todos los años), por año o por mes durante el período de tiempo completo.</li>
+  <li><b>Códigos postales de demandados conocidos de Virginia:</b> los códigos postales proporcionados para los demandados (inquilinos) contra quienes se presenta la orden de retención/desalojo ilegal. El Sistema de información de casos en línea no proporciona las direcciones completas de los demandantes o demandados, solo los códigos postales. Los códigos postales de los demandados se proporcionan aquí para comprender mejor <b>dónde</b> están presentando los casos los desalojadores. Los códigos postales de los demandados no se repiten, por lo que si un desalojador presentó cuatro casos contra los demandados en el código postal 12345, el 12345 solo se enumeraría una vez. No todos los casos proporcionan códigos postales válidos o códigos postales dentro de Virginia; estos han sido eliminados del catálogo actual.</li>
+  </ul>
+
+<h2>Procesamiento de datos</h2>
+<p>Hemos aplicado varios procedimientos de limpieza para mejorar la calidad de los datos, entre ellos:</p>
+<ul>
+    <li>Eliminando registros de casos duplicados.</li>
+    <li>Estandarizando los nombres de los demandantes y los demandados; Por ejemplo:</li>
+      <ul>
+        <li>Un secretario de la corte podría registrar un nombre como "FRESH FRUIT LLC" el lunes y como "FRESH FRUIT, LLC" el martes, por lo que eliminamos las comas antes de los acrónimos de identificación comercial (LLC, LP, LLP, etc.).</li>
+        <li>Un demandante puede figurar como "GOOD LIVING APTS" en un caso y como "GOOD LIVING APARTMENTS" en otro, por lo que ampliamos las siglas comunes de vivienda (APTS &#8594; APARTMENTS; MGMT &#8594; MANAGEMENT, etc.).</li>
+        <li>Empleamos muchos pasos adicionales para abordar las inconsistencias y los errores comunes de ingreso de datos; puede leer más sobre esos pasos en la sección <em>Proceso de limpieza y estandarización de datos</em> <a href="https://github.com/virginiaequitycenter/va-evictions" target="_blank">aquí</a>.</li>
+      </ul>
+  <li>Identificando a los acusados residenciales mediante un patrón de expresiones regulares desarrollado a medida y filtrando a todos los acusados no residenciales. Puede ver la expresión regular completa <a href="https://github.com/jacob-gg/non-person-regex" target="_blank">aquí</a>.</li>
+</ul>
+
+<p>Un nombre dado de desalojador/demandante puede contener muchas variaciones, ortografías alternativas, faltas de ortografía y abreviaturas en múltiples presentaciones de desalojo. Hemos intentado abordar y dar cuenta de muchas de estas instancias, pero el mismo desalojador aún puede aparecer en varias filas con solo ligeras diferencias en los nombres. Los usuarios interesados en un arrendador o desalojador en particular deben considerar realizar búsquedas de nombres parciales en la columna Nombre del demandante.</p>
+
+<p>Actualmente estamos investigando enfoques para deduplicar los nombres de los demandantes, que incluyen:</p>
+  <ul>
+    <li>"Borrar" los nombres de los demandantes para reducir el número de ortografías/faltas de ortografía alternativas del mismo nombre, lo que de otro modo reduciría la precisión de esta base de datos. Hemos explorado el uso de algoritmos de distancia de cadena para identificar posibles "coincidencias aproximadas" entre los nombres de los demandantes con ligeras diferencias ortográficas que comparten el mismo tribunal de presentación. Este proceso computacionalmente intensivo aún no se ha completado para todas las localidades.</li>
+  <li>Buscar coincidencias en una lista de todas las variantes observadas de un nombre para generar un nombre común. La creación manual de una lista de coincidencias requiere mucho trabajo y se ha explorado solo en un puñado de localidades.</li>
+  <li>Trabajo con Legal Services Corporation para incorporar enfoques de coincidencia de nombres que han desarrollado en iteraciones futuras de este trabajo.</li>
+  </ul>
+
+<p>
+El repositorio de código para este trabajo está disponible en <a href="https://github.com/virginiaequitycenter/va-evictions" target="_blank">GitHub</a>. Para cualquier pregunta, comuníquese con nosotros <a href="https://docs.google.com/forms/d/e/1FAIpQLSeANUSskUw_HDpMTEuD7pXcivT7uBXz0iCGzc0nhPsZZ9Yh6Q/viewform?usp=sharing" target="_blank">aquí</a>.
+</p>
+
+<h2>Nota al pie</h2>
+<ol>
+<li>Los resultados menos frecuentes incluyen que no se encuentra o no se sirve al defendente, el caso se transfiere a otro sitio, el caso se apela, o “otras” sentencias.</li>
+</ol>
+
+</div>

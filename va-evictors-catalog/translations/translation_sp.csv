@@ -1,0 +1,39 @@
+﻿English,Español
+en,es
+Select language,Seleccione el idioma
+Virginia Evictors Catalog,Catálogo Virginia Evictors
+Home,Inicio
+Data Notes,Notas de datos
+About the Project,Acerca del proyecto
+In the News,En las noticias
+Who is Filing Evictions in Virginia?,¿Quién está declarando los desalojos en Virginia?
+The Virginia Evictors Catalog provides data about plaintiffs filing unlawful detainers (evictions) in Virginia's General District Courts from ,El catálogo de desalojos de Virginia proporciona información sobre los demandantes que presentan detenciones ilegales (desalojos) en los Tribunales Generales de Distrito de Virginia desde 
+ through , hasta 
+Each row in the table below represents a plaintiff filing in a specific court jurisdiction.,Cada fila en la tabla por debajo representa un demandante que declara en una jurisdicción judicial específica.
+How to search the catalog,Cómo buscar el catálogo
+
+Select Court Jurisdictions to Include,Seleccione las jurisdicciones judiciales para incluir
+Note: Select one or more court jurisdictions to show in the table and visualizations. Select multiple jurisdictions by clicking on court names while holding down the control or command key.,Nota: Seleccione una o más jurisdicciones judiciales para mostrar en la tabla y las visualizaciones. Seleccione varias jurisdicciones haciendo clic en los nombres de los tribunales mientras mantiene pulsada la tecla de control o comando.
+Select a Time Period to Display,Seleccione un período de tiempo para mostrar
+"Totals across All Years","Los totales de todos los años"
+"Totals by Year","Totales por año"
+"Totals by Month","Totales por mes"
+
+Table,Tabla
+Visualize,Visualización
+Download,Descargar
+
+Court Jurisdiction,Jurisdicción del Tribunal
+Plaintiff Name,Nombre del demandante
+Cases Filed,Casos presentados
+Eviction Judgments,Sentencias de desalojo
+Serial Filings,Presentaciones en serie
+Time Frame,Marco de tiempo
+Known Virginia Defendant ZIP Codes,Códigos postales de demandados conocidos de Virginia
+Sources: Legal Services Corporation (lsc.gov),Fuente de datos: Legal Services Corporation (lsc.gov)
+Contact Us,Contáctenos
+
+"Cases Filed and Eviction Judgments within Selected Court Jurisdictions (Totals by Selected Jurisdictions, All Years)","Casos presentados y sentencias de desalojo dentro de jurisdicciones judiciales seleccionadas (totales por jurisdicciones seleccionadas, todos los años)"
+"Cases Filed and Eviction Judgments within Selected Court Jurisdictions (Totals by Year, of Selected Jurisdictions)","Casos presentados y sentencias de desalojo dentro de jurisdicciones judiciales seleccionadas (totales por año, de jurisdicciones seleccionadas)"
+"Cases Filed and Eviction Judgments within Selected Court Jurisdictions (Totals by Month, of Selected Jurisdictions)","Casos presentados y sentencias de desalojo dentro de jurisdicciones judiciales seleccionadas (totales por mes, de jurisdicciones seleccionadas)"
+

@@ -1,0 +1,90 @@
+<div class="collapse-content">
+<h2>Resumen</h2>
+  <ul class="orient-list">
+    <li class="orient-list-item">
+    La tabla y las pestañas de visualización a continuación muestran datos judiciales basados en las selecciones realizadas en los dos cuadros etiquetados "Seleccionar jurisdicciones judiciales" y "Seleccionar período de tiempo".
+    </li>
+    <li class="orient-list-item">
+La visualización se cambiará dependiendo del tiempo elegido.
+</li>
+   <li class="orient-list-item">
+Las secciones de búsqueda de la table permiten añadir filtros adicionales.
+</li>
+   <li class="orient-list-item">
+Consulte a “Notas acerca de los datos” para una definición completa de cada columna de la tabla, y también más información sobre los datos presentados en el catálogo.
+</li>
+  </ul>
+<h2>Cuadros de Selección</h2>
+<ul class="orient-list">
+<li class="orient-list-item">
+Filtre la tabla para jurisdicciones judiciales específicas seleccionando los nombres de los tribunales en el cuadro "Seleccionar jurisdicciones judiciales". 
+</li>
+<ul class="orient-list">
+<li>
+La tabla está en la configuración al comienzo de seleccionar todas todas las jurisdicciones de los tribunales del VA. 
+</li>
+<li>
+Seleccione varias jurisdicciones haciendo clic en los nombres de los tribunales mientras mantiene presionada la tecla de control (Windows) o comando (Mac).
+</li>
+<li class="orient-list-item">
+Para seleccionar todas las jurisdicciones, haga clic en el primer nombre del tribunal y, a continuación, en el último nombre del tribunal mientras mantiene pulsada la tecla de Mayúsculas. 
+</li>
+</ul>
+
+<li class="orient-list-item">
+Las presentaciones de desalojo agregadas para los períodos de tiempo seleccionados en el cuadro "Seleccionar período de tiempo" aparecerán en las pestañas de tabla y visualización. 
+</li>
+
+<ul class="orient-list">
+<li>
+La visualización se cambiará dependiendo del tiempo elegido.
+</li>
+<li>
+Seleccione "Totales en todos los años" para ver la suma de las presentaciones para todos los años en el catálogo.
+</li>
+<li>
+Seleccione "Totales por año" para ver la suma de las presentaciones dentro de cada año representadas en el catálogo.
+</li>
+<li>
+Seleccione “Totales por mes” para ver la suma de las presentaciones dentro de cada mes representadas en el catálogo. Dentro de esta opción, la tabla se puede filtrar aún más escribiendo el año-mes en el campo de búsqueda debajo del encabezado “Marco de tiempo” en la tabla (por ejemplo, “2020-01” filtrará la tabla a los casos presentados durante enero de 2020). 
+</li>
+</ul>
+</ul>
+<h2>Opciones adicionales de ordenación y filtro</h2>
+<ul class="orient-list">
+<li class="orient-list-item">
+Ordene la tabla de datos haciendo clic en las flechas arriba/abajo junto a los encabezados de las columnas (es decir, "Casos presentados", "Sentencias de desalojo", etc.).
+</li>
+
+<li class="orient-list-item">
+Filtre la tabla por demandante escribiendo el nombre del demandante en el campo debajo de "Nombre del demandante". 
+</li>
+<ul class="orient-list">
+<li >
+Se puede usar para ver si un demandante individual presentó desalojos en múltiples jurisdicciones judiciales. 
+</li>
+<li class="orient-list-item">
+Algunos nombres de los demandantes aparecen de manera ligeramente diferente en las presentaciones judiciales. Escriba solo una parte del nombre de un demandante para ver si varía.
+</li>
+</ul>
+<li class="orient-list-item">
+Utilice el cuadro de búsqueda de la esquina superior derecha de la tabla para buscar en todos los campos de la tabla o busque columnas individuales utilizando el campo situado debajo de cada encabezado de la columna.
+</li>
+</ul>
+
+<h2>Descarga de los datos y visualizaciones de la tabla</h2>
+<ul class="orient-list">
+<li class="orient-list-item">
+Descargue los datos de la tabla en formato CSV haciendo clic en el botón "Descargar" encima de la tabla. Los archivos CSV se pueden abrir usando Excel o cualquier otro programa de hoja de cálculo.
+</li>
+<ul class="orient-list">
+<li class="orient-list-item">
+El archivo descargado contendrá solo los datos filtrados de las opciones seleccionadas en “Seleccionar jurisdicciones judiciales” y “Seleccionar período de tiempo”. Cualquier filtrado realizado con los campos de búsqueda no se aplicará a los datos descargados.
+</li>
+
+</ul>
+<li class="orient-list-item">
+Descargue un archivo de imagen (.png) del gráfico en la pestaña "Visualización" haciendo clic en el icono de la cámara que se encuentra encima del gráfico.
+</li>
+<ul>
+</div>
