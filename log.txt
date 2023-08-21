@@ -1,10 +1,10 @@
-run_date: 2023-07-24
-time_finished: 16:28
-n_residential_cases: 565583
-n_cases: 570754
+run_date: 2023-08-21
+time_finished: 16:25
+n_residential_cases: 598302
+n_cases: 603730
 min_year_residential_cases: 2018
 max_year_residential_cases: 2023
-n_serial_residential_cases: 161540
-n_true_duplicates_removed: 525
+n_serial_residential_cases: 171953
+n_true_duplicates_removed: 561
 n_duplicate_case_ids_removed: 1
 duplicate_case_ids_removed: 155_GV22000758-00
