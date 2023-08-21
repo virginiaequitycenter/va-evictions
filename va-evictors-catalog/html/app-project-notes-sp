@@ -45,12 +45,18 @@
   <li>Jacob Goldstein-Greenwood escribió el código para limpiar y estandarizar los datos, y desarrolló el paquete <a href="https://github.com/virginiaequitycenter/ECtools" target="_blank">ECtools</a> en el que se basa ese código.</li>
   <li>Hannah Woehrle, Michael Salgueiro y Atticus Johnson proporcionaron apoyo adicional en gestión, coordinación y comunicaciones del proyecto.</li>
   <li>El trabajo de datos fue financiado con el apoyo del programa 4-VA Collaborative Research Grant en UVA, The Richmond Memorial Health Foundation y The VCU Center for Community Engaged Research.</li>
+  <li>Las traducciones al español fueron proporcionadas por Multilingual Outreach Volunteer Effort (MOVE) en el Centro de Lengua y Cultura Inglesa Estadounidense de la UVA.</li>
 </ul>
 
 <p><em>Citación</em></p>
-<p>The Equity Center, RVA Eviction Lab, and UVA Library StatLab. "Virginia Evictors Catalog." https://virginiaequitycenter.shinyapps.io/va-evictors-catalog/</p>
+<p>The Equity Center, RVA Eviction Lab, and UVA Library StatLab. <em>Virginia Evictors Catalog</em>. UVA Karsh Institute of Democracy Center for the Redress of Inequity Through Community-Engaged Scholarship, RVA Eviction Lab in the Wilder School of Government and Public Affairs at VCU, UVA Library Research Data Services StatLab. https://virginiaequitycenter.shinyapps.io/va-evictors-catalog/. Accessed <span id="date"></span>.</p>
 
 <p><em>Repositorio de código</em></p>
 <p>El trabajo que sustenta el Virginia Evictors Catalog está disponible públicamente en <a href="https://github.com/virginiaequitycenter/va-evictions" target="_blank">GitHub</a>.</p>
 
 </div>
+
+<script>
+  var today = new Date;
+  document.getElementById('date').innerHTML= today.toDateString();
+</script>
