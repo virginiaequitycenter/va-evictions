@@ -12,6 +12,10 @@ body {
   word-wrap: break-word;
 }
 
+a {
+  color: #0d6efd;
+}
+
 @media screen and (max-width: 42em) {
   .container-fluid {
     padding: 0.5rem;
@@ -153,7 +157,8 @@ header, footer {
 }
 
 .collapsible {
-    background-color: #777;
+    /* background-color: #777; */
+    background-color: #636363;
     color: white;
     cursor: pointer;
     padding: 0.75rem 1.25rem;
@@ -215,8 +220,16 @@ header, footer {
 
 .nav-pills .nav-link.active {
   color: #fff;
-    background-color: #138496;
-    border-color: #117a8b;
+    background-color: #087990;
+    border-color: #056275;
+}
+
+.btn-info:hover,
+.btn-info:not(:disabled):not(.disabled):active, .btn-info.active:not(:disabled):not(.disabled), .show > .btn-info.dropdown-toggle, .in > .btn-info.dropdown-toggle,
+.btn-info:focus, .btn-info.focus {
+  color: #fff;
+  background-color: #087990;
+  border-color: #056275;
 }
 
 .tab-content {

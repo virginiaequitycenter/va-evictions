@@ -3,8 +3,8 @@
 # Author: Jacob Goldstein-Greenwood | jacobgg@virginia.edu | GitHub: jacob-gg  #
 # Author: Michele Claibourn | mclaibourn@virginia.edu | GitHub: mclaibourn     #
 # Author: Elizabeth Mitchell | beth@virginia.edu | GitHub: eam5                #
-# Last revised: 2023-08-22                                                     #
-# Last deployed: 2023-08-22                                                    #
+# Last revised: 2023-09-08                                                     #
+# Last deployed: 2023-09-08                                                    #
 ################################################################################
 
 # Packages ----
@@ -253,7 +253,12 @@ server <- function(input, output, session) {
                 }),
               colnames = c(i18n$t("Court Jurisdiction"), i18n$t("Plaintiff Name"), 
                            i18n$t("Cases Filed"), i18n$t("Eviction Judgments"), i18n$t("Serial Filings"),
-                           i18n$t("Time Frame"), i18n$t("Known Virginia Defendant ZIP Codes"))
+                           i18n$t("Time Frame"), i18n$t("Known Virginia Defendant ZIP Codes")),
+              # the following JS inserts an aria-label for the column search fields to address the missing form control label for accessibility
+              callback = JS("
+                formControl = $('#plaintiff_table tr td div.form-group input.form-control');
+                $(formControl).attr('aria-label', 'Search Column');
+              ")
               #NEED TO FIX BELOW TO CALL TO A UNIQUE TABLE ID/DATA TABLE ID CHANGES WITH EACH REACTIVE INPUT
               # callback = JS("
               #   var tips = ['The general district court where the case was filed. Court jurisdictions are tied to localities (counties or cities) in Virginia.',
