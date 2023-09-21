@@ -2,7 +2,7 @@
 # Eviction case data cleaning script                         #
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn      #
 # GitHub: jacob-gg, mclaibourn                               #
-# Last revised: 2023-08-21                                   #
+# Last revised: 2023-09-20                                   #
 ##############################################################
 
 ######################## Instructions ########################
@@ -85,12 +85,18 @@ cases$filed_year <- extract_year(cases$filed_date, expect_modern = TRUE)
 # Extract quarters of case filings
 cases$filed_quarter <- assign_quarter(cases$filed_date, return_QX = TRUE)
 
-########################### Canary ###########################
-# For May 2023 update, only work with cases from 2018 through June 30, 2023:
-cases <- cases[cases$filed_date <= '2023-06-30', ]
+# Only subset cases through certain date if a valid date is given in setup.txt
+if ('setup.txt' %in% dir()) {
+  setup <- readLines('setup.txt')
+  use_cases_through <- setup[which(setup == 'use-data-through:') + 1]
+  if (grepl(pattern = '\\d{4}-\\d{2}-\\d{2}', x = use_cases_through)) {
+    cases <- cases[cases$filed_date <= use_cases_through, ]
+  }
+}
+
+# Only work with cases from 2018 onward
 cases$filed_year <- as.numeric(cases$filed_year)
 cases <- cases[cases$filed_year >= 2018, ]
-##############################################################
 
 ####################### Notes on names #######################
 # We use LSC cleaned_party_name for plantiff names, but we still apply our standardization and cleaning

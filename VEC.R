@@ -2,28 +2,39 @@
 # Run all scripts to update the VEC and deploy app           #
 # Authors: Jacob Goldstein-Greenwood                         #
 # GitHub: jacob-gg                                           #
-# Last revised: 2023-08-21                                   #
+# Last revised: 2023-09-20                                   #
 ##############################################################
 
 ######################### Instructions #######################
 # When the app is ready for an update, run this from shell:  #
 # Rscript --vanilla VEC.R <arg>                              #
-# <arg> must be one of: UD, DA, UDaDA                        #
+# <arg> must be one of:                                      #
+# 'GD', 'UD', 'DA', 'GDaUD', 'UDaDA', 'GDaUDaDA'             #
+#   - GD = get data only                                     #
 #   - UD = update data only                                  #
-#   - DA = depoy app only                                    #
-#   - UDaDA = update data and deploy app                     #
+#   - DA = deploy app only                                   #
+#   - GDaUD = get data and update data only                  #
+#   - UDaDA = update data and deploy app only                #
+#   - GDaUDaDA = get data and update data and deploy app     #
 ##############################################################
 
 args <- commandArgs(trailingOnly = TRUE)
-if ((length(args) == 1 && args[1] %in% c('UD', 'DA', 'UDaDA')) == FALSE) {
-  stop('Input argument must be "UD" or "UDaDA"', call. = FALSE)
+if ((length(args) == 1 && args[1] %in% c('GD', 'UD', 'DA', 'GDaUD', 'UDaDA', 'GDaUDaDA')) == FALSE) {
+  stop('Input argument must be "GD", "UD", "DA", "GDaUD", "UDaDA" or "GDaUDaDA"', call. = FALSE)
 }
 
 if (grepl('va\\-evictions$', getwd()) != TRUE) {
   stop('VEC.R must be run from the va-evictions directory', call. = FALSE)
 }
 
-if (args[1] == 'UD' | args[1] == 'UDaDA') {
+if (args[1] %in% c('GD', 'GDaUD', 'GDaUDaDA')) {
+  msg <- '# Running get-data.R... #'
+  pndsgns <- paste0(rep('#', nchar(msg)), collapse = '')
+  cat('\n', pndsgns, '\n', msg, '\n', pndsgns, '\n')
+  source('get-data.R')
+}
+
+if (args[1] %in% c('UD', 'GDaUD', 'UDaDA', 'GDaUDaDA')) {
   msg <- '# Running clean.R... #'
   pndsgns <- paste0(rep('#', nchar(msg)), collapse = '')
   cat('\n', pndsgns, '\n', msg, '\n', pndsgns, '\n')
@@ -35,7 +46,7 @@ if (args[1] == 'UD' | args[1] == 'UDaDA') {
   source('summarize.R')
 }
 
-if (args[1] == 'DA' | args[1] == 'UDaDA') {
+if (args[1] %in% c('DA', 'UDaDA', 'GDaUDaDA')) {
   msg <- '# Running deploy.R from /va-evictors-catalog... #'
   pndsgns <- paste0(rep('#', nchar(msg)), collapse = '')
   cat('\n', pndsgns, '\n', msg, '\n', pndsgns, '\n')
@@ -45,8 +56,3 @@ if (args[1] == 'DA' | args[1] == 'UDaDA') {
   pndsgns <- paste0(rep('#', nchar(msg)), collapse = '')
   cat('\n', pndsgns, '\n', msg, '\n', pndsgns, '\n')
 }
-
-# Add logging; perhaps email log file to self.
-# For the later-in-fall update, consider boxR to
-# check the Box for new updates, auto-download into data/updates,
-# and use those data as part of the app update.

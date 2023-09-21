@@ -1,0 +1,15 @@
+# README
+# use-data-through: [YYYY-MM-DD] what (filing) date should the app contain cases through?
+# original: [Box .zip folder name] what folder (in Box) contains the "original" data, for which all other data sets are updates?
+# updates: [Box .zip folder names, one per line] what folders (in Box) contain the updates to the "original" data?
+# Folder names on Box can be written as <xyz>.zip or <xyz>
+
+use-data-through:
+2023-06-30
+
+original:
+2023-05-04_all_data.zip
+
+updates:
+2023-05-182023-06-192023-07-172023-08-21
+2023-09-18
