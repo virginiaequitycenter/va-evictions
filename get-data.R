@@ -2,7 +2,7 @@
 # Retrieve unlawful detainer case data from LSC Box folder   #
 # Authors: Jacob Goldstein-Greenwood                         #
 # GitHub: jacob-gg                                           #
-# Last revised: 2023-09-20                                   #
+# Last revised: 2024-02-02                                   #
 ##############################################################
 
 # Check packages
@@ -44,7 +44,7 @@ dir.create('data')
 
 # Retrieve data from Box and put it in the right places
 # CD in Box folder with LSC data updates
-box_setwd(lapply(box_ls(), function(x) x$id[x$name == 'shared' & x$owned_by$login == 'serviceaccount@lsc.gov']) |> unlist())
+box_setwd(lapply(box_ls(), function(x) x$id[x$id == Sys.getenv('BOX_ID_LSC_EVICTION_DATA')]) |> unlist())
 
 # Check presence of requested folders
 folder_names <- sapply(box_ls(), function(x) x$name)
