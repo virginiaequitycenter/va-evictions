@@ -7,7 +7,7 @@
 # For error in console: Failed to connect to Box Api / Refresh token has expired - resolved by resetting Client Secret in Box app configuration and updating .Renviron file
 
 use-data-through:
-2023-09-30
+2023-12-31
 
 original:
 2023-05-04_all_data.zip
@@ -20,3 +20,6 @@ updates:
 2023-09-18
 2023-10-16
 2023-11-20
+2023-12-18
+2024-01-15
+2024-02-20
