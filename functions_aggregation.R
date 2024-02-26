@@ -1,4 +1,4 @@
-if ('dplyr' %in% loaded_packages()$package == F) { library(dplyr) }
+if ('dplyr' %in% devtools::loaded_packages()$package == F) { library(dplyr) }
 
 case_aggregator <- function(dat) {
   case_filed_date_var <- colnames(dat)[grepl(x = colnames(dat), pattern = 'date')]
@@ -46,7 +46,11 @@ hearing_aggregator <- function(dat, date_format = '%m/%d/%Y', time_format = '%R 
   case_id_var <- colnames(dat)[grepl(x = colnames(dat), pattern = 'id')]
   
   dat <- dat %>% group_by(eval(as.symbol(case_id_var))) %>%
-    summarize(hearing_count = n()) %>% 
+    mutate(date = as.Date(date, format = '%m/%d/%Y')) %>% 
+    arrange(desc(date)) %>% 
+    summarize(hearing_count = n(),
+              latest_hearing_date = date[1],
+              latest_hearing_result = result[1]) %>% 
     ungroup()
   
   dat <- rename_with(dat, function(x) sub('^.+$', {{case_id_var}}, x), contains('eval'))
