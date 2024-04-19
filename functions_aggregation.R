@@ -49,8 +49,8 @@ hearing_aggregator <- function(dat, date_format = '%m/%d/%Y', time_format = '%R 
     mutate(date = as.Date(date, format = '%m/%d/%Y')) %>% 
     arrange(desc(date)) %>% 
     summarize(hearing_count = n(),
-              latest_hearing_date = date[1],
-              latest_hearing_result = result[1]) %>% 
+              disposition_date = date[result %in% c("Judgment", "Default Judgment", "Other")][1],
+              disposition = result[result %in% c("Judgment", "Default Judgment", "Other")][1]) %>% 
     ungroup()
   
   dat <- rename_with(dat, function(x) sub('^.+$', {{case_id_var}}, x), contains('eval'))

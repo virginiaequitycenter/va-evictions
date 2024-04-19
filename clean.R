@@ -2,7 +2,7 @@
 # Eviction case data cleaning script                         #
 # Authors: Jacob Goldstein-Greenwood, Michele Claibourn      #
 # GitHub: jacob-gg, mclaibourn                               #
-# Last revised: 2023-09-20                                   #
+# Last revised: 2024-04-19                                   #
 ##############################################################
 
 ######################## Instructions ########################
