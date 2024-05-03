@@ -21,8 +21,8 @@ library(ggforce)
 library(ggsankey)
 
 # data
-writs <- readRDS("../writ_project/writ_matchedto_case.RDS")
-#cases <- readRDS("../data/case_matchedto_writ.RDS")
+writs <- readRDS("../data/writ_matchedto_case.RDS")
+cases <- readRDS("../data/case_matchedto_writ.RDS")
 
 # uses writs_matchedto_case.RDS from writ_data.R
 # uses case_matchedto_writ.RDS from writ_data.R
@@ -110,6 +110,7 @@ ggplot(df_set, aes(x, id = id, split = y, value = n)) +
   scale_fill_manual(values = c("#fed976", "#feb24c", "#fd8d3c", "#e31a1c", "#800026")) +
   labs(x = "") +
   theme_sankey()
+
 ```
 
 ### ggsankey::geom_sankey
@@ -134,12 +135,24 @@ ggplot(df_long, aes(x = x, next_x = next_x,
               smooth = 6) +
   geom_sankey_text(aes(label = after_stat(paste0(node, "\n", "(", freq, ")"))),
                    color = "black", size = 3) +
-  scale_fill_viridis_d() +
-  scale_x_discrete(labels = c("Outcome", "Judgment Type", "Writ Issued", "Writ Executed")) +
+  scale_fill_viridis_d(option = "cividis") +
+  scale_x_discrete(labels = c("Outcome", "Judgment Type", "Writ Issued", "Writ Executed"),
+                   position = "top") +
   labs(x = "") +
   theme_sankey() +
   theme(legend.position = "none")
+
 ```
+
+Note: I need to change the labels on the writ executed column to gain more control over the colors in the ggsankey::geom_sankey version; but am concerned that will be more confusing to read.
+
+### Additional thoughts
+
+In a final version, I could imagine adding some background color to represent informal evictions. That is, extending the overall area of the figure by adding background color below the figure. The size of the background color would be approximately proportionate to an estimated number of non-court evictions, but in a way that acknowledges uncertainty (e.g,  fuzzy edges or fading out).
+
+Currently just playing with possible color themes, but always looking for suggestions on better uses of color. 
+
+Figures could also be oriented vertically to make them bigger.
 
 ## Case Filing to Writs
 
@@ -270,9 +283,11 @@ ggplot(cases_long, aes(x = x, next_x = next_x,
               smooth = 6) +
   geom_sankey_text(aes(label = after_stat(paste0(node, "\n", "(", freq, ")"))),
                    color = "black", size = 2) +
-  scale_fill_viridis_d() +
-  scale_x_discrete(labels = c("Cases", "Outcome", "Writ Issued", "Writ Executed")) +
+  scale_fill_viridis_d(option = "cividis") +
+  scale_x_discrete(labels = c("Cases", "Outcome", "Writ Issued", "Writ Executed"),
+                   position = "top") +
   labs(x = "") +
   theme_sankey() +
   theme(legend.position = "none")
 ```
+

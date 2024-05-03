@@ -1,0 +1,378 @@
+---
+title: "Writ of Evictions in VA: Plots"
+date: "2024-04-29"
+author: Michele Claibourn, Henry DeMarco
+output: 
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r libdata}
+library(tidyverse)
+library(tidycensus)
+library(DT)
+
+#df <- readRDS("/Users/henrydemarco/Desktop/writs/data/writ_matchedto_case.RDS")
+df <- readRDS("../data/writ_matchedto_case.RDS")
+```
+
+```{r prepdata}
+df <- df %>% 
+  distinct()
+
+df <- df %>% 
+  mutate(county = str_sub(case_key, 12,14),
+         date_disp = ymd(date_disposed),
+         date_writ = ymd(writ_iss_date),
+         date_exec = ymd(writ_exec_date),
+         dur_disp_writ = interval(date_disp, date_writ) / ddays(1),
+         dur_writ_exec = interval(date_writ, date_exec) / ddays(1))
+
+df %>% group_by(disposition) %>% 
+  summarize(total = n(),
+            missing_writ = sum(is.na(dur_disp_writ), na.rm = TRUE),
+            percent_miss_writ = missing_writ/total,
+            mean_writ = mean(dur_disp_writ, na.rm = TRUE),
+            missing_exec = sum(is.na(dur_writ_exec)),
+            percent_miss_exec = missing_exec / total,
+            mean_exec = mean(dur_writ_exec, na.rm = TRUE))
+
+df %>% group_by(disposition) %>% 
+  summarize(total = n(),
+            missing_writ = sum(is.na(dur_disp_writ), na.rm = TRUE),
+            percent_miss_writ = missing_writ/total,
+            mean_writ = mean(dur_disp_writ, na.rm = TRUE),
+            missing_exec = sum(is.na(dur_writ_exec)),
+            percent_miss_exec = missing_exec / total,
+            mean_exec = mean(dur_writ_exec, na.rm = TRUE))
+
+df <- df %>%
+  mutate(county.x = ifelse(county == '703', '700', county.x))
+
+df <- df %>% 
+  mutate(days_since_disp = interval(date_disp, as.Date("2024-02-17")) / ddays(1))
+
+df <- df %>% 
+  mutate(days_since_writ = interval(date_writ, as.Date("2024-02-17")) / ddays(1),
+         writ_status = case_when(
+           is.na(date_writ) ~ "none",
+           is.na(date_exec) & days_since_writ > 30 ~ "expired",
+           is.na(date_exec) & days_since_writ <= 30 ~ "pending",
+           TRUE ~ "executed"
+         ))
+
+county_ten <- get_acs(geography = "county", 
+                      variables = c(ownhh = "B25003_002", 
+                                    renthh = "B25003_003",
+                                    totalhh = "B25003_001"), 
+                      state = "VA", 
+                      survey = "acs5",
+                      year = 2022,
+                      output = "wide")
+
+#Alter GEOID column to remove first two digits (enabling join with FIPS)
+county_ten <- county_ten %>%
+  mutate(county = substr(GEOID, 3, 5))
+
+writs_by_county <- df %>% group_by(county) %>%
+  summarize(county_cases = n_distinct(case_key),
+            iss_date_non_miss = n_distinct(case_key[!is.na(writ_iss_date)]),
+            exec_date_non_miss = n_distinct(case_key[!is.na(date_exec)])
+  )
+#Leftjoin county-level writs dataframe and county tenure dataframe
+writs_by_county <- left_join(county_ten, writs_by_county, by = c("county"))
+
+#Add columns to df for percentage possession vs. immediate by county
+df <- df %>%
+  group_by(first_plaintiff) %>%
+  mutate(possession_rate_plaintiff = sum(possession == "Possession", na.rm = TRUE) / n(),
+         immediate_rate_plaintiff = sum(possession == "Immediate", na.rm = TRUE) / n(),
+         total_count = n()) %>%
+  ungroup()
+
+#Left join to create a new table in which county_ten and df are joined
+writs_with_county <- left_join(county_ten, df, by = c("county" = "county.x"))
+
+#Create new dataframe with writ renter rates
+writ_rates <- writs_with_county %>% group_by(county) %>%
+  summarize(case_rate_rent = n_distinct(case_key) / unique(renthhE),
+            exec_rate_rent = n_distinct(case_key[!is.na(date_exec)]) / unique(renthhE),
+            iss_rate_rent = n_distinct(case_key[!is.na(writ_iss_date)]) / unique(renthhE)
+  )
+
+#Leftjoin new writ rate dataframe and writs_by_county dataframe
+writs_by_county <- left_join(writs_by_county, writ_rates, by = c("county"))
+
+#Creating new variable for case counts by county:
+writs_with_county <- writs_with_county %>%
+  group_by(county) %>%
+  mutate(county_cases = n_distinct(case_key))
+
+#Creating new data frame for case count by plaintiff
+plaintiff_case_counts <- df %>%
+  group_by(first_plaintiff) %>%
+  summarize(unique_plaintiff_cases = n_distinct(case_key))
+
+#Leftjoin unique cases by plaintiff with full writs / county dataframe
+writs_with_all_case_counts <- left_join(writs_with_county, plaintiff_case_counts, by = c("first_plaintiff"))
+
+#Creating plaintiff writs dataframes
+plaintiff_cases <- df %>% group_by(first_plaintiff) %>%
+  summarize(plaintiff_all = n_distinct(case_key),
+            plaintiff_iss = n_distinct(case_key[!is.na(writ_iss_date)]),
+            plaintiff_exec = n_distinct(case_key[!is.na(date_exec)]),
+  )
+
+#Adding plaintiff exec / iss rates (over total judgements)
+plaintiff_rate <- plaintiff_cases %>% group_by(first_plaintiff) %>% 
+  summarize(plaintiff_all = plaintiff_all,
+            plaintiff_iss = plaintiff_iss,
+            plaintiff_exec = plaintiff_exec,
+            plaintiff_iss_rate = plaintiff_iss / plaintiff_all,
+            plaintiff_exec_rate = plaintiff_exec / plaintiff_all)
+
+#Summary table with only key variables for county
+county_summary <- writs_by_county %>% group_by(county) %>% 
+  summarize(county_name = NAME,
+            total_renters = renthhE,
+            total_judgements = county_cases,
+            total_issued = iss_date_non_miss,
+            total_executed = exec_date_non_miss,
+            judgement_rate_renters = case_rate_rent,
+            issuance_rate_renters = iss_rate_rent,
+            exec_rate_renters = exec_rate_rent
+            )
+
+#Preparing summary for number and rates of possession and judgment by county:
+jud_poss_rates <- writs_with_county %>% group_by(county) %>%
+  summarize(case_count = n_distinct(case_key),
+            num_default = sum(disposition == "default judgment", na.rm = TRUE),
+            per_default = sum(disposition == "default judgment", na.rm = TRUE) / n(),
+            num_plaintiff = sum(disposition == "plaintiff", na.rm = TRUE),
+            per_plaintiff = sum(disposition == "plaintiff", na.rm = TRUE) / n(),
+            num_poss = sum(possession == "Possession", na.rm = TRUE),
+            per_poss = sum(possession == "Possession", na.rm = TRUE) / n(),
+            num_poss_imm = sum(possession == "Immediate", na.rm = TRUE),
+            per_poss_imm = sum(possession == "Immediate", na.rm = TRUE) / n(),
+            num_poss_miss = sum(is.na(possession)),
+            per_poss_miss= sum(is.na(possession)) / n()
+  )
+
+jud_poss_rates <- left_join(writs_by_county, jud_poss_rates, by = c("county"))
+
+judg_poss_type_county <- jud_poss_rates %>% group_by(county) %>% 
+  summarize(county_name = NAME,
+            total_judgments = county_cases,
+            num_default = num_default,
+            per_default = per_default,
+            num_plaintiff = num_plaintiff,
+            per_plaintiff = per_plaintiff,
+            num_poss = num_poss,
+            per_poss = per_poss,
+            num_poss_imm = num_poss_imm,
+            per_poss_imm = per_poss_imm,
+            num_poss_miss = num_poss_miss,
+            per_poss_miss = per_poss_miss
+  )
+
+default_poss_1 <- left_join(judg_poss_type_county, county_summary, by = c("county"))
+
+# legal_aid_service_areas <- read.csv("/Users/henrydemarco/Desktop/writs/data/legal_aid_service_areas.csv")
+
+legal_aid_service_areas <- read.csv("../data/legal_aid_service_areas.csv")
+
+#Alter GEOID column to remove first two digits (enabling join)
+legal_aid_service_areas <- legal_aid_service_areas %>%
+  mutate(county = substr(GEOID, 3, 5))
+
+default_possession <- merge(default_poss_1, legal_aid_service_areas, by = c("county"))
+
+default_poss_writs <- default_possession %>% group_by(county) %>% 
+    summarize(county_name = county_name.x,
+              total_judgments = total_judgments,
+              num_default = num_default,
+              per_default = per_default,
+              num_plaintiff = num_plaintiff,
+              per_plaintiff = per_plaintiff,
+              num_poss = num_poss,
+              per_poss = per_poss,
+              num_poss_imm = num_poss_imm,
+              per_poss_imm = per_poss_imm,
+              num_poss_miss = num_poss_miss,
+              per_poss_miss = per_poss_miss,
+              total_renters = total_renters,
+              total_issued = total_issued,
+              total_executed = total_executed,
+              judgement_rate_renters = judgement_rate_renters,
+              issuance_rate_renters = issuance_rate_renters,
+              exec_rate_renters = exec_rate_renters,
+              service_area = legal_aid_service_area
+    )
+
+default_poss_writs$short_county_name <- sub(", Virginia$", "", default_poss_writs$county_name)
+```
+
+## Overview
+
+These plots use the most recent writ data shared by LSC (February 2024), joined with the processed unlawful detainer data shared monthly. These plots explore the relationships between writ outcomes (like issuance and execution) and administrative outcomes (default judgment and immediate possession), sorting by county and by plaintiff. For explorations by county, plots use rates of judgment and possession over total case numbers in a given county, along with judgment/issuance/execution rates over total number of renters in a given county. For explorations by plaintiff, plots use rates of judgment and possession over total numbers of cases associated with a given plaintiff.
+
+Given that default judgment indicates that a defendant did not appear in court, we wanted to see if this condition appears to be associated with higher rates of formal eviction. Based on information from legal experts, we know that immediate possession means that a writ of eviction can be requested, issued, and served on the same day, so we also wondered whether this condition would be associated with higher rates of formal eviction.
+
+We were also interested in whether there were clear trends for counties or LSC Service Areas in terms of which areas have high rates of formal eviction and high rates of default judgment or immediate possession. Based on our exploration, there are some 'outlier' counties and service areas that appear to meet the above criteria: these include Williamsburg City and Portsmouth City (both within the Legal Aid Society of Eastern Virginia) and Petersburg City (in the Central Virginia Legal Aid Society).
+
+## Relationships Between Default Judgment Rates and Formal Eviction Rates, by County
+
+For this report, we created visual representations of how writ outcomes vary with default judgment and immediate possession, looking for county-level and regional trends. Each plot includes color-coded points identifying the broader LSC service areas containing particular counties. This first series contains plots examining the relationship between default judgment percentage (by county) and county-level writ judgment, issuance, and execution rates for renters. In these plots, outlier counties are labeled according to defined cutoff points for writ judgment, issuance, and execution rates. 
+
+In these first three plots, we see that the Legal Aid Society of Eastern Virginia and the Central Virginia Legal Aid Society are the most represented service regions among outlier points. At the county level, Petersburg City, Williamsburg City, Portsmouth City, and Hampton City all have consistently high rates of default judgments and writ judgment, issuance, and execution rates. These counties diverge from the majority of counties plotted, which have lower rates of writ judgments, issuance, and execution, and varying rates of default judgments.
+
+```{r county plots}
+
+#Default rate relationships:
+  
+      #Relationship between default rate and judgment rate
+
+  ggplot(data = default_poss_writs, aes(x = judgement_rate_renters, y = per_default)) +
+   geom_point(aes(color = service_area)) +
+    geom_text(data = subset(default_poss_writs, judgement_rate_renters > 0.15),
+              aes(label = short_county_name),
+              vjust = 2, hjust = 0.75, size = 2.5) +
+    labs(x = "Judgment Rate for Renters (by County)", y = "Default Percentage (by County)") +
+    ggtitle("Counties with Highest Rates of Writ Judgment and Default Judgment")
+
+    #Relationship between default rate and issuance rate?
+  
+  ggplot(default_poss_writs, aes(x = issuance_rate_renters, y = per_default)) +
+             geom_point(aes(color = service_area)) +
+             geom_text(data = subset(default_poss_writs, issuance_rate_renters > 0.025),
+                        aes(label = short_county_name),
+                        vjust = 2, hjust = 0.75, size = 2.5) +
+             labs(x = "Issuance Rate for Renters (by County)", y = "Default Percentage (by County)") +
+             ggtitle("Counties with Highest Rates of Writ Issuance and Default Judgment")
+  
+    #Relationship between default rate and execution rate?
+      
+        ggplot(data = default_poss_writs, aes(x = exec_rate_renters, y = per_default)) +
+          geom_point(aes(color = service_area)) +
+          geom_text(data = subset(default_poss_writs, exec_rate_renters > 0.01),
+                    aes(label = short_county_name),
+                    vjust = 2, hjust = 0.75, size = 2.5) +
+          labs(x = "Execution Rate for Renters (by County)", y = "Default Percentage (by County)") +
+          ggtitle("Counties with Highest Rates of Writ Execution and Default Judgment")
+        
+```
+
+## Relationships Between Immediate Possession Rates and Formal Eviction Rates, by County
+
+The next series of plots examines the relationship between immediate possession rates (by county) and county-level judgment, issuance, and execution rates for renters. As with the previous series focusing on default percentage, we see the Legal Aid Society of Eastern Virginia and the Central Virginia Legal Aid Society emerge as the service regions most represented among county outliers. Williamsburg City stands out as having high rates of judgment and writ issuance and a high percentage of immediate possession. Notably, Williamsburg City is not among the outliers in terms of execution rate. Portsmouth City has fairly high rates of immediate possession and high rates of judgment, issuance, and execution.
+
+```{r}
+ #Immediate rate writ possible relationships:
+        
+        #Relationship between immediate possession rate and judgment rate?
+        ggplot(data = default_poss_writs, aes(x = judgement_rate_renters, y = per_poss_imm)) +
+          geom_point(aes(color = service_area)) +
+          geom_text(data = subset(default_poss_writs, judgement_rate_renters > 0.125),
+                    aes(label = short_county_name),
+                    vjust = 2, hjust = 0.75, size = 2.5) +
+          labs(x = "Judgment Rate for Renters (by County)", y = "Immediate Possession Percentage (by County)") +
+          ggtitle("Counties with Highest Rates of Writ Judgment and Immediate Possession")
+        
+        #Relationship between immediate rate and issuance rate?
+        ggplot(data = default_poss_writs, aes(x = issuance_rate_renters, y = per_poss_imm)) +
+          geom_point(aes(color = service_area)) +
+          geom_text(data = subset(default_poss_writs, issuance_rate_renters > 0.04),
+                    aes(label = short_county_name),
+                    vjust = 2, hjust = 0.75, size = 2.5) +
+          labs(x = "Issuance Rate for Renters (by County)", y = "Immediate Possession Percentage (by County)") +
+          ggtitle("Counties with Highest Rates of Writ Issuance and Immediate Possession")
+        
+        #Relationship between immediate rate and execution rate?
+        ggplot(data = default_poss_writs, aes(x = exec_rate_renters, y = per_poss_imm)) +
+          geom_point(aes(color = service_area)) +
+          geom_text(data = subset(default_poss_writs, exec_rate_renters > 0.0125),
+                    aes(label = short_county_name),
+                    vjust = 2, hjust = 0.75, size = 2.5) +
+          labs(x = "Execution Rate for Renters (by County)", y = "Immediate Possession Percentage (by County)") +
+          ggtitle("Counties with Highest Rates of Writ Execution and Immediate Possession")
+ 
+```
+
+## Relationships Between Default Judgment Rates and Immediate Possession Rates, by County
+
+The following plot examines the relationship between default judgment rates and immediate possession rates, by county. Here, we see that Albemarle County and Chesapeake City stand out with both high rates of default judgment immediate possession rates. Unlike in the previous plots, the service areas that appeared among outliers seemed to be more varied. The majority of counties have default rates between 40% and 60%, and relatively low rates of immediate possession.
+
+```{r}
+#Examining relationship between judgments and possession
+        
+        ggplot(data = default_poss_writs, aes(x = per_default, y = per_poss_imm)) +
+         geom_point(aes(color = service_area)) +
+        geom_text(data = subset(default_poss_writs, per_default > 0.75),
+                  aes(label = short_county_name),
+                  vjust = 2, hjust = 0.75, size = 2.5) +
+        labs(x = "Default Rate for County", y = "Immediate Possession Percentage for County") +
+        ggtitle("Counties with Highest Rates of Default Judgment and Immediate Possession")
+        
+```
+
+## Relationships Between Default Judgment Rates and Immediate Possession Rates, by Plaintiff
+
+Finally, we examine the relationships between default judgment rates and immediate possession rates, now sorting by individual plaintiff rather than by county. Each point on this plot represents a particular plaintiff, and we labelled 'outlier' plaintiffs with high rates of default judgment and immediate possession. Many plaintiffs have high rates of default judgment and immediate possession: these include ODU Student Housing Owner LLC, Arbor Glen Apartments LLC, and Arcadia Apartments.
+
+```{r plaintiff plots}
+
+ #New plaintiff writs dataframes
+      plaintiff_writs <- df %>% group_by(first_plaintiff) %>%
+        summarize(plaintiff_all = n_distinct(case_key),
+                  plaintiff_iss = n_distinct(case_key[!is.na(writ_iss_date)]),
+                  plaintiff_exec = n_distinct(case_key[!is.na(date_exec)]),
+                  case_count = n_distinct(case_key),
+                  num_default = sum(disposition == "default judgment", na.rm = TRUE),
+                  per_default = sum(disposition == "default judgment", na.rm = TRUE) / n(),
+                  num_plaintiff = sum(disposition == "plaintiff", na.rm = TRUE),
+                  per_plaintiff = sum(disposition == "plaintiff", na.rm = TRUE) / n(),
+                  num_poss = sum(possession == "Possession", na.rm = TRUE),
+                  per_poss = sum(possession == "Possession", na.rm = TRUE) / n(),
+                  num_poss_imm = sum(possession == "Immediate", na.rm = TRUE),
+                  per_poss_imm = sum(possession == "Immediate", na.rm = TRUE) / n(),
+                  num_poss_miss = sum(is.na(possession)),
+                  per_poss_miss= sum(is.na(possession)) / n(),
+        )
+
+ #Adding plaintiff exec / iss rates (over total judgements): limited to plaintiffs with over 60 total cases
+      plaintiff_writs_final <- plaintiff_writs %>% group_by(first_plaintiff) %>% 
+        summarize(case_count = case_count,
+                  plaintiff_all = plaintiff_all,
+                  plaintiff_iss = plaintiff_iss,
+                  plaintiff_exec = plaintiff_exec,
+                  plaintiff_iss_rate = plaintiff_iss / plaintiff_all,
+                  plaintiff_exec_rate = plaintiff_exec / plaintiff_all,
+                  num_default = num_default,
+                  per_default = per_default,
+                  num_plaintiff = num_plaintiff,
+                  per_plaintiff = per_plaintiff,
+                  num_poss = num_poss,
+                  per_poss = per_poss,
+                  num_poss_imm = num_poss_imm,
+                  per_poss_imm = per_poss_imm,
+                  num_poss_miss = num_poss_miss,
+                  per_poss_miss = per_poss_miss,
+                  ) %>% 
+                  filter(plaintiff_all > 60)
+
+      #Relationship between default percentage and immediate possession percentage (by Plaintiff)
+      ggplot(data = plaintiff_writs_final, aes(x = per_default, y = per_poss_imm)) +
+        geom_point() +
+        geom_text(data = subset(plaintiff_writs_final, per_default > 0.85),
+                  aes(label = first_plaintiff),
+                  vjust = 2, hjust = 0.75, size = 2.5) +
+        labs(x = "Default Judgment Percentage (by Plaintiff)", y = "Immediate Possession Percentage (by Plaintiff)") +
+        ggtitle("Plaintiffs with Highest Rates of Default Judgment and Immediate Possession")
+      
+```

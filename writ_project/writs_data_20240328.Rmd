@@ -1,0 +1,335 @@
+---
+title: "Writ of Evictions in VA"
+date: "2024-03-28"
+author: Michele Claibourn, Henry DeMarco
+output: 
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r libdata}
+library(tidyverse)
+library(tidycensus)
+library(DT)
+
+df <- readRDS("../data/writ_matchedto_case.RDS")
+county_ten <- readRDS("../data/acs_county_ten.RDS")
+```
+
+```{r prepdata}
+df <- df %>% 
+  distinct()
+
+df <- df %>%
+  mutate(county = county.x,
+         county = ifelse(county == '703', '700', county),
+         days_since_disp = interval(date_disposed, as.Date("2024-02-17")) / ddays(1),
+         days_since_writ = interval(writ_iss_date, as.Date("2024-02-17")) / ddays(1),
+         writ_status = case_when(
+           is.na(writ_iss_date) ~ "none",
+           is.na(writ_exec_date) & days_since_writ > 30 ~ "expired",
+           is.na(writ_exec_date) & days_since_writ <= 30 ~ "pending",
+           TRUE ~ "executed"
+         ))
+
+#Creating county-level writs dataframe
+writs_by_county <- df %>% 
+  group_by(county) %>%
+  summarize(county_cases = n(),
+            iss_date_non_miss = sum(!is.na(writ_iss_date)),
+            exec_date_non_miss = sum(!is.na(writ_exec_date)),
+            possession_rate_plaintiff = sum(possession == "Possession", na.rm = TRUE) / n(),
+            immediate_rate_plaintiff = sum(possession == "Immediate", na.rm = TRUE) / n()
+  )
+
+#Leftjoin county-level writs dataframe and county tenure dataframe
+writs_by_county <- left_join(county_ten, writs_by_county, by = c("county"))
+
+#Create new dataframe with writ renter rates
+writs_by_county <- writs_by_county %>% 
+  mutate(exec_rate_byiss = round(exec_date_non_miss / iss_date_non_miss, 3),
+         case_rate_byrenter = round(county_cases / renthhE, 3),
+         iss_rate_bycase = round(iss_date_non_miss / county_cases, 3),
+         iss_rate_byrenter = round(iss_date_non_miss / renthhE, 3),
+         exec_rate_bycase = round(exec_date_non_miss / county_cases, 3),
+         exec_rate_byrenter = round(exec_date_non_miss / renthhE, 3)
+  )
+```
+
+## Initial Descriptions 
+
+This exploration uses the most recent writ data shared by LSC (February 2024), joined with the processed unlawful detainer data shared monthly. This adds filing date and the categories of possession (immediate, possession, missing) to the writ data. 
+
+The data contain `r nrow(df)` unique judgments. Of these, `r sum(!is.na(df$writ_iss_date))` have a record or a writ being issued; `r sum(!is.na(df$writ_exec_date))` have a record of a writ being executed. 
+
+The range of dates represented in the data include
+
+* Filing dates: from `r min(df$filed_date, na.rm = TRUE)` to `r max(df$filed_date, na.rm = TRUE)` 
+* Disposition dates: from `r min(df$date_disposed, na.rm = TRUE)` to `r max(df$date_disposed, na.rm = TRUE)` 
+* Writ issued dates: from `r min(df$writ_iss_date, na.rm = TRUE)` to `r max(df$writ_iss_date, na.rm = TRUE)` 
+* Writ executed dates: from `r min(df$writ_exec_date, na.rm = TRUE)` to `r max(df$writ_exec_date, na.rm = TRUE)`
+
+We created duration variables to capture the time between judgment and writ issuance, and between writ issuance and execution, and provide a brief summary of these below, separately by judgment type and by possession.
+
+
+```{r desc_judge}
+df %>% group_by(disposition) %>% 
+  summarize(total = n(),
+            with_writ = sum(!is.na(dur_disp_writ)),
+            prop_with_writ = with_writ/total,
+            mean_timetowrit = mean(dur_disp_writ, na.rm = TRUE),
+            with_exec = sum(!is.na(dur_writ_exec)),
+            prop_with_exec = with_exec / total,
+            mean_timetoexec = mean(dur_writ_exec, na.rm = TRUE)) %>% 
+  datatable(rownames = FALSE, caption = "By Judgment") %>% 
+  formatRound(c('prop_with_writ', 'mean_timetowrit', 'prop_with_exec', 'mean_timetoexec'), 3)
+  
+```
+
+```{r desc_poss}
+df %>% group_by(possession) %>% 
+  summarize(total = n(),
+            with_writ = sum(!is.na(dur_disp_writ)),
+            prop_with_writ = with_writ/total,
+            mean_timetowrit = mean(dur_disp_writ, na.rm = TRUE),
+            with_exec = sum(!is.na(dur_writ_exec)),
+            prop_with_exec = with_exec / total,
+            mean_timetoexec = mean(dur_writ_exec, na.rm = TRUE)) %>% 
+  datatable(rownames = FALSE, caption= "By Possession") %>% 
+  formatRound(c('prop_with_writ', 'mean_timetowrit', 'prop_with_exec', 'mean_timetoexec'), 3)
+```
+
+Below is a county-level aggregation of the number of eviction judgments, number of issued writs, number of executed writs, and number of renting households along with rates of issued and executed writs by judgments and by renting housholds.
+
+```{r county}
+writs_by_county %>% 
+  select(NAME, county_cases, iss_date_non_miss, exec_date_non_miss, exec_rate_byiss, iss_rate_bycase, exec_rate_bycase, renthhE,
+         case_rate_byrenter, iss_rate_byrenter,
+         exec_rate_byrenter) %>% 
+  datatable(rownames = FALSE,
+            colnames = c("County", "Judgments", "Writs Issued", "Writs Executed", "Writs Executed/Writs Issued", "Writs Issued/Judgments", "Writs Executed/Judgments", 
+                         "Renting HH", "Judgments/Renters",  "Writs Issued/Renters", "Writs Executed/Renters"),
+            caption= "By County",
+            options = list(order = list(list(3, 'desc'))
+                           )) 
+```
+
+## Durations 
+
+Exploring the time between when cases are decided, writs are issued, and writs are executed we see notable outliers and potential errors.
+
+### Time to writs issued
+
+Beginning with the duration until writs are issued: 
+
+```{r durissue1}
+#Displaying time between writ judgement and issuance
+ggplot(df, aes(x = dur_disp_writ)) +
+  geom_histogram(fill = "steelblue3", color = "steelblue4", binwidth = 2) +
+  labs(title = "Time between Judgment Date and Writ Issued",
+       x = "Days", y = "Frequency")
+```
+
+For the time between judgement and writ issuance, there are notable (and substantial) negative values (2158). Filtering these negative values out leaves a more regular and expected pattern among remaining cases, with a maximum duration of 164 days. Virginia code stipulates that writs of eviciton must be issued within 180 days from the date of judgement for possession.
+
+```{r durissue2}
+#Displaying time between judgement date and writ issued limited to >= -100 days
+ggplot(subset(df, dur_disp_writ >= 0), aes(x = dur_disp_writ)) +
+  geom_histogram(fill = "steelblue3", color = "steelblue4", binwidth = 2) +
+  labs(title = "Time between Judgment Date and Writ Issued",
+       x = "Days", y = "Frequency")
+
+```
+
+A closer look at the negative values suggests that many of these are the result of clerical errors (e.g,. inputting the wrong year).
+
+```{r durissue3}
+#Table for writ issuance less than 0
+df %>%
+  filter(dur_disp_writ < 0) %>% 
+  select(filed_date, date_disposed, writ_iss_date, dur_disp_writ) %>% 
+  datatable(#rownames = FALSE, 
+            caption= "Negative Durations for Issued Writs",
+            options = list(order = list(list(4, 'asc'))))
+
+```
+
+### Time to writs executed
+
+Looking at the time between a writ being issued and executed:
+
+```{r execissue1}
+#Displaying time between writ issuance and execution
+ggplot(df, aes(x = dur_writ_exec)) +
+  geom_histogram(fill = "steelblue3", color = "steelblue4", binwidth = 1) +
+  labs(title = "Time between Writ Issued and Writ Executed",
+       x = "Days", y = "Frequency")
+```
+
+While there are no negative values for the duration between issuance and execution, but there are sizable positive outliers. 
+
+Apart from these outliers (e.g, more than 100 days), we see a clear distribution across the initial 30 days.
+
+```{r execissue2}
+#Displaying time between writ execution limited to =< 100 days
+ggplot(subset(df, dur_writ_exec <= 100), aes(x = dur_writ_exec)) +
+  geom_histogram(fill = "steelblue3", color = "steelblue4", binwidth = 1) +
+  labs(title = "Time between Writ Issued and Writ Executed",
+       x = "Days", y = "Frequency")
+```
+
+Virginia code stipulates that writs of eviction must be executed within 30 days from issuance (or they will be vacated). With these key thresholds in mind, we found 50 values that exceed the 30-day limit for writ execution. Displaying a table for these values over 30 days allows for more in-depth examination of each instance. 
+
+```{r execissue3}
+#Table for writ issuance and execution greater than 30
+df %>%
+  filter(dur_writ_exec > 30) %>% 
+  select(filed_date, date_disposed, writ_iss_date, writ_exec_date, dur_writ_exec) %>% 
+  datatable(#rownames = FALSE, 
+            caption= "Writs with Execution Dates more than 30 Days Past Date Issued",
+            options = list(order = list(list(5, 'desc'))))
+
+```
+
+## Durations by Possession
+
+A quick look at the time to writ issuance and time to writ execution by Judgment type and by possession, excluding outliers (negative values for issuance duration, more than 30 days for execution duration): 
+
+```{r dur_by}
+mean_dur_possess <- df %>% 
+  filter(dur_disp_writ >= 0) %>% 
+  group_by(possession) %>% 
+  summarize(mean = mean(dur_disp_writ))
+
+# Time between judgment date and writ issued limited positive values
+df %>% filter(dur_disp_writ >= 0) %>% 
+ggplot(aes(x = dur_disp_writ, fill = possession)) +
+  geom_density(alpha = 0.5) +
+  scale_fill_manual(values = c("#E69F00", "#009E73", "grey")) +
+  annotate("text", x = 50,
+            y = c(.06, .055, .05),
+            label = paste0("Mean = ", round(mean_dur_possess$mean, 1)),
+            color = c("#E69F00", "#009E73", "grey")) +
+  labs(title = "Time between Judgment Date and Writ Issued (Possession)",
+       x = "Days", y = "Relative Frequency") +
+  theme_minimal()
+
+# Time between writ issued and executed limited to <= 30 days
+mean_dur_possess <- df %>% 
+  filter(dur_writ_exec <= 30) %>% 
+  group_by(possession) %>% 
+  summarize(mean = mean(dur_writ_exec))
+
+df %>% 
+  filter(dur_writ_exec <= 30) %>% 
+  ggplot(aes(x = dur_writ_exec, fill = possession)) +
+  geom_density(alpha = 0.5) +
+  scale_fill_manual(values = c("#E69F00", "#009E73", "grey")) +
+  annotate("text", x = 20,
+           y = c(.065, .06, .055),
+           label = paste0("Mean = ", round(mean_dur_possess$mean, 1)),
+           color = c("#E69F00", "#009E73", "grey")) +
+  labs(title = "Time between Writ Issued and Writ Executed (Possession)",
+       x = "Days", y = "Frequency") +
+  theme_minimal()
+```
+
+
+## Writs by Plaintiff
+
+We examined data by individual plaintiffs, compiling a table displaying (by plaintiff) total judgments, total writs issued, total writs executed, and the rate of writ issuance and execution (over total judgments). 
+
+```{r plaintiff}
+df %>%  
+  group_by(first_plaintiff) %>% 
+  summarize(total_judgments = n(),
+            total_writs_issued = sum(!is.na(writ_iss_date)),
+            total_writs_executed = sum(!is.na(writ_exec_date)),
+            issuance_rate = round(total_writs_issued / total_judgments, 3),
+            executed_rate = round(total_writs_executed / total_judgments, 3),
+            ) %>% 
+            ungroup() %>%
+            arrange(desc(total_judgments)) %>% 
+  datatable(#rownames = FALSE,
+  options = list(
+    pageLength = 10,  # Number of rows per page
+    lengthMenu = c(10, 25, 50),  # Dropdown for selecting number of rows per page
+    searching = TRUE,  # Enable search box
+    order = list(list(2, 'desc'))  # Initial sorting by column 3 (total_judgements) in descending order
+  )
+)
+```
+
+## Disposition Date Question
+
+To use the fuller court data -- including cases that don't result in an eviction judgment -- in visuals that portray how cases flow through the court we need to have an analogous disposition date for all cases like that generated for the writs data shared by LSC. 
+
+We approximated the LSC process by setting the disposition date as the hearing date for which the hearing result is "Judgment" or "Default Judgment" or "Other", but not "Continued"; for cases with a missing disposition date, we set the latest hearing date as the disposition date where for cases with a judgment result (e.g., not missing). A few hundred are still different, but we're okay with that for the moment.
+
+```{r dispdate}
+df %>% 
+  filter(date_disposed != date_disposed_cases) %>% 
+  select(disposition, date_disposed, date_disposed_cases, 
+         latest_hearing_result, judgment) %>% 
+  datatable(#rownames = FALSE, 
+    caption= "Where Disposition Dates Differ by Method")
+```
+
+Non-matching dates are most likely due to us using later hearings than those used by LSC, who used the last hearing date with "Other" in instances when a judgment was present rather than the last hearing.
+
+## Questions/Discussion
+
+### Judgment: Default versus Plaintiff
+
+* The data on eviction cases with default judgments versus plaintiff judgments suggests that writs may be issued more quickly once a judgment has been reached for default judgments: are there legal explanations for why this might be the case? Does the type of judgment (default or plaintiff) influence the procedure or timeline for writs?
+
+  + Laura: There isn’t a legal distinction between a default judgement and plaintiff judgment, at least not in terms of procedure for issuing writs. There may be a practical distinction where you have a plaintiff’s attorney representing a large landlord who is collecting judgment for immediate possession on a large batch of default cases and is sequencing writs so that they all go out at the same time. I suggest sorting by attorney name, which can be a proxy for whether the plaintiff is a large LL. For example, Senex only represents large landlords and operates with a high volume of UDs.
+  + Marty: Default judgment means defendant was not in court.  Judgment means was in court.  Landlords are much more likely to ask for and get “immediate possession” rather than “10-day possession” if defendant was not in court.
+
+* We see over 2,500 cases with a default judgment for which a writ was issued and executed. For these cases, is it possible (likely) that a defendant was unaware the eviction process was occurring prior to the writ being executed?
+
+  + Laura: For the 2,500 default cases, it is possible the defendants self-evicted before the court date or before the sheriff’s eviction. And yes, given that many Summons for UD are simply posted to people’s front doors, it is possible that the defendant’s didn’t know about the eviction case until the sheriff’s eviction, but I don’t know how you quantify that with any degree of certainty.
+  + Marty: When any defendant is unaware of a lawsuit (Summons for Unlawful Detainer or Warrant in Debt), 99% of the time the defendant was served by mailing & posting.  Neither is perfect.  However, even if there were a 1 in 50 chance of not getting the mailing, and a 1 in 50 chance of not getting the posting, there is a 1 in 2,500 chance of not getting either one or the other.  If both the mailing and posting certificates of service are 100% complete and 100% accurate, it is virtually impossible to set aside the default judgment.
+  
+### Possession: Immediate versus Possession
+
+* In the court records, a judgment of eviction is usually accompanied with a record of possession: either ‘immediate’ or ‘possession.’ What is the legal distinction between these categories? Should this distinction influence the procedure or timeline for a writ of eviction?
+
+  + Laura: Plaintiffs can get an immediate possession when judgment is entered but the sheriff cannot execute the write until the 10 day appeal period has passed. Some clerks won’t send the writ to the sheriff until the 10-day period has passed, which makes immediate possession no different than regular possession, but other clerks send it immediately and it is up to the sheriffs to respect that appeal period. There is nothing in the code that prevents the sheriff from delivering the eviction notice to the defendant during that appeal period, but the law is clear that the sheriff cannot execute the writ until the 10 days have lapsed.
+  + Marty: “Immediate possession” means the Writ of Eviction can be requested and issued the same day, and even served the same day.  However, the Writ of Eviction cannot be executed until the 11th or subsequent day.  “Possession” usually means the same thing as “10-day possession” and the Writ of Eviction cannot be requested or issued until the 11th or subsequent day. 
+
+* For the cases that do not have a value for possession, the data suggests a smaller percent of these have writs issued, but when they are issued, they follow more quickly once a judgment has been reached. Does the absence of a value for possession tend to be associated with particular scenarios, especially those that would affect the process around writs?
+
+  + Laura: The cases where there is a judgment for possession but no money judgment is likely for some other lease violation, such as holdover tenancy (lease expired, but tenant remained in the property).  The only way to really tell though would be to get a copy of summons and termination notice.
+  + Marty: If there is no money, the case was brought for a non-rent breach (i.e., behavior or conduct), or a holdover tenancy.  Occasionally a landlord will bring a Summons for Unlawful Detainer for possession and rent, and then drop the rent claim.
+
+### Jurisdictional Differences
+
+* In the data on statewide eviction judgments reached between January 1, 2023 and February 16, 2024, some jurisdictions have an unusually low number (and percent) of executed writs. In Richmond City, with nearly 7,000 eviction judgments during this period, and over 1,900 writs issued, only one writ of eviction is recorded as being executed (that is,  0.1% of issued writs are recorded as executed). For comparison, in the Hampton Roads localities, between 20-40% of writs are recorded as executed. Are there on-the-ground differences – in court procedures or landlord behaviors – that might account for these differences, especially for the low counts in the Richmond region (Chesterfield and Henrico also have low rates of executed writs recorded, with 0.1% and 0.4% respectively)?
+
+  + Laura: The only reason I could think there would be a jurisdictional difference is clerks in Richmond are not entering the data in the system. 8.01-471 directs the sheriff to return the executed writ, but nothing directs the clerk to record the return. They are probably getting the writ return and putting it in the case file but not entering it into the computer. This is obviously a problem when it comes to the OES report, because they will be relying on the data entered into the court’s online case information system.
+  + Marty: As noted in my 3/21/24 email to you, one executed Writ of Eviction in Richmond City since May 2023 is totally unbelievable.  In mid-August 2023, Councilmember Ellen Robertson shared with me data she was given by the City of Richmond Sheriff’s Office which provided monthly totals of executed Writs of Eviction in calendar year 2023 to date.  The number was slightly under 2,000, and projected to a yearly total slightly over 3,000.  You might consider contacting Ms. Robertson directly for that information – Ellen.Robertson@rva.gov.  The rates of executed Writs of Eviction in Henrico & Chesterfield Counties are similarly unbelievable.  Agree with Laura – data simply are not being entered.
+
+### Time between Judgment and Writ Issuance
+
+* We see more than 1,000 cases where the data of writ issuance occurs before the date a judgment in the case is reached. While some of these are surely clerical errors, are there any scenarios where this could happen? 
+
+  + Laura: Those are likely bifurcated UDs pursuant to 8.01-128 where the court has entered a judgment for possession, thereby allowing the plaintiff to get the writ of eviction, and then continued out the remainder of the case to determine final rent and damages.
+  + Marty: Agree with Laura.  These are bifurcated cases, where possession granted (usually on the first court date) and final rent & judgments are granted 4-6 weeks later.
+
+### Time between Writ Issuance and Execution
+
+* We have fifty discrete instances of a writ being executed more than 30 days after a judgment has been reached in a case. Based on Virginia Code (§ 8.01-471), it seems like these writs would be vacated. Are there legitimate reasons why more than 30 days could pass between issuance and execution without a writ being vacated?
+
+  + Laura: I think you are confusing two timelines here. The plaintiff has 180 days from date of possession to get the writ. Any writ issued after 180 days is invalid and can be quashed. Once the writ is issued, the sheriff has 30 days execute the writ. If that 30 days has lapsed, the writ is void as a matter of the law and the plaintiff would need to request a new writ.  8.01-470 states that a bit more clearly.
+  + Marty: Again, agree with Laura.  180 days after judgment to request Writ of Eviction.  Once issued, Writ of Eviction must be executed within 30 days.
+  
+
+
+* Additional thoughts - Laura: I’m not sure who best to coordinate this, but I think that to get an accurate picture of executed writs necessitates someone making FOIA requests to those jurisdictions where online case information shows a high number of judgment and writs issued, but low number of returned writs. I think it may also require a conversation with OES at some point to alert them to the problem.
