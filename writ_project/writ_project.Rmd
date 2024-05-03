@@ -19,7 +19,7 @@ library(tidyverse)
 
 ## Background
 
-If a landlord chooses to evict their tenant, they must follow a specific legal process, outlined below. However, not all evictions follow this route. Many tenants are displaced in a form of "informal evictions" that are not documented. The goal of this project is to review the small subset of participants that were evicted through the full legal process. 
+If a landlord chooses to evict their tenant, they must follow a specific legal process, outlined below. However, not all evictions follow this route. Many tenants are displaced in a form of "informal evictions" that are not documented. The goal of this project is to review the small subset of participants that were evicted through the full legal process to better understand trends in landlord behavior in Virginia. 
 
 ![](evictions.png){width="600"}
 
@@ -29,7 +29,7 @@ If a landlord chooses to evict their tenant, they must follow a specific legal p
 
 This analysis is focused on steps 4 - 6, the **Judgement for Possession** and the **Writ of Eviction**.
 
-The judgement is the outcome of the court case, and it can be either in favor of the landlord (Plaintiff), in favor of the defendant, or it can be Default, which means the defendant was unable to show up to court, and so the judgement rules in favor of the landlord. 
+The judgement is the outcome of the court case, and it can be either in favor of the landlord (ruled as Plaintiff), in favor of the defendant, or it can ruled as Default, which means the defendant was unable to show up to court, and so the judgement rules in favor of the landlord. 
 
 If the judgement is either Default or Plaintiff, then the judge can issue a Judgement of Possession. This can be Immediate Possession, which allows the landlord to get a Writ of Eviction right away, or Standard Possession, which issues the Writ of Eviction after a 10 day appeal period. All tenants have a 10 day appeal period, the type of Possession indicates if the Writ of Eviction was issued before the appeal period or after. The Writ of Eviction goes from the clerk to the Sheriff to the tenant, and authorizes the Sheriff to evict on a specific date. 
 
@@ -283,35 +283,46 @@ ggplot(data = default_poss_writs, aes(x = judgement_rate_renters, y = per_defaul
 
 Moving onto plots examining the relationship between plaintiff judgment percentage (by county) and judgment, issuance, and execution rates for renters (by county), we see the same outliers as in the previous plots. In this case, Petersburg City, Williamsburg City, Portsmouth City, and Hampton City all have consistently high rates of judgment, issuance, and execution rates, but low rates of plaintiff judgment.
 
-```{r}
-#Plaintiff rate writ possible relationships:            
-                    
-      #Relationship between plaintiff rate and judgment rate?
-        ggplot(data = default_poss_writs, aes(x = judgement_rate_renters, y = per_plaintiff)) +
-          geom_point() +
-          geom_text(data = subset(default_poss_writs, judgement_rate_renters > 0.13),
-                    aes(label = short_county_name),
-                    vjust = 1.5, hjust = 0.5, size = 2.5) +
-          labs(x = "Judgment Rate for Renters (by County)", y = "Plaintiff Percentage (by County)") +
-          ggtitle("Relationship between Judgment Rate for Renters and Plaintiff Percentage")
-        
-        #Relationship between plaintiff rate and issuance rate?
-        ggplot(data = default_poss_writs, aes(x = issuance_rate_renters, y = per_plaintiff)) +
-          geom_point() +
-          geom_text(data = subset(default_poss_writs, issuance_rate_renters > 0.04),
-                    aes(label = short_county_name),
-                    vjust = 1.5, hjust = 0.75, size = 2.5) +
-          labs(x = "Issuance Rate for Renters (by County)", y = "Plaintiff Percentage (by County)") +
-          ggtitle("Relationship between Issuance Rate for Renters and Plaintiff Percentage")
-        
-        #Relationship between plaintiff rate and execution rate?
-        ggplot(data = default_poss_writs, aes(x = exec_rate_renters, y = per_plaintiff)) +
-          geom_point() +
-          geom_text(data = subset(default_poss_writs, exec_rate_renters > 0.0125),
-                    aes(label = short_county_name),
-                    vjust = 1.5, hjust = 0.75, size = 2.5) +
-          labs(x = "Execution Rate for Renters (by County)", y = "Plaintiff Percentage (by County)") +
-          ggtitle("Relationship between Execution Rate for Renters and Plaintiff Percentage")
+```{r plaintiffs}
+           
+#Relationship between plaintiff rate and judgment rate?
+ggplot(data = default_poss_writs, aes(x = judgement_rate_renters, y = per_plaintiff)) +
+  geom_point() +
+  geom_text(
+    data = subset(default_poss_writs, judgement_rate_renters > 0.13),
+    aes(label = short_county_name),
+    vjust = 1.5,
+    hjust = 0.5,
+    size = 2.5
+  ) +
+  labs(x = "Judgment Rate for Renters (by County)", y = "Plaintiff Percentage (by County)") +
+  ggtitle("Relationship between Judgment Rate for Renters and Plaintiff Percentage")
+
+#Relationship between plaintiff rate and issuance rate?
+ggplot(data = default_poss_writs, aes(x = issuance_rate_renters, y = per_plaintiff)) +
+  geom_point() +
+  geom_text(
+    data = subset(default_poss_writs, issuance_rate_renters > 0.04),
+    aes(label = short_county_name),
+    vjust = 1.5,
+    hjust = 0.75,
+    size = 2.5
+  ) +
+  labs(x = "Issuance Rate for Renters (by County)", y = "Plaintiff Percentage (by County)") +
+  ggtitle("Relationship between Issuance Rate for Renters and Plaintiff Percentage")
+
+#Relationship between plaintiff rate and execution rate?
+ggplot(data = default_poss_writs, aes(x = exec_rate_renters, y = per_plaintiff)) +
+  geom_point() +
+  geom_text(
+    data = subset(default_poss_writs, exec_rate_renters > 0.0125),
+    aes(label = short_county_name),
+    vjust = 1.5,
+    hjust = 0.75,
+    size = 2.5
+  ) +
+  labs(x = "Execution Rate for Renters (by County)", y = "Plaintiff Percentage (by County)") +
+  ggtitle("Relationship between Execution Rate for Renters and Plaintiff Percentage")
 ```
 
 ## Relationships Between Posssession Rate and Judgment, Issuance, and Execution Rates (By County)
