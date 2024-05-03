@@ -1,0 +1,557 @@
+---
+title: "Writ of Evictions in VA"
+date: "2024-05-02"
+author: Michele Claibourn, Henry DeMarco, and Samantha Toet
+output: 
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+library(ggrepel)
+library(DT)
+library(tidycensus)
+library(tidyverse)
+```
+
+## Background
+
+If a landlord chooses to evict their tenant, they must follow a specific legal process, outlined below. However, not all evictions follow this route. Many tenants are displaced in a form of "informal evictions" that are not documented. The goal of this project is to review the small subset of participants that were evicted through the full legal process. 
+
+![](evictions.png){width="600"}
+
+[*Source: [Virginia Poverty Law Center](https://housing.vplc.org/evictions/)*]{style="float:right"}
+
+<br>
+
+This analysis is focused on steps 4 - 6, the **Judgement for Possession** and the **Writ of Eviction**.
+
+The judgement is the outcome of the court case, and it can be either in favor of the landlord (Plaintiff), in favor of the defendant, or it can be Default, which means the defendant was unable to show up to court, and so the judgement rules in favor of the landlord. 
+
+If the judgement is either Default or Plaintiff, then the judge can issue a Judgement of Possession. This can be Immediate Possession, which allows the landlord to get a Writ of Eviction right away, or Standard Possession, which issues the Writ of Eviction after a 10 day appeal period. All tenants have a 10 day appeal period, the type of Possession indicates if the Writ of Eviction was issued before the appeal period or after. The Writ of Eviction goes from the clerk to the Sheriff to the tenant, and authorizes the Sheriff to evict on a specific date. 
+
+## Overview
+
+The below plots review the most recent writ data shared by the Legal Services Corporation of VA (February 2024), joined with the processed Unlawful Detainer data shared monthly. These plots explore the relationships between writ categories including judgments in favor of the landlord (Default and Plaintiff) and Possession (Immediate, Possession, or Missing), sorting by county and by plaintiff. For explorations by county, plots use rates of judgment and possession over total case numbers in a given county, along with judgment/issuance/execution rates over total number of renters in a given county. For explorations by plaintiff, plots use rates of judgment and possession over total numbers of cases associated with a given plaintiff.
+
+```{r prepdata}
+
+# Get writs data 
+df <- readRDS("../writ_project/writ_matchedto_case.RDS")
+
+# Prep for working with year info 
+df <- df %>% 
+  distinct() %>% 
+  mutate(county = str_sub(case_key, 12,14),
+         date_disp = ymd(date_disposed),
+         date_writ = ymd(writ_iss_date),
+         date_exec = ymd(writ_exec_date),
+         dur_disp_writ = interval(date_disp, date_writ) / ddays(1),
+         dur_writ_exec = interval(date_writ, date_exec) / ddays(1))
+
+# Check disposition summaries to account for missing data 
+# df %>% group_by(disposition) %>%
+#   summarize(total = n(),
+#             missing_writ = sum(is.na(dur_disp_writ), na.rm = TRUE),
+#             percent_miss_writ = missing_writ/total,
+#             mean_writ = mean(dur_disp_writ, na.rm = TRUE),
+#             missing_exec = sum(is.na(dur_writ_exec)),
+#             percent_miss_exec = missing_exec / total,
+#             mean_exec = mean(dur_writ_exec, na.rm = TRUE)) %>% View()
+
+# Fix Newport News FIPS code 
+df <- df %>%
+  mutate(county.x = ifelse(county == '703', '700', county.x))
+
+# Calculate timelines and writ statuses 
+df <- df %>% 
+  mutate(days_since_disp = interval(date_disp, as.Date("2024-02-17")) / ddays(1))
+
+df <- df %>% 
+  mutate(days_since_writ = interval(date_writ, as.Date("2024-02-17")) / ddays(1),
+         writ_status = case_when(
+           is.na(date_writ) ~ "none",
+           is.na(date_exec) & days_since_writ > 30 ~ "expired",
+           is.na(date_exec) & days_since_writ <= 30 ~ "pending",
+           TRUE ~ "executed"
+         ))
+
+# Get ACS data
+county_ten <- get_acs(geography = "county", 
+                      variables = c(ownhh = "B25003_002", 
+                                    renthh = "B25003_003",
+                                    totalhh = "B25003_001"), 
+                      state = "VA", 
+                      survey = "acs5",
+                      year = 2022,
+                      output = "wide")
+
+#Alter GEOID column to remove first two digits (enabling join with FIPS)
+county_ten <- county_ten %>%
+  mutate(county = substr(GEOID, 3, 5))
+
+# Summarize by county
+writs_by_county <- df %>% group_by(county) %>%
+  summarize(county_cases = n_distinct(case_key),
+            iss_date_non_miss = n_distinct(case_key[!is.na(writ_iss_date)]),
+            exec_date_non_miss = n_distinct(case_key[!is.na(date_exec)])
+  )
+
+#Left join county-level writs dataframe and county tenure dataframe
+writs_by_county <- left_join(county_ten, writs_by_county, by = c("county"))
+
+#Add columns to df for percentage possession vs. immediate by county
+df <- df %>%
+  group_by(first_plaintiff) %>%
+  mutate(possession_rate_plaintiff = sum(possession == "Possession", na.rm = TRUE) / n(),
+         immediate_rate_plaintiff = sum(possession == "Immediate", na.rm = TRUE) / n(),
+         total_count = n()) %>%
+  ungroup() 
+
+#NOTE: some of the plaintiffs are duplicated due to different spelling and white space characteristics. For example, there are at least 4 different "1000 rva hldgs llc" all with different spellings. Granted nearly all of the duplicates have only 1 case, this shouldn't skew our results too much, but something we should keep in mind. This is most likely because it's admin data, and so names are manually entered.
+
+#Left join to create a new table in which county_ten and df are joined
+writs_with_county <- left_join(county_ten, df, by = c("county" = "county.x"))
+
+#Create new dataframe with writ renter rates
+writ_rates <- writs_with_county %>% group_by(county) %>%
+  summarize(case_rate_rent = n_distinct(case_key) / unique(renthhE),
+            exec_rate_rent = n_distinct(case_key[!is.na(date_exec)]) / unique(renthhE),
+            iss_rate_rent = n_distinct(case_key[!is.na(writ_iss_date)]) / unique(renthhE)
+  )
+
+#Left join new writ rate data frame and writs_by_county data frame
+writs_by_county <- left_join(writs_by_county, writ_rates, by = c("county"))
+
+#Create new variable for case counts by county
+writs_with_county <- writs_with_county %>%
+  group_by(county) %>%
+  mutate(county_cases = n_distinct(case_key))
+
+#Create new data frame for case count by plaintiff
+plaintiff_case_counts <- df %>%
+  group_by(first_plaintiff) %>%
+  summarize(unique_plaintiff_cases = n_distinct(case_key))
+
+#Left join unique cases by plaintiff with full writs with county dataframe
+writs_with_all_case_counts <- left_join(writs_with_county, plaintiff_case_counts, by = c("first_plaintiff"))
+
+#Create plaintiff writs dataframes
+plaintiff_cases <- df %>% group_by(first_plaintiff) %>%
+  summarize(plaintiff_all = n_distinct(case_key),
+            plaintiff_iss = n_distinct(case_key[!is.na(writ_iss_date)]),
+            plaintiff_exec = n_distinct(case_key[!is.na(date_exec)]),
+  )
+
+#Adding plaintiff execution and issuance rates (over total judgements)
+plaintiff_rate <- plaintiff_cases %>% group_by(first_plaintiff) %>% 
+  summarize(plaintiff_all = plaintiff_all,
+            plaintiff_iss = plaintiff_iss,
+            plaintiff_exec = plaintiff_exec,
+            plaintiff_iss_rate = plaintiff_iss / plaintiff_all,
+            plaintiff_exec_rate = plaintiff_exec / plaintiff_all)
+
+
+#Summary table with only key variables for county
+county_summary <- writs_by_county %>% group_by(county) %>% 
+  summarize(county_name = NAME,
+            total_renters = renthhE,
+            total_judgements = county_cases,
+            total_issued = iss_date_non_miss,
+            total_executed = exec_date_non_miss,
+            judgement_rate_renters = case_rate_rent,
+            issuance_rate_renters = iss_rate_rent,
+            exec_rate_renters = exec_rate_rent
+            )
+
+#Preparing summary for number and rates of possession and judgment by county:
+jud_poss_rates <- writs_with_county %>% group_by(county) %>%
+  summarize(case_count = n_distinct(case_key),
+            num_default = sum(disposition == "default judgment", na.rm = TRUE),
+            per_default = sum(disposition == "default judgment", na.rm = TRUE) / n(),
+            num_plaintiff = sum(disposition == "plaintiff", na.rm = TRUE),
+            per_plaintiff = sum(disposition == "plaintiff", na.rm = TRUE) / n(),
+            num_poss = sum(possession == "Possession", na.rm = TRUE),
+            per_poss = sum(possession == "Possession", na.rm = TRUE) / n(),
+            num_poss_imm = sum(possession == "Immediate", na.rm = TRUE),
+            per_poss_imm = sum(possession == "Immediate", na.rm = TRUE) / n(),
+            num_poss_miss = sum(is.na(possession)),
+            per_poss_miss= sum(is.na(possession)) / n()
+  )
+
+# Build rates of judgement outcomes
+jud_poss_rates <- left_join(writs_by_county, jud_poss_rates, by = c("county"))
+
+judg_poss_type_county <- jud_poss_rates %>% group_by(county) %>% 
+  summarize(county_name = NAME,
+            total_judgments = county_cases,
+            num_default = num_default,
+            per_default = per_default,
+            num_plaintiff = num_plaintiff,
+            per_plaintiff = per_plaintiff,
+            num_poss = num_poss,
+            per_poss = per_poss,
+            num_poss_imm = num_poss_imm,
+            per_poss_imm = per_poss_imm,
+            num_poss_miss = num_poss_miss,
+            per_poss_miss = per_poss_miss
+  )
+
+default_possession <- left_join(judg_poss_type_county, county_summary, by = c("county"))
+
+default_poss_writs <- default_possession %>% group_by(county) %>% 
+    summarize(county_name = county_name.x,
+              total_judgments = total_judgments,
+              num_default = num_default,
+              per_default = per_default,
+              num_plaintiff = num_plaintiff,
+              per_plaintiff = per_plaintiff,
+              num_poss = num_poss,
+              per_poss = per_poss,
+              num_poss_imm = num_poss_imm,
+              per_poss_imm = per_poss_imm,
+              num_poss_miss = num_poss_miss,
+              per_poss_miss = per_poss_miss,
+              total_renters = total_renters,
+              total_issued = total_issued,
+              total_executed = total_executed,
+              judgement_rate_renters = judgement_rate_renters,
+              issuance_rate_renters = issuance_rate_renters,
+              exec_rate_renters = exec_rate_renters
+    )
+
+default_poss_writs$short_county_name <- sub(", Virginia$", "", default_poss_writs$county_name)
+```
+
+
+## Frequency of Default Judgements
+
+How often are Writs of Possession issued when the defendant is unable to show up to court? Beginning with plots examining the relationship between Default judgment percentage and judgment, issuance, and execution rates for renters by county, several consistent outliers emerge. Petersburg City, Williamsburg City, Portsmouth City, and Hampton City all have consistently high rates of Default judgments, issuance, and execution rates. These counties diverge from the majority of counties plotted, which have lower rates of judgments, issuance, and execution, and varying rates of default judgments. It seems that these outliers have higher rates of no-shows by defendants in court. 
+
+```{r default_judgements}
+
+#Relationship between default rate and judgment rate
+ggplot(data = default_poss_writs, aes(x = judgement_rate_renters, y = per_default)) +
+  geom_point() +
+  geom_text_repel(
+    data = subset(default_poss_writs, judgement_rate_renters > 0.15),
+    aes(label = short_county_name),
+    size = 2.5
+  ) +
+  # Rename x-axis from "Judgement Rate for Renters" to what I think we're trying to say:
+  labs(x = "Pecent Judgements of where Possession was Issued", 
+       y = "Percentage Ruled Default", 
+       title = "Default Percentages by Judgement Rates", 
+       subtitle = "How often are Writs of Possession issued when the defendant is unable to show up to court?") + 
+  scale_x_continuous(labels = scales::percent) +
+  scale_y_continuous(labels = scales::percent)
+
+# These just reiterate the above plot so I'm commenting them out 
+# #Relationship between default rate and issuance rate?
+# ggplot(default_poss_writs,
+#        aes(x = issuance_rate_renters, y = per_default)) +
+#   geom_point() +
+#   geom_text(
+#     data = subset(default_poss_writs, issuance_rate_renters > 0.02),
+#     aes(label = short_county_name),
+#     vjust = 2,
+#     hjust = 0.75,
+#     size = 2.5
+#   ) +
+#   labs(x = "Issuance Rate for Renters (by County)", y = "Default Percentage (by County)") +
+#   ggtitle("Relationship between Issuance Rate for Renters and Default Percentage")
+# 
+# #Relationship between default rate and execution rate?
+# ggplot(data = default_poss_writs, aes(x = exec_rate_renters, y = per_default)) +
+#   geom_point() +
+#   geom_text(
+#     data = subset(default_poss_writs, exec_rate_renters > 0.01),
+#     aes(label = short_county_name),
+#     vjust = 2,
+#     hjust = 0.75,
+#     size = 2.5
+#   ) +
+#   labs(x = "Execution Rate for Renters (by County)", y = "Default Percentage (by County)") +
+#   ggtitle("Relationship between Execution Rate for Renters and Default Percentage")
+        
+```
+
+## Relationships Between Plaintiff Judgment Rate and Judgment, Issuance, and Execution Rates (By County)
+
+Moving onto plots examining the relationship between plaintiff judgment percentage (by county) and judgment, issuance, and execution rates for renters (by county), we see the same outliers as in the previous plots. In this case, Petersburg City, Williamsburg City, Portsmouth City, and Hampton City all have consistently high rates of judgment, issuance, and execution rates, but low rates of plaintiff judgment.
+
+```{r}
+#Plaintiff rate writ possible relationships:            
+                    
+      #Relationship between plaintiff rate and judgment rate?
+        ggplot(data = default_poss_writs, aes(x = judgement_rate_renters, y = per_plaintiff)) +
+          geom_point() +
+          geom_text(data = subset(default_poss_writs, judgement_rate_renters > 0.13),
+                    aes(label = short_county_name),
+                    vjust = 1.5, hjust = 0.5, size = 2.5) +
+          labs(x = "Judgment Rate for Renters (by County)", y = "Plaintiff Percentage (by County)") +
+          ggtitle("Relationship between Judgment Rate for Renters and Plaintiff Percentage")
+        
+        #Relationship between plaintiff rate and issuance rate?
+        ggplot(data = default_poss_writs, aes(x = issuance_rate_renters, y = per_plaintiff)) +
+          geom_point() +
+          geom_text(data = subset(default_poss_writs, issuance_rate_renters > 0.04),
+                    aes(label = short_county_name),
+                    vjust = 1.5, hjust = 0.75, size = 2.5) +
+          labs(x = "Issuance Rate for Renters (by County)", y = "Plaintiff Percentage (by County)") +
+          ggtitle("Relationship between Issuance Rate for Renters and Plaintiff Percentage")
+        
+        #Relationship between plaintiff rate and execution rate?
+        ggplot(data = default_poss_writs, aes(x = exec_rate_renters, y = per_plaintiff)) +
+          geom_point() +
+          geom_text(data = subset(default_poss_writs, exec_rate_renters > 0.0125),
+                    aes(label = short_county_name),
+                    vjust = 1.5, hjust = 0.75, size = 2.5) +
+          labs(x = "Execution Rate for Renters (by County)", y = "Plaintiff Percentage (by County)") +
+          ggtitle("Relationship between Execution Rate for Renters and Plaintiff Percentage")
+```
+
+## Relationships Between Posssession Rate and Judgment, Issuance, and Execution Rates (By County)
+
+Next, we generate plots examining the relationship between possession rate (by county) and judgment, issuance, and execution rates for renters (by county). Defining outliers in terms of high judgment, issuance, and execution rates, we see the same counties as in previous plots. In this instance, there are larger gaps between the outliers: for example, Hopewell City has a very high rate of possession and a high judgment rate, while Williamsburg city has a low rate of possession but high rates of judgments and writs issued. Petersburg City has a medium rate of possession (around 45%) and high rates of judgment, issuance, and execution.
+
+```{r}
+#Possession rate writ possible relationships:
+        
+         #Relationship between possession rate and judgment rate?
+        ggplot(data = default_poss_writs, aes(x = judgement_rate_renters, y = per_poss)) +
+          geom_point() +
+          geom_text(data = subset(default_poss_writs, judgement_rate_renters > 0.125),
+                    aes(label = short_county_name),
+                    vjust = 1.5, hjust = 0.75, size = 2.5) +
+          labs(x = "Judgment Rate for Renters (by County)", y = "Possession Percentage (by County)") +
+          ggtitle("Relationship between Judgment Rate for Renters and Possession Percentage")
+        
+        #Relationship between possession rate and issuance rate?
+        ggplot(data = default_poss_writs, aes(x = issuance_rate_renters, y = per_poss)) +
+          geom_point() +
+          geom_text(data = subset(default_poss_writs, issuance_rate_renters > 0.04),
+                    aes(label = short_county_name),
+                    vjust = 2, hjust = 0.75, size = 2.5) +
+          labs(x = "Issuance Rate for Renters (by County)", y = "Possession Percentage (by County)") +
+          ggtitle("Relationship between Issuance Rate for Renters and Possession Percentage")
+        
+         #Relationship between possession rate and execution rate?
+        ggplot(data = default_poss_writs, aes(x = exec_rate_renters, y = per_poss)) +
+          geom_point() +
+          geom_text(data = subset(default_poss_writs, exec_rate_renters > 0.0125),
+                    aes(label = short_county_name),
+                    vjust = 2, hjust = 0.75, size = 2.5) +
+          labs(x = "Execution Rate for Renters (by County)", y = "Possession Percentage (by County)") +
+          ggtitle("Relationship between Execution Rate for Renters and Possession Percentage")
+```
+
+## Relationships Between Immediate Posssession Rate and Judgment, Issuance, and Execution Rates (By County)
+
+Plotting the relationship between immediate possession rate and judgment, issuance, and execution rates for renters (by county), we see the inverse of the previous three plots. Williamsburg City stands out as having high rates of judgment and writ issuance and a high percentage of immediate possession. Notably, Williamsburg City is not among the outliers in terms of execution rate. Portsmouth City has fairly high rates of immediate possession and high rates of judgment, issuance, and execution.
+
+```{r}
+ #Immediate rate writ possible relationships:
+        
+        #Relationship between immediate possession rate and judgment rate?
+        ggplot(data = default_poss_writs, aes(x = judgement_rate_renters, y = per_poss_imm)) +
+          geom_point() +
+          geom_text(data = subset(default_poss_writs, judgement_rate_renters > 0.125),
+                    aes(label = short_county_name),
+                    vjust = 2, hjust = 0.75, size = 2.5) +
+          labs(x = "Judgment Rate for Renters (by County)", y = "Immediate Possession Percentage (by County)") +
+          ggtitle("Relationship between Judgment Rate for Renters and Immediate Possession Percentage")
+        
+        #Relationship between immediate rate and issuance rate?
+        ggplot(data = default_poss_writs, aes(x = issuance_rate_renters, y = per_poss_imm)) +
+          geom_point() +
+          geom_text(data = subset(default_poss_writs, issuance_rate_renters > 0.04),
+                    aes(label = short_county_name),
+                    vjust = 2, hjust = 0.75, size = 2.5) +
+          labs(x = "Issuance Rate for Renters (by County)", y = "Immediate Possession Percentage (by County)") +
+          ggtitle("Relationship between Issuance Rate for Renters and Immediate Possession Percentage")
+        
+        #Relationship between immediate rate and execution rate?
+        ggplot(data = default_poss_writs, aes(x = exec_rate_renters, y = per_poss_imm)) +
+          geom_point() +
+          geom_text(data = subset(default_poss_writs, exec_rate_renters > 0.0125),
+                    aes(label = short_county_name),
+                    vjust = 2, hjust = 0.75, size = 2.5) +
+          labs(x = "Execution Rate for Renters (by County)", y = "Immediate Possession Percentage (by County)") +
+          ggtitle("Relationship between Execution Rate for Renters and Immediate Possession Percentage")
+ 
+```
+
+## Relationships Between Missing Posssession Rate and Judgment, Issuance, and Execution Rates (By County)
+
+Next, we plot the relationships between judgment, issuance, and execution rate and missing possession percentage (by county). The outliers in terms of high judgment, issuance, and execution rates are the same few counties we have identified in previous plots.
+
+```{r}
+#Missing possession rate writ possible relationships:
+        
+        #Relationship between possession missing rate and judgment rate?
+        ggplot(data = default_poss_writs, aes(x = judgement_rate_renters, y = per_poss_miss)) +
+          geom_point() +
+          geom_text(data = subset(default_poss_writs, judgement_rate_renters > 0.125),
+                    aes(label = short_county_name),
+                    vjust = 2, hjust = 0.75, size = 2.5) +
+          labs(x = "Judgment Rate for Renters (by County)", y = "Missing Possession Percentage (by County)") +
+          ggtitle("Relationship between Judgment Rate for Renters and Missing Possession Percentage")
+        
+        #Relationship between possession missing rate and issuance rate?
+        ggplot(data = default_poss_writs, aes(x = issuance_rate_renters, y = per_poss_miss)) +
+          geom_point() +
+          geom_text(data = subset(default_poss_writs, issuance_rate_renters > 0.04),
+                    aes(label = short_county_name),
+                    vjust = 2, hjust = 0.75, size = 2.5) +
+          labs(x = "Issuance Rate for Renters", y = "Missing Possession Percentage") +
+          ggtitle("Relationship between Issuance Rate for Renters and Missing Possession Percentage")
+        
+         #Relationship between possession missing rate and execution rate?
+        ggplot(data = default_poss_writs, aes(x = exec_rate_renters, y = per_poss_miss)) +
+          geom_point() +
+          geom_text(data = subset(default_poss_writs, exec_rate_renters > 0.0125),
+                    aes(label = short_county_name),
+                    vjust = 2, hjust = 0.75, size = 2.5) +
+          labs(x = "Execution Rate for Renters (by County)", y = "Missing Possession Percentage (by County)") +
+          ggtitle("Relationship between Execution Rate for Renters and Missing Possession Percentage")
+
+        
+```
+
+## Relationships Between Default / Plaintiff Judgment Rates and Possession / Immediate Rates (by County)
+
+The following plots examine the relationships between default / plaintiff judgment rates and possession / immediate rate, by county. Here, we see that Albemarle County and Chesapeake City stand out with both high rates of default judgment immediate possession rates. Wise County has high rates of default judgment and high rates of possession percentage. Many counties have high rates of plaintiff judgment and possession percentage: these include Prince George County, Rappahannock County and Highland County. Very few counties have both high rates of immediate possession and plaintiff judgments: these include Middlesex County and King and Queen County. A large cluster of counties have low rates of immediate possession and high rates of plaintiff judgment, including Richmond County, Prince George County, and several others.
+
+```{r}
+#Examining relationship between judgments and possession
+        
+        ggplot(data = default_poss_writs, aes(x = per_default, y = per_poss_imm)) +
+        geom_point() +
+        geom_text(data = subset(default_poss_writs, per_default > 0.75),
+                  aes(label = short_county_name),
+                  vjust = 2, hjust = 0.75, size = 2.5) +
+        labs(x = "Default Rate for County", y = "Immediate Possession Percentage for County") +
+        ggtitle("Relationship between Default Judgment Percentage and Immediate Possession Percentage")
+        
+        ggplot(data = default_poss_writs, aes(x = per_default, y = per_poss)) +
+        geom_point() +
+        geom_text(data = subset(default_poss_writs, per_default > 0.75),
+                  aes(label = short_county_name),
+                  vjust = 2, hjust = 0.75, size = 2.5) +
+        labs(x = "Default Rate for County", y = "Possession Percentage for County") +
+        ggtitle("Relationship between Default Judgment Percentage and Possession Percentage")
+
+#Examining relationship between plaintiff rate and possession
+        
+         ggplot(data = default_poss_writs, aes(x = per_plaintiff, y = per_poss)) +
+        geom_point() +
+        geom_text(data = subset(default_poss_writs, per_plaintiff > 0.75),
+                  aes(label = short_county_name),
+                  vjust = 2, hjust = 0.75, size = 2.5) +
+        labs(x = "Plaintiff Judgment Rate for County", y = "Possession Percentage for County") +
+        ggtitle("Relationship between Plaintiff Judgment Percentage and Possession Percentage")
+      
+      ggplot(data = default_poss_writs, aes(x = per_plaintiff, y = per_poss_imm)) +
+        geom_point() +
+        geom_text(data = subset(default_poss_writs, per_plaintiff > 0.75),
+                  aes(label = short_county_name),
+                  vjust = 2, hjust = 0.75, size = 2.5) +
+        labs(x = "Plaintiff Judgment Rate for County", y = "Immediate Possession for County") +
+        ggtitle("Relationship between Plaintiff Judgment Percentage and Immediate Possession Percentage")
+        
+```
+
+## Relationships Between Default / Plaintiff Judgment Rates and Possession / Immediate Rates (by Plaintiff)
+
+Finally, we examine the relationships between default / plaintiff judgment rates and possession / immediate rate, now sorting by individual plaintiff rather than by county. Many plaintiffs have high rates of default judgment and immediate possession: these include ODU Student Housing Owner LLC, Arbor Glen Apartments LLC, and Arcadia Apartments. Fewer plantiffs have high rates of default judgment and high rates of possession, but KPM LLC stands out as having fairly high rates of both. Plaintiffs with high rates of plaintiff judgment and immediate possession are Stone Ridge 26g LLC, Fairfield England Run LLC, and LRC King St Commons GP LLC. A few plaintiffs have high rates of plaintiff judgment and possession, including Dobrin Property Management LLC, Virginia Residence LLC, and Richmond Redevelopment and Housing Authority.
+
+```{r plaintiff plots}
+
+ #New plaintiff writs dataframes
+      plaintiff_writs <- df %>% group_by(first_plaintiff) %>%
+        summarize(plaintiff_all = n_distinct(case_key),
+                  plaintiff_iss = n_distinct(case_key[!is.na(writ_iss_date)]),
+                  plaintiff_exec = n_distinct(case_key[!is.na(date_exec)]),
+                  case_count = n_distinct(case_key),
+                  num_default = sum(disposition == "default judgment", na.rm = TRUE),
+                  per_default = sum(disposition == "default judgment", na.rm = TRUE) / n(),
+                  num_plaintiff = sum(disposition == "plaintiff", na.rm = TRUE),
+                  per_plaintiff = sum(disposition == "plaintiff", na.rm = TRUE) / n(),
+                  num_poss = sum(possession == "Possession", na.rm = TRUE),
+                  per_poss = sum(possession == "Possession", na.rm = TRUE) / n(),
+                  num_poss_imm = sum(possession == "Immediate", na.rm = TRUE),
+                  per_poss_imm = sum(possession == "Immediate", na.rm = TRUE) / n(),
+                  num_poss_miss = sum(is.na(possession)),
+                  per_poss_miss= sum(is.na(possession)) / n(),
+        )
+
+ #Adding plaintiff exec / iss rates (over total judgements): limited to plaintiffs with over 60 total cases
+      plaintiff_writs_final <- plaintiff_writs %>% group_by(first_plaintiff) %>% 
+        summarize(case_count = case_count,
+                  plaintiff_all = plaintiff_all,
+                  plaintiff_iss = plaintiff_iss,
+                  plaintiff_exec = plaintiff_exec,
+                  plaintiff_iss_rate = plaintiff_iss / plaintiff_all,
+                  plaintiff_exec_rate = plaintiff_exec / plaintiff_all,
+                  num_default = num_default,
+                  per_default = per_default,
+                  num_plaintiff = num_plaintiff,
+                  per_plaintiff = per_plaintiff,
+                  num_poss = num_poss,
+                  per_poss = per_poss,
+                  num_poss_imm = num_poss_imm,
+                  per_poss_imm = per_poss_imm,
+                  num_poss_miss = num_poss_miss,
+                  per_poss_miss = per_poss_miss,
+                  ) %>% 
+                  filter(plaintiff_all > 60)
+
+      #Relationship between default percentage and immediate possession percentage (by Plaintiff)
+      ggplot(data = plaintiff_writs_final, aes(x = per_default, y = per_poss_imm)) +
+        geom_point() +
+        geom_text(data = subset(plaintiff_writs_final, per_default > 0.85),
+                  aes(label = first_plaintiff),
+                  vjust = 2, hjust = 0.75, size = 2.5) +
+        labs(x = "Default Judgment Percentage (by Plaintiff)", y = "Immediate Possession Percentage (by Plaintiff)") +
+        ggtitle("Relationship between Default Judgment Percentage and Immediate Possession Percentage") 
+      
+       #Relationship between default percentage and possession percentage (by Plaintiff)
+      ggplot(data = plaintiff_writs_final, aes(x = per_default, y = per_poss)) +
+        geom_point() +
+        geom_text(data = subset(plaintiff_writs_final, per_default > 0.85),
+                  aes(label = first_plaintiff),
+                  vjust = 2, hjust = 0.75, size = 2.5) +
+        labs(x = "Default Judgment Percentage (by Plaintiff)", y = "Possession Percentage (by Plaintiff)") +
+        ggtitle("Relationship between Default Judgment Percentage and Possession Percentage")
+      
+      #Relationship between plaintiff judgment percentage and immediate possession percentage (by Plaintiff)
+      ggplot(data = plaintiff_writs_final, aes(x = per_plaintiff, y = per_poss_imm)) +
+        geom_point() +
+        geom_text(data = subset(plaintiff_writs_final, per_plaintiff > 0.45),
+                  aes(label = first_plaintiff),
+                  vjust = 2, hjust = 0.75, size = 2.5) +
+        labs(x = "Plaintiff Judgment Percentage (by Plaintiff)", y = "Immediate Possession Percentage (by Plaintiff)") +
+        ggtitle("Relationship between Plaintiff Judgment Percentage and Possession Percentage")
+      
+      #Relationship between plaintiff judgment percentage and Possession Percentage (by Plaintiff)
+      ggplot(data = plaintiff_writs_final, aes(x = per_plaintiff, y = per_poss)) +
+        geom_point() +
+        geom_text(data = subset(plaintiff_writs_final, per_plaintiff > 0.45),
+                  aes(label = first_plaintiff),
+                  vjust = 2, hjust = 0.75, size = 2.5) +
+        labs(x = "Plaintiff Judgment Percentage (by Plaintiff)", y = "Possession Percentage (by Plaintiff)") +
+        ggtitle("Relationship between Plaintiff Judgment Percentage and Possession Percentage")
+      
+      
+```
+
+## Remaining Questions
+
+-   How should outliers be identified / labeled? Should we select outliers along both axes (rater than just x-axis)?
+-   What counties are the outlier plaintiffs in? Are there trends here?
+-   Should renter rates be integrated in plaintiff-level plots?
+-   Does it make sense to plot judgment / issuance / execution rates for renters (by county) but default / possession rates JUST by county (not including rates for renters)?

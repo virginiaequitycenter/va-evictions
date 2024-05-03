@@ -1,0 +1,134 @@
+GEOID,NAME,pop_est,legal_aid_service_area
+51001,"Accomack County, Virginia",33367,Legal Aid Society of Eastern Virginia
+51003,"Albemarle County, Virginia",112513,Central Virginia Legal Aid Society
+51005,"Alleghany County, Virginia",15159,Blue Ridge Legal Services
+51007,"Amelia County, Virginia",13309,Virginia Legal Aid Society
+51009,"Amherst County, Virginia",31426,Virginia Legal Aid Society
+51011,"Appomattox County, Virginia",16253,Virginia Legal Aid Society
+51013,"Arlington County, Virginia",235845,Legal Services of Northern Virginia
+51015,"Augusta County, Virginia",77433,Blue Ridge Legal Services
+51017,"Bath County, Virginia",4177,Blue Ridge Legal Services
+51019,"Bedford County, Virginia",79761,Legal Aid Society of Roanoke Valley
+51021,"Bland County, Virginia",6241,Southwest Virginia Legal Aid Society
+51023,"Botetourt County, Virginia",33734,Legal Aid Society of Roanoke Valley
+51025,"Brunswick County, Virginia",15965,Virginia Legal Aid Society
+51027,"Buchanan County, Virginia",20246,Southwest Virginia Legal Aid Society
+51029,"Buckingham County, Virginia",16869,Virginia Legal Aid Society
+51031,"Campbell County, Virginia",55518,Virginia Legal Aid Society
+51033,"Caroline County, Virginia",31181,Legal Aid Works
+51035,"Carroll County, Virginia",29126,Southwest Virginia Legal Aid Society
+51036,"Charles City County, Virginia",6760,Central Virginia Legal Aid Society
+51037,"Charlotte County, Virginia",11563,Virginia Legal Aid Society
+51041,"Chesterfield County, Virginia",366019,Central Virginia Legal Aid Society
+51043,"Clarke County, Virginia",14882,Blue Ridge Legal Services
+51045,"Craig County, Virginia",4898,Legal Aid Society of Roanoke Valley
+51047,"Culpeper County, Virginia",52822,Legal Aid Works
+51049,"Cumberland County, Virginia",9697,Virginia Legal Aid Society
+51051,"Dickenson County, Virginia",14089,Southwest Virginia Legal Aid Society
+51053,"Dinwiddie County, Virginia",28057,Central Virginia Legal Aid Society
+51057,"Essex County, Virginia",10602,Legal Aid Works
+51059,"Fairfax County, Virginia",1145354,Legal Services of Northern Virginia
+51061,"Fauquier County, Virginia",73290,Legal Aid Works
+51063,"Floyd County, Virginia",15532,Southwest Virginia Legal Aid Society
+51065,"Fluvanna County, Virginia",27442,Central Virginia Legal Aid Society
+51067,"Franklin County, Virginia",54838,Legal Aid Society of Roanoke Valley
+51069,"Frederick County, Virginia",92007,Blue Ridge Legal Services
+51071,"Giles County, Virginia",16711,Southwest Virginia Legal Aid Society
+51073,"Gloucester County, Virginia",38875,Legal Aid Society of Eastern Virginia
+51075,"Goochland County, Virginia",24906,Central Virginia Legal Aid Society
+51077,"Grayson County, Virginia",15356,Southwest Virginia Legal Aid Society
+51079,"Greene County, Virginia",20631,Central Virginia Legal Aid Society
+51081,"Greensville County, Virginia",11373,Virginia Legal Aid Society
+51083,"Halifax County, Virginia",34013,Virginia Legal Aid Society
+51085,"Hanover County, Virginia",110513,Central Virginia Legal Aid Society
+51087,"Henrico County, Virginia",333120,Central Virginia Legal Aid Society
+51089,"Henry County, Virginia",50760,Virginia Legal Aid Society
+51091,"Highland County, Virginia",2247,Blue Ridge Legal Services
+51093,"Isle of Wight County, Virginia",38898,Virginia Legal Aid Society
+51095,"James City County, Virginia",78818,Legal Aid Society of Eastern Virginia
+51097,"King and Queen County, Virginia",6681,Legal Aid Works
+51099,"King George County, Virginia",26985,Legal Aid Works
+51101,"King William County, Virginia",17845,Legal Aid Works
+51103,"Lancaster County, Virginia",10866,Legal Aid Works
+51105,"Lee County, Virginia",22287,Southwest Virginia Legal Aid Society
+51107,"Loudoun County, Virginia",420773,Legal Services of Northern Virginia
+51109,"Louisa County, Virginia",38106,Central Virginia Legal Aid Society
+51111,"Lunenburg County, Virginia",11988,Virginia Legal Aid Society
+51113,"Madison County, Virginia",13828,Legal Aid Works
+51115,"Mathews County, Virginia",8537,Legal Aid Society of Eastern Virginia
+51117,"Mecklenburg County, Virginia",30367,Virginia Legal Aid Society
+51119,"Middlesex County, Virginia",10738,Legal Aid Society of Eastern Virginia
+51121,"Montgomery County, Virginia",99373,Southwest Virginia Legal Aid Society
+51125,"Nelson County, Virginia",14773,Central Virginia Legal Aid Society
+51127,"New Kent County, Virginia",23296,Central Virginia Legal Aid Society
+51131,"Northampton County, Virginia",12132,Legal Aid Society of Eastern Virginia
+51133,"Northumberland County, Virginia",12007,Legal Aid Works
+51135,"Nottoway County, Virginia",15638,Virginia Legal Aid Society
+51137,"Orange County, Virginia",36593,Legal Aid Works
+51139,"Page County, Virginia",23753,Blue Ridge Legal Services
+51141,"Patrick County, Virginia",17660,Virginia Legal Aid Society
+51143,"Pittsylvania County, Virginia",60541,Virginia Legal Aid Society
+51145,"Powhatan County, Virginia",30503,Central Virginia Legal Aid Society
+51147,"Prince Edward County, Virginia",21922,Virginia Legal Aid Society
+51149,"Prince George County, Virginia",42634,Central Virginia Legal Aid Society
+51153,"Prince William County, Virginia",481114,Legal Services of Northern Virginia
+51155,"Pulaski County, Virginia",33841,Southwest Virginia Legal Aid Society
+51157,"Rappahannock County, Virginia",7422,Legal Aid Works
+51159,"Richmond County, Virginia",8968,Legal Aid Works
+51161,"Roanoke County, Virginia",96653,Legal Aid Society of Roanoke Valley
+51163,"Rockbridge County, Virginia",22673,Blue Ridge Legal Services
+51165,"Rockingham County, Virginia",83905,Blue Ridge Legal Services
+51167,"Russell County, Virginia",25763,Southwest Virginia Legal Aid Society
+51169,"Scott County, Virginia",21536,Southwest Virginia Legal Aid Society
+51171,"Shenandoah County, Virginia",44337,Blue Ridge Legal Services
+51173,"Smyth County, Virginia",29799,Southwest Virginia Legal Aid Society
+51175,"Southampton County, Virginia",18003,Virginia Legal Aid Society
+51177,"Spotsylvania County, Virginia",141097,Legal Aid Works
+51179,"Stafford County, Virginia",157606,Legal Aid Works
+51181,"Surry County, Virginia",6546,Central Virginia Legal Aid Society
+51183,"Sussex County, Virginia",10866,Virginia Legal Aid Society
+51185,"Tazewell County, Virginia",40392,Southwest Virginia Legal Aid Society
+51187,"Warren County, Virginia",40800,Blue Ridge Legal Services
+51191,"Washington County, Virginia",53985,Southwest Virginia Legal Aid Society
+51193,"Westmoreland County, Virginia",18480,Legal Aid Works
+51195,"Wise County, Virginia",36105,Southwest Virginia Legal Aid Society
+51197,"Wythe County, Virginia",28275,Southwest Virginia Legal Aid Society
+51199,"York County, Virginia",70238,Legal Aid Society of Eastern Virginia
+51510,"Alexandria city, Virginia",157594,Legal Services of Northern Virginia
+51520,"Bristol city, Virginia",17036,Southwest Virginia Legal Aid Society
+51530,"Buena Vista city, Virginia",6639,Blue Ridge Legal Services
+51540,"Charlottesville city, Virginia",46289,Central Virginia Legal Aid Society
+51550,"Chesapeake city, Virginia",249377,Legal Aid Society of Eastern Virginia
+51570,"Colonial Heights city, Virginia",18158,Central Virginia Legal Aid Society
+51580,"Covington city, Virginia",5722,Blue Ridge Legal Services
+51590,"Danville city, Virginia",42507,Virginia Legal Aid Society
+51595,"Emporia city, Virginia",5680,Virginia Legal Aid Society
+51600,"Fairfax city, Virginia",24242,Legal Services of Northern Virginia
+51610,"Falls Church city, Virginia",14576,Legal Services of Northern Virginia
+51620,"Franklin city, Virginia",8194,Virginia Legal Aid Society
+51630,"Fredericksburg city, Virginia",28258,Legal Aid Works
+51640,"Galax city, Virginia",6687,Southwest Virginia Legal Aid Society
+51650,"Hampton city, Virginia",137217,Legal Aid Society of Eastern Virginia
+51660,"Harrisonburg city, Virginia",51784,Blue Ridge Legal Services
+51670,"Hopewell city, Virginia",23046,Central Virginia Legal Aid Society
+51678,"Lexington city, Virginia",7346,Blue Ridge Legal Services
+51680,"Lynchburg city, Virginia",79166,Virginia Legal Aid Society
+51683,"Manassas city, Virginia",42620,Legal Services of Northern Virginia
+51685,"Manassas Park city, Virginia",17123,Legal Services of Northern Virginia
+51690,"Martinsville city, Virginia",13539,Virginia Legal Aid Society
+51700,"Newport News city, Virginia",185118,Legal Aid Society of Eastern Virginia
+51710,"Norfolk city, Virginia",236973,Legal Aid Society of Eastern Virginia
+51720,"Norton city, Virginia",3668,Southwest Virginia Legal Aid Society
+51730,"Petersburg city, Virginia",33261,Central Virginia Legal Aid Society
+51735,"Poquoson city, Virginia",12479,Legal Aid Society of Eastern Virginia
+51740,"Portsmouth city, Virginia",97384,Legal Aid Society of Eastern Virginia
+51750,"Radford city, Virginia",16379,Southwest Virginia Legal Aid Society
+51760,"Richmond city, Virginia",227171,Central Virginia Legal Aid Society
+51770,"Roanoke city, Virginia",99213,Legal Aid Society of Roanoke Valley
+51775,"Salem city, Virginia",25372,Legal Aid Society of Roanoke Valley
+51790,"Staunton city, Virginia",25581,Blue Ridge Legal Services
+51800,"Suffolk city, Virginia",94856,Virginia Legal Aid Society
+51810,"Virginia Beach city, Virginia",457900,Legal Aid Society of Eastern Virginia
+51820,"Waynesboro city, Virginia",22341,Blue Ridge Legal Services
+51830,"Williamsburg city, Virginia",15486,Legal Aid Society of Eastern Virginia
+51840,"Winchester city, Virginia",28103,Blue Ridge Legal Services

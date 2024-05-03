@@ -1,0 +1,278 @@
+---
+title: "Visualizing the Flow of Eviction Cases"
+date: "2024-04-15"
+author: mpc
+output: 
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, fig.width = 12)
+```
+
+```{r libdata}
+library(tidyverse)
+
+# potential viz packages
+library(ggforce)
+library(ggsankey)
+
+# data
+writs <- readRDS("../writ_project/writ_matchedto_case.RDS")
+#cases <- readRDS("../data/case_matchedto_writ.RDS")
+
+# uses writs_matchedto_case.RDS from writ_data.R
+# uses case_matchedto_writ.RDS from writ_data.R
+```
+
+## Eviction Judgment to Writs
+
+Using only the cases resulting in a judgment of eviction (e.g., default judgment or judgment for plaintiff), we can show the flow of cases through each subsequent outcome: type of judgment (may not be useful to include), whether a writ is issued, whether a writ is executed. 
+
+Below are two possible visual types.
+
+```{r prepdata1}
+## derive measures
+writs <- writs %>% 
+  mutate(dur_disp_date = interval(date_disposed, as.Date("2024-02-01")) / ddays(1),
+         dur_writ_date = interval(writ_iss_date, as.Date("2024-02-01")) / ddays(1))
+
+
+# Evictions (Eviction Judgment) -> 
+#   Judgment Type (Default, Plaintiff) -> 
+#     Writ Issued (Yes, No, Ongoing) -> 
+#       Writ Executed (Yes, No, Ongoing)
+writs_categories <- writs %>% 
+  mutate(outcome = "Eviction\nJudgment",
+        # these should take into account time since disposition 
+        writ_issued = case_when(
+            # case is not yet disposed
+            disposition == "Ongoing"  ~ "Ongoing",
+            # case is disposed and writ issued date is present
+            disposition != "Ongoing" & !is.na(writ_iss_date) ~ "Yes", 
+            # case is disposed, writ issue date is absent, but a writ could still happen
+            disposition != "Ongoing" & is.na(writ_iss_date) & dur_disp_date <= 180 ~ "Ongoing",
+            # case is disposed, writ issue date is absent, and it's too late to request a writ
+            disposition != "Ongoing" & is.na(writ_iss_date) & dur_disp_date > 180  ~ "No",
+            # one case with no dur_disp_date
+            TRUE ~ "No"
+            ),
+         # these should take into account time since issued 
+         writ_executed = case_when(
+           # case is not yet disposed
+           disposition == "Ongoing" ~ "Ongoing",
+           # case is disposed, writ is issued, writ execution date is present
+           disposition != "Ongoing" & writ_issued == "Yes" & !is.na(writ_exec_date) ~ "Yes",
+           # case is disposed, writ is issued, writ execution date is absent, but within 30 days
+           disposition != "Ongoing" & writ_issued == "Yes" & is.na(writ_exec_date) & dur_writ_date <= 30  ~ "Ongoing",
+           # case is disposed, writ is issued, writ execution date is absent, but over 30 days
+           disposition != "Ongoing" & writ_issued == "Yes" & is.na(writ_exec_date) & dur_writ_date > 30 ~ "No",
+           # case is disposed, writ is ongoing, writ execution date is absent
+           disposition != "Ongoing" & writ_issued == "Ongoing" ~ "Ongoing",
+           # case is disposed, writ is absent (and can't be requested)
+           disposition != "Ongoing" & writ_issued == "No"  ~ "No",
+           TRUE ~ "No"
+         ),
+         disposition = str_to_title(str_remove(disposition, " judgment")))
+```
+
+### ggforce::geom_parallel_sets
+
+```{r fig1}
+# ggforce version
+# https://ggforce.data-imaginist.com/reference/geom_parallel_sets.html
+df_wide <- writs_categories %>% 
+  count(outcome, disposition, writ_issued, writ_executed) %>% 
+  mutate(color = c(1,2,3,4,5,1,2,3,4,5),
+         color = factor(color))
+
+df_set <- df_wide %>% 
+  gather_set_data(c("outcome","disposition","writ_issued","writ_executed"))
+
+df_set <- df_set %>% 
+  mutate(y = factor(y, 
+                    levels = c("Eviction\nJudgment", "Default", "Plaintiff",
+                               "Yes", "Ongoing", "No")))
+
+ggplot(df_set, aes(x, id = id, split = y, value = n)) +
+  geom_parallel_sets(aes(fill = color), 
+                     alpha = 0.6, axis.width = 0.1,
+                     show.legend = FALSE) +
+  geom_parallel_sets_axes(axis.width = 0.2, fill = "grey") +
+  geom_parallel_sets_labels(aes(label = after_stat(paste0(label, "\n", "(", value, ")"))),
+                            color = 'black', size = 2, angle = 0) +
+  scale_x_continuous(labels = c("Outcome", "Judgment Type", "Writ Issued", "Writ Executed"),
+                     position = "top") +
+  #scale_fill_manual(values = lacroix_palette(type = "paired")) +
+  scale_fill_manual(values = c("#fed976", "#feb24c", "#fd8d3c", "#e31a1c", "#800026")) +
+  labs(x = "") +
+  theme_sankey()
+```
+
+### ggsankey::geom_sankey
+
+```{r fig2}
+# ggsankey version
+# https://github.com/davidsjoberg/ggsankey
+# https://rpubs.com/oomiwale1/926103
+
+df_long <- writs_categories %>% 
+  make_long(outcome, disposition, writ_issued, writ_executed)
+
+ggplot(df_long, aes(x = x, next_x = next_x,
+                    node = node, next_node = next_node,
+                    fill = node,
+                    label = node)) +
+  geom_sankey(alpha = 0.5,          
+              node.color = "grey20",             
+              show.legend = FALSE,
+              space = NULL,
+              width = .2,
+              smooth = 6) +
+  geom_sankey_text(aes(label = after_stat(paste0(node, "\n", "(", freq, ")"))),
+                   color = "black", size = 3) +
+  scale_fill_viridis_d() +
+  scale_x_discrete(labels = c("Outcome", "Judgment Type", "Writ Issued", "Writ Executed")) +
+  labs(x = "") +
+  theme_sankey() +
+  theme(legend.position = "none")
+```
+
+## Case Filing to Writs
+
+Alternatively, we could begin with a set of cases filed (here all cases filed beginning in January 2023) and include cases that do not result in a formal eviction ruling.  
+
+```{r prepdata2}
+# Starting with Cases
+cases <- cases %>% 
+  mutate(dur_disp_date = interval(date_disposed, as.Date("2024-02-01")) / ddays(1),
+         dur_writ_date = interval(writ_iss_date, as.Date("2024-02-01")) / ddays(1))
+
+## derive measures
+# Filing (Case Filed) -> 
+#   Outcome (Eviction, Non-Eviction, Ongoing) -> 
+#     Writ Issued (Yes, No, Ongoing) -> 
+#       Writ Executed (Yes, No, Ongoing)
+
+cases_categories <- cases %>% 
+  mutate(filed = "Cases",
+         outcome = case_when(
+           str_detect(judgment, "Dismissed") ~ "Non-Eviction",
+           judgment == "Non-suit" ~ "Non-Eviction",
+           judgment == "Defendant" ~ "Non-Eviction",
+           judgment == "Not Found/Unserved" ~ "Non-Eviction",
+           judgment == "Other" ~ "Non-Eviction",
+           judgment == "Transfer/Change of Venue" ~ "Non-Eviction",
+           judgment == "null without prejudice" ~ "Non-Eviction",
+           judgment == "Plaintiff" ~ "Eviction",
+           is.na(judgment) ~ "Ongoing"
+         ),
+         # these should take into account time since disposition 
+         # do non-eviction cases need values here? (yes for now)
+         writ_issued = case_when(
+           # writs moot
+           outcome == "Non-Eviction" ~ "No",
+           # outcome is not present
+           outcome == "Ongoing" ~ "Ongoing",
+           # outcome is eviction and writ issued date is present
+           outcome == "Eviction" & !is.na(writ_iss_date) ~ "Yes", 
+           # outcome is eviction, writ issue date is absent, but a writ could still happen
+           outcome == "Eviction" & dur_disp_date <= 180 & is.na(writ_iss_date) ~ "Ongoing",
+           # outcome is eviction, writ issue date is absent, and it's too late to request a writ
+           outcome == "Eviction" & dur_disp_date > 180 & is.na(writ_iss_date) ~ "No",
+           # cases with missing dur_disp_date?
+           outcome == "Eviction" & is.na(dur_disp_date) ~ "No"
+         ),
+         # these should take into account time since issued 
+         # do non-eviction cases need values here? (yes for now)
+         writ_executed = case_when(
+           # writs moot
+           outcome == "Non-Eviction" ~ "No",
+           # outcome is not present
+           writ_issued == "Ongoing" ~ "Ongoing",
+           # outcome is eviction, writ is issued, writ execution date is present
+           outcome == "Eviction" & writ_issued == "Yes" & !is.na(writ_exec_date) ~ "Yes",
+           # outcome is eviction, writ is issued, writ execution date is absent, but within 30 days
+           outcome == "Eviction" & writ_issued == "Yes" & is.na(writ_exec_date) & dur_writ_date <= 30  ~ "Ongoing",
+           # outcome is eviction, writ is issued, writ execution date is absent, but over 30 days
+           outcome == "Eviction" & writ_issued == "Yes" & is.na(writ_exec_date) & dur_writ_date > 30 ~ "No",
+           # outcome is eviction, writ is ongoing
+           outcome == "Eviction" & writ_issued == "Ongoing" ~ "Ongoing",
+           # outcome is eviction, writ is absent (and can't be requested)
+           outcome == "Eviction" & writ_issued == "No"  ~ "No"
+         ))
+```
+
+### ggforce::geom_parallel_sets
+
+```{r fig3}
+## ggforce version
+cases_wide <- cases_categories %>% 
+  count(filed, outcome, writ_issued, writ_executed) %>% 
+  mutate(color = c(1,2,3,4,5,6,7),
+         color = factor(color))
+
+cases_set <- cases_wide %>% 
+  gather_set_data(c("filed","outcome","writ_issued","writ_executed"))
+
+cases_set <- cases_set %>% 
+  mutate(y = factor(y, 
+                    levels = c("Cases", "Eviction", "Yes", "Ongoing", 
+                               "Non-Eviction", "No")))
+
+ggplot(cases_set, aes(x, id = id, split = y, value = n)) +
+  geom_parallel_sets(aes(fill = color), 
+                     alpha = 0.6, axis.width = 0.1,
+                     show.legend = FALSE) +
+  geom_parallel_sets_axes(axis.width = 0.2, fill = "grey") +
+  geom_parallel_sets_labels(aes(label = after_stat(paste0(label, "\n", "(", value, ")"))),
+                            color = 'black', size = 2, angle = 0) +
+  scale_x_continuous(labels = c("Cases", "Outcome", "Writ Issued", "Writ Executed"),
+                     position = "top") +
+  scale_fill_manual(values = c("#fed976", "#feb24c", "#fd8d3c", "#e31a1c", "#800026", "grey30", "#feb24c")) +
+  labs(x = "") +
+  theme_sankey()
+```
+
+### ggsankey::geom_sankey
+
+```{r fig4}
+## ggsankey version
+# https://github.com/davidsjoberg/ggsankey
+# https://rpubs.com/oomiwale1/926103
+
+cases_long <- cases_categories %>% 
+  make_long(filed, outcome, writ_issued, writ_executed)
+
+# alter order of nodes?
+# first level is at bottom of plot?
+cases_long <- cases_long %>% 
+  mutate(node = factor(node, 
+                       levels = c("Cases", "Non-Eviction", "No",
+                                  "Ongoing", "Eviction", "Yes")),
+         next_node = factor(next_node, 
+                            levels = c("Non-Eviction", "No", "Ongoing",
+                                       "Eviction", "Yes")))
+
+
+ggplot(cases_long, aes(x = x, next_x = next_x,
+                    node = node, next_node = next_node,
+                    fill = node,
+                    label = node)) +
+  geom_sankey(alpha = 0.5,          
+              node.color = "grey20",             
+              show.legend = FALSE,
+              space = NULL,
+              width = .2,
+              smooth = 6) +
+  geom_sankey_text(aes(label = after_stat(paste0(node, "\n", "(", freq, ")"))),
+                   color = "black", size = 2) +
+  scale_fill_viridis_d() +
+  scale_x_discrete(labels = c("Cases", "Outcome", "Writ Issued", "Writ Executed")) +
+  labs(x = "") +
+  theme_sankey() +
+  theme(legend.position = "none")
+```
