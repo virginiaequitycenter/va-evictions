@@ -19,7 +19,7 @@ library(tidycensus)
 library(DT)
 
 #df <- readRDS("/Users/henrydemarco/Desktop/writs/data/writ_matchedto_case.RDS")
-df <- readRDS("../data/writ_matchedto_case.RDS")
+df <- readRDS("writ_matchedto_case.RDS")
 ```
 
 ```{r prepdata}
@@ -185,7 +185,7 @@ default_poss_1 <- left_join(judg_poss_type_county, county_summary, by = c("count
 
 # legal_aid_service_areas <- read.csv("/Users/henrydemarco/Desktop/writs/data/legal_aid_service_areas.csv")
 
-legal_aid_service_areas <- read.csv("../data/legal_aid_service_areas.csv")
+legal_aid_service_areas <- read.csv("legal_aid_service_areas.csv")
 
 #Alter GEOID column to remove first two digits (enabling join)
 legal_aid_service_areas <- legal_aid_service_areas %>%

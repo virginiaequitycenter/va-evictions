@@ -83,7 +83,7 @@ va_localities <- va_localities %>%
 
 
 # Write file ----
-write_csv(va_localities, "data/legal_aid_service_areas.csv")
+#write_csv(va_localities, "data/legal_aid_service_areas.csv")
 
 
 # Check/Compare to web page map ----
@@ -99,4 +99,5 @@ ggplot(va_localities_sf) +
                                "red","purple"),
                     guide = "none") +
   theme_void()
+
                                

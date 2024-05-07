@@ -1579,7 +1579,7 @@ library(tidycensus)
 library(DT)
 
 #df &lt;- readRDS(&quot;/Users/henrydemarco/Desktop/writs/data/writ_matchedto_case.RDS&quot;)
-df &lt;- readRDS(&quot;../data/writ_matchedto_case.RDS&quot;)</code></pre>
+df &lt;- readRDS(&quot;writ_matchedto_case.RDS&quot;)</code></pre>
 <pre class="r"><code>df &lt;- df %&gt;% 
   distinct()
 
@@ -1752,7 +1752,7 @@ default_poss_1 &lt;- left_join(judg_poss_type_county, county_summary, by = c(&qu
 
 # legal_aid_service_areas &lt;- read.csv(&quot;/Users/henrydemarco/Desktop/writs/data/legal_aid_service_areas.csv&quot;)
 
-legal_aid_service_areas &lt;- read.csv(&quot;../data/legal_aid_service_areas.csv&quot;)
+legal_aid_service_areas &lt;- read.csv(&quot;legal_aid_service_areas.csv&quot;)
 
 #Alter GEOID column to remove first two digits (enabling join)
 legal_aid_service_areas &lt;- legal_aid_service_areas %&gt;%
