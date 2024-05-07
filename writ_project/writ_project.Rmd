@@ -12,8 +12,7 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 
-library(DT)
-library(ggrepel)
+library(reactable)
 library(sf)
 library(tidycensus)
 library(tidyverse)
@@ -23,11 +22,18 @@ library(tidyverse)
 
 If a landlord chooses to evict their tenant, they must follow a specific legal process, outlined below. However, not all evictions follow this route. Many tenants are displaced in a form of "informal evictions" that are not documented. The goal of this project is to review the small subset of participants that were evicted through the full legal process to better understand trends in landlord behavior in Virginia. 
 
-This analysis uses the most recent writ data shared by LSC (February 2024), joined with the processed Unlawful Detainer data shared monthly. The below plots explore the relationships between steps in the writ process (such as the timing between issuance and execution) and administrative outcomes (such as default judgment and immediate possession). The information is organized by county and plaintiff.
+This analysis uses the most recent writ data shared by LSC (February 2024), joined with the processed Unlawful Detainer data shared monthly. The below plots explore the relationships between steps in the writ process (such as the timing between issuance and execution) and administrative outcomes (such as default judgment and immediate possession). The information is organized by legal services support area, county, and plaintiff.
 
 ![](evictions.png){width="600"}
 
 [*Source: [Virginia Poverty Law Center](https://housing.vplc.org/evictions/)*]{style="float:right"}
+
+<br>
+<br>
+
+We're reviewing Step 4, **Judgement** for possession, Step 6, **Issuing** the writ, and Step 9, **Executing** the eviction, specifically with a focus on where individuals may fall through the cracks. 
+
+---
 
 ```{r prep, include=FALSE}
 
@@ -66,12 +72,12 @@ county_ten <- get_acs(geography = "county",
 
 # Get writs info by county
 writs_by_county <- df %>% group_by(county) %>%
-  summarize(county_cases = n_distinct(case_key),
-            iss_date_non_miss = n_distinct(case_key[!is.na(writ_iss_date)]),
-            exec_date_non_miss = n_distinct(case_key[!is.na(date_exec)]))
+  summarize(county_cases = as.numeric(n_distinct(case_key)),
+            iss_date_non_miss = as.numeric(n_distinct(case_key[!is.na(writ_iss_date)])),
+            exec_date_non_miss = as.numeric(n_distinct(case_key[!is.na(date_exec)])))
 
 # Join with tenures
-writs_by_county <- left_join(county_ten, writs_by_county, by = c("county"))
+writs_by_county <- left_join(county_ten, writs_by_county, by = c("county")) 
 
 # Get service areas
 source("legalaidarea.R")
@@ -92,10 +98,9 @@ writs_by_area <- writs_by_county %>%
 
 ```
 
+## Regional Eviction Rates {.tabset}
 
-## When do people actually leave? {.tabset}
-
-For this report, we created visual representations of rates of writ timelines to see if there were any regional trends. 
+For this report, we created visual representations of rates of writ timelines to see if there were any regional trends. The data is grouped into the eight [Legal Aid Service Areas](https://evictionhelpline.org/legal-aid-map/) of Virginia. 
 
 ### Judgement Rates
 
@@ -134,7 +139,7 @@ areas_sf %>%
 
 ```
 
-### Execution Rate
+### Execution Rates
 
 Of all the writs issued, how many are actually executed on?
 
@@ -149,3 +154,55 @@ areas_sf %>%
        subtitle = "# Writs Executed / # Writs Issued")
 
 ```
+
+---
+
+## County Explorer
+
+Review trends in the eviction process by county.
+
+```{r county_table}
+
+county <- writs_by_county %>%
+  left_join(legal_aid_service_areas, by = c("NAME")) %>%
+  mutate(rental_rate = renthhE / pop_est, 
+         judgement_rate = county_cases / renthhE,
+         issuance_rate = iss_date_non_miss / county_cases, 
+         execution_rate = exec_date_non_miss / iss_date_non_miss) %>%
+  select(NAME, legal_aid_service_area, pop_est, renthhE, rental_rate, county_cases, judgement_rate, 
+         iss_date_non_miss, issuance_rate, exec_date_non_miss, execution_rate) %>%
+  rename(county = NAME, estimated_population = pop_est, rental_population = renthhE,
+         judgements = county_cases, issued = iss_date_non_miss, executed = exec_date_non_miss) 
+
+county$county <- sub(", Virginia$", "", county$county)
+
+reactable(
+  county,
+  defaultColDef = colDef(
+    header = function(value) str_to_title(gsub("_", " ", value, fixed = TRUE)),
+    align = "center",
+    defaultSortOrder = "desc",
+    headerStyle = list(background = "#f7f7f8")
+  ),
+  columns = list(
+    county = colDef(minWidth = 140),
+    legal_aid_service_area = colDef(minWidth = 140),
+    judgements = colDef(),
+    rental_rate = colDef(format = colFormat(percent = TRUE, digits = 1)),
+    judgement_rate = colDef(format = colFormat(percent = TRUE, digits = 1),
+                            minWidth = 130),
+    issuance_rate = colDef(format = colFormat(percent = TRUE, digits = 1)),
+    execution_rate = colDef(format = colFormat(percent = TRUE, digits = 1))
+  ),
+  defaultSorted = c("judgement_rate"),
+  bordered = TRUE,
+  highlight = TRUE,
+  searchable = TRUE
+)
+
+```
+
+
+
+
+
