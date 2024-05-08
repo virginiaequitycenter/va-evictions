@@ -12,6 +12,8 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 
+library(ggforce)
+library(ggsankey)
 library(reactable)
 library(sf)
 library(tidycensus)
@@ -97,6 +99,82 @@ writs_by_area <- writs_by_county %>%
   select(legal_aid_service_area, pop_est, total_renters, total_cases, judgement_rate, issue_rate, execution_rate)
 
 ```
+
+## Visualizing the Flow of Eviction
+
+```{r alluvial_prep}
+
+writs <- readRDS("writ_matchedto_case.RDS")
+
+writs <- writs %>% 
+  mutate(dur_disp_date = interval(date_disposed, as.Date("2024-02-01")) / ddays(1),
+         dur_writ_date = interval(writ_iss_date, as.Date("2024-02-01")) / ddays(1))
+
+writs_categories <- writs %>% 
+  mutate(outcome = "Eviction\nJudgment",
+        # these should take into account time since disposition 
+        writ_issued = case_when(
+            # case is not yet disposed
+            disposition == "Ongoing"  ~ "Ongoing",
+            # case is disposed and writ issued date is present
+            disposition != "Ongoing" & !is.na(writ_iss_date) ~ "Yes", 
+            # case is disposed, writ issue date is absent, but a writ could still happen
+            disposition != "Ongoing" & is.na(writ_iss_date) & dur_disp_date <= 180 ~ "Ongoing",
+            # case is disposed, writ issue date is absent, and it's too late to request a writ
+            disposition != "Ongoing" & is.na(writ_iss_date) & dur_disp_date > 180  ~ "No",
+            # one case with no dur_disp_date
+            TRUE ~ "No"
+            ),
+         # these should take into account time since issued 
+         writ_executed = case_when(
+           # case is not yet disposed
+           disposition == "Ongoing" ~ "Ongoing",
+           # case is disposed, writ is issued, writ execution date is present
+           disposition != "Ongoing" & writ_issued == "Yes" & !is.na(writ_exec_date) ~ "Yes",
+           # case is disposed, writ is issued, writ execution date is absent, but within 30 days
+           disposition != "Ongoing" & writ_issued == "Yes" & is.na(writ_exec_date) & dur_writ_date <= 30  ~ "Ongoing",
+           # case is disposed, writ is issued, writ execution date is absent, but over 30 days
+           disposition != "Ongoing" & writ_issued == "Yes" & is.na(writ_exec_date) & dur_writ_date > 30 ~ "No",
+           # case is disposed, writ is ongoing, writ execution date is absent
+           disposition != "Ongoing" & writ_issued == "Ongoing" ~ "Ongoing",
+           # case is disposed, writ is absent (and can't be requested)
+           disposition != "Ongoing" & writ_issued == "No"  ~ "No",
+           TRUE ~ "No"
+         ),
+         disposition = str_to_title(str_remove(disposition, " judgment")))
+
+df_wide <- writs_categories %>% 
+  count(outcome, disposition, writ_issued, writ_executed) %>% 
+  mutate(color = c(1,2,3,4,5,1,2,3,4,5),
+         color = factor(color))
+
+df_set <- df_wide %>% 
+  gather_set_data(c("outcome","disposition","writ_issued","writ_executed"))
+
+df_set <- df_set %>% 
+  mutate(y = factor(y, 
+                    levels = c("Eviction\nJudgment", "Default", "Plaintiff",
+                               "Yes", "Ongoing", "No")))
+
+ggplot(df_set, aes(x, id = id, split = y, value = n)) +
+  geom_parallel_sets(aes(fill = color), 
+                     alpha = 0.6, axis.width = 0.1,
+                     show.legend = FALSE) +
+  geom_parallel_sets_axes(axis.width = 0.2, fill = "grey") +
+  geom_parallel_sets_labels(aes(label = after_stat(paste0(label, "\n", "(", value, ")"))),
+                            color = 'black', size = 2, angle = 0) +
+  scale_x_continuous(labels = c("Outcome", "Judgment Type", "Writ Issued", "Writ Executed"),
+                     position = "top") +
+  #scale_fill_manual(values = lacroix_palette(type = "paired")) +
+  scale_fill_manual(values = c("#fde725", "#5ec962", "#21918c", "#3b528b", "#440154")) +
+  labs(x = "") +
+  theme_sankey()
+
+```
+
+
+
+
 
 ## Regional Eviction Rates {.tabset}
 
@@ -201,8 +279,3 @@ reactable(
 )
 
 ```
-
-
-
-
-
