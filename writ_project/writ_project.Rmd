@@ -1,6 +1,6 @@
 ---
 title: "Writ of Evictions in VA"
-date: "2024-05-07"
+date: "2024-05-08"
 author: Michele Claibourn, Henry DeMarco, and Samantha Toet
 output: 
   html_document:
@@ -102,7 +102,9 @@ writs_by_area <- writs_by_county %>%
 
 ## Visualizing the Flow of Eviction
 
-```{r alluvial_prep}
+The below plot shows the flow of eviction cases through each subsequent outcome: type of judgment, whether a writ is issued, and whether a writ is executed. This plot demonstrates that a large proportion (60%) of eviction judgements end up not being executed. That means in 60% of the eviction cases in VA the tenant was removed informally, and not by the sheriff or another legal official.  The plot also shows that a significant proportion (35%) of eviction cases don't yet have an outcome. It is hypothesized that these trends are due to either inconsistent data collection and sharing mechanisms or the result of inconsistent timelines in the eviction process across districts. 
+
+```{r alluvial}
 
 writs <- readRDS("writ_matchedto_case.RDS")
 
@@ -168,17 +170,15 @@ ggplot(df_set, aes(x, id = id, split = y, value = n)) +
   #scale_fill_manual(values = lacroix_palette(type = "paired")) +
   scale_fill_manual(values = c("#fde725", "#5ec962", "#21918c", "#3b528b", "#440154")) +
   labs(x = "") +
-  theme_sankey()
+  theme_sankey() 
 
 ```
 
-
-
-
-
 ## Regional Eviction Rates {.tabset}
 
-For this report, we created visual representations of rates of writ timelines to see if there were any regional trends. The data is grouped into the eight [Legal Aid Service Areas](https://evictionhelpline.org/legal-aid-map/) of Virginia. 
+For this report, we created visual representations of rates of writ timelines to see if there were any regional trends. For example, how many judgements actually issue a writ of eviction? How often is the sheriff actually executing the writ and removing people from their homes? 
+
+The data is grouped into the eight [Legal Aid Service Areas](https://evictionhelpline.org/legal-aid-map/) of Virginia. 
 
 ### Judgement Rates
 
@@ -227,7 +227,7 @@ areas_sf %>%
   ggplot() +
   geom_sf(aes(fill = execution_rate)) +
   theme_void() +
-  scale_fill_viridis_c(labels = scales::label_percent(), name = "Issuance Rate") +
+  scale_fill_viridis_c(labels = scales::label_percent(), name = "Execution Rate") +
   labs(title = "Rate of Execution",
        subtitle = "# Writs Executed / # Writs Issued")
 
@@ -238,6 +238,11 @@ areas_sf %>%
 ## County Explorer
 
 Review trends in the eviction process by county.
+
+```{r county}
+
+```
+
 
 ```{r county_table}
 
