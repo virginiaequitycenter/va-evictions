@@ -1,0 +1,488 @@
+---
+title: "Writs of Eviction in VA"
+date: "2024-05-08"
+author: Michele Claibourn, Henry DeMarco, and Samantha Toet
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+
+library(reactable)
+library(sf)
+#library(tidycensus)
+library(tidyverse)
+library(ggforce)
+library(ggsankey)
+```
+
+## Background
+
+If a landlord chooses to evict their tenant, they must follow a specific legal process, outlined below. However, not all evictions follow this route. Many tenants are displaced in a form of "informal evictions" that are not documented. Others move upon receiving notice of a lease termination or after receiving a court summons. Still others will move once an eviction judgment has been handed down by the court. For renters that remain, the landlording entity may request the court issue a writ of eviction to be executed by the sheriff. Here we examine the number of formal eviction judgments that reach each of these points, underscoring that the execution of writs of eviction represents a deep undercount of the frequency from which people are displaced from their homes. 
+
+
+```{r image, echo = FALSE, fig.align = "center", output.width = "600", fig.cap = "Source: [Virginia Poverty Law Center](https://housing.vplc.org/evictions/)"}
+knitr::include_graphics("../evictions.png")
+```
+
+The analysis below uses cases of unlawful detainers that resulted in eviction judgments between January 2024 and February 2024. Beginning July 1, 2023, [Virginia Code](https://law.lis.virginia.gov/vacode/title8.01/chapter18/section8.01-471/) requires that the execution of writs of eviction be recorded in the court record. Thus, we are able to analyze the flow of steps in the eviction process; specifically, beginning with **Judgments for possession** (Step 4), we examine the number of cases for which the **Writ of eviction is issued** (Step 6), and the nmber of cases for which the **Writ of eviction is executed** (Step 9). 
+
+
+```{r prep, include=FALSE}
+
+# Get writs data 
+df <- readRDS("../data/writ_matchedto_case.RDS")
+
+df <- df %>% 
+  distinct() %>%
+  # Work with dates
+  mutate(county = str_sub(case_key, 12,14),
+         county.x = ifelse(county == '703', '700', county.x), # fix wonky Newport New fips code
+         date_disp = ymd(date_disposed),
+         date_writ = ymd(writ_iss_date),
+         date_exec = ymd(writ_exec_date),
+         dur_disp_writ = interval(date_disp, date_writ) / ddays(1),
+         dur_writ_exec = interval(date_writ, date_exec) / ddays(1),
+         days_since_disp = interval(date_disp, as.Date("2024-02-17")) / ddays(1),
+         days_since_writ = interval(date_writ, as.Date("2024-02-17")) / ddays(1),
+         # Get writ statuses
+         writ_status = case_when(
+           is.na(date_writ) ~ "none",
+           is.na(date_exec) & days_since_writ > 30 ~ "expired",
+           is.na(date_exec) & days_since_writ <= 30 ~ "pending",
+           TRUE ~ "executed"))
+
+# Get county tenures 
+county_ten <- readRDS("../data/acs_county_ten.RDS")
+# county_ten <- get_acs(geography = "county", 
+#                       variables = c(ownhh = "B25003_002", 
+#                                     renthh = "B25003_003",
+#                                     totalhh = "B25003_001"), 
+#                       state = "VA", 
+#                       survey = "acs5",
+#                       year = 2022,
+#                       output = "wide") %>%
+#   mutate(county = substr(GEOID, 3, 5)) # Alter GEOID column to remove first two digits (enabling join with FIPS)
+
+# Get writs info by county
+writs_by_county <- df %>% group_by(county) %>%
+  summarize(county_cases = n(),
+            iss_date_non_miss = sum(!is.na(writ_iss_date)),
+            exec_date_non_miss = sum(!is.na(date_exec)))
+
+# Join with tenures
+writs_by_county <- left_join(county_ten, writs_by_county, by = c("county"))
+
+# Get service areas
+legal_aid_service_areas <- read_csv("../data/legal_aid_service_areas.csv") %>%
+  mutate(county = substr(GEOID, 3, 5))
+
+# Summarize by service area
+writs_by_area <- writs_by_county %>%
+  left_join(legal_aid_service_areas, by = c("NAME")) %>%
+  group_by(legal_aid_service_area) %>%
+  summarize(total_renters = sum(renthhE, na.rm = TRUE),
+         judgment_rate = sum(county_cases, na.rm = TRUE)/total_renters, # % renters that received a judgement
+         issue_rate = sum(iss_date_non_miss, na.rm = TRUE)/sum(county_cases, na.rm = TRUE), # % of eviction judgments with writ issued
+         execution_rate = sum(exec_date_non_miss, na.rm = TRUE)/sum(iss_date_non_miss, na.rm = TRUE), # % of issued that were executed
+         pop_est = sum(pop_est, na.rm = TRUE),
+         total_cases = sum(county_cases, na.rm = TRUE)) %>% 
+  select(legal_aid_service_area, pop_est, total_renters, total_cases, judgment_rate, issue_rate, execution_rate)
+
+```
+
+## Evictions through the Courts
+
+During this period, there were `r nrow(df)` eviction judgments in Virginia's general district courts. Of these, `r sum(!is.na(df$writ_iss_date))` have a record or a writ being issued; `r sum(!is.na(df$writ_exec_date))` have a record of a writ being executed. 
+
+
+## Timing of Writs 
+
+We created a measure to capture the time between when an eviction judgment is made and when a writ of eviction is issued for the `r sum(!is.na(df$writ_iss_date))` cases with a recorded writ issuance date. Similarly we created a measure for the time between when a writ of eviction is issued and when it is executed for the `r sum(!is.na(df$writ_exec_date))` caseswith a recorded writ execution date. 
+
+### When are writs issued? {.tabset}
+
+#### Timing
+
+Filtering out negative values (cases where the writ issued date occurs before the eviction judgment date), the time between judgments and issued writs ranges between 0 and 164 days. Virginia code stipulates that writs of eviction must be issued within 180 days from the date of judgement for possession.
+
+```{r dur_issue_sub}
+# Displaying time between judgement date and writ issued limited to >= -100 days
+ggplot(subset(df, dur_disp_writ >= 0), aes(x = dur_disp_writ)) +
+  geom_histogram(fill = "grey", color = "grey", binwidth = 2) +
+  labs(title = "Time between Judgment Date and Writ Issued",
+       x = "Days", y = "Frequency") +
+  theme_minimal()
+```
+
+#### Timing by Possession
+
+When a court renders an eviction judgment, the judgment is either for possession or for immediate possession. In a judgment of possession, there is a 10-day appeal period before a writ of eviction can be requested and issued. Under a judgment of immediate possession, the writ of eviction can be requested and issued on the same day as the judgment, but cannot be executed until after the 10-day appeal period.
+
+```{r dur_issue_poss}
+mean_dur_possess <- df %>% 
+  mutate(possession2 = case_when(
+    possession == "Immediate" ~ "Immediate Possession",
+    possession == "Possession" ~ "Possession",
+    is.na(possession) ~ "Possession"
+  )) %>% 
+  filter(dur_disp_writ >= 0) %>% 
+  group_by(possession2) %>% 
+  summarize(mean = round(mean(dur_disp_writ), 0))
+
+# Time between judgment date and writ issued limited positive values
+df %>% 
+  mutate(possession2 = case_when(
+    possession == "Immediate" ~ "Immediate Possession",
+    possession == "Possession" ~ "Possession",
+    is.na(possession) ~ "Possession"
+  )) %>% 
+  filter(dur_disp_writ >= 0) %>% 
+ggplot(aes(x = dur_disp_writ, fill = possession2)) +
+  geom_density(alpha = 0.5) +
+  scale_fill_manual(values = c("#E69F00", "#009E73"),
+                    name = "Possession Judgment") +
+  annotate("text", x = 50,
+            y = c(.06, .055),
+            label = paste0("Mean = ", round(mean_dur_possess$mean, 1)),
+            color = c("#E69F00", "#009E73")) +
+  labs(title = "Time between Judgment Date and Writ Issued",
+       subtitle = "By Possession Judgment",
+       x = "Days", y = "Relative Frequency") +
+  theme_minimal()
+```
+
+#### Timing among all cases
+
+For the time between judgement and writ issuance, there are notable (and substantial) negative values (2158). A closer look at the negative values suggests that many of these are the result of clerical errors (e.g,. recording the wrong year).
+
+```{r dur_issue_all}
+# Displaying time between writ judgement and issuance
+ggplot(df, aes(x = dur_disp_writ)) +
+  geom_histogram(fill = "grey", color = "grey", binwidth = 2) +
+  labs(title = "Time between Judgment Date and Writ Issued",
+       x = "Days", y = "Frequency") +
+  theme_minimal()
+```
+
+### When are writs executed? {.tabset}
+
+#### Timing
+
+Virginia code stipulates that writs of eviction must be executed within 30 days from issuance (or they will be vacated). Below we filter out improbable values (cases where the writ execution date occurs more than 30 days after the writ issued date). 
+
+```{r dur_exec_sub}
+# Displaying time between writ execution limited to =< 30 days
+ggplot(subset(df, dur_writ_exec <= 30), aes(x = dur_writ_exec)) +
+  geom_histogram(fill = "grey", color = "grey", binwidth = 1) +
+  labs(title = "Time between Writ Issued and Writ Executed",
+       x = "Days", y = "Frequency") +
+  theme_minimal()
+```
+
+#### Timing by Possession
+
+```{r dur_exec_poss}
+# Time between writ issued and executed limited to <= 30 days
+mean_dur_possess <- df %>% 
+    mutate(possession2 = case_when(
+    possession == "Immediate" ~ "Immediate Possession",
+    possession == "Possession" ~ "Possession",
+    is.na(possession) ~ "Possession"
+  )) %>% 
+  filter(dur_writ_exec <= 30) %>% 
+  group_by(possession2) %>% 
+  summarize(mean = round(mean(dur_writ_exec),0))
+
+df %>% 
+    mutate(possession2 = case_when(
+    possession == "Immediate" ~ "Immediate Possession",
+    possession == "Possession" ~ "Possession",
+    is.na(possession) ~ "Possession"
+  )) %>%
+  filter(dur_writ_exec <= 30) %>% 
+  ggplot(aes(x = dur_writ_exec, fill = possession2)) +
+  geom_density(alpha = 0.5) +
+  scale_fill_manual(values = c("#E69F00", "#009E73"),
+                    name = "Possession Judgment") +
+  annotate("text", x = 20,
+           y = c(.065, .06),
+           label = paste0("Mean = ", round(mean_dur_possess$mean, 1)),
+           color = c("#E69F00", "#009E73")) +
+  labs(title = "Time between Writ Issued and Writ Executed",
+       subtitle = "By Posession Judgment",
+       x = "Days", y = "Frequency") +
+  theme_minimal()
+```
+
+#### Timing among all cases
+
+Among cases with a recorded writ execution date, 50 have execution dates more than 30 days after the date the write of eviction was issued.
+
+```{r dur_exec_all}
+# Displaying time between writ execution 
+ggplot(df, aes(x = dur_writ_exec)) +
+  geom_histogram(fill = "grey", color = "grey", binwidth = 1) +
+  labs(title = "Time between Writ Issued and Writ Executed",
+       x = "Days", y = "Frequency") +
+  theme_minimal()
+```
+
+## From Judgment to Executed Writ {.tabset}
+
+Using only the cases resulting in a judgment of eviction, we can show the flow of cases through each subsequent outcome: type of judgment (may not be useful to include), whether a writ is issued, whether a writ is executed. This is intended to visually underscore how few eviction judgments result in executed writs of eviction.
+
+Below are two possible visual types.
+
+```{r all_prep}
+## derive measures
+writs <- df %>% 
+  mutate(dur_disp_date = interval(date_disposed, as.Date("2024-02-01")) / ddays(1),
+         dur_writ_date = interval(writ_iss_date, as.Date("2024-02-01")) / ddays(1))
+
+
+# Evictions (Eviction Judgment) -> 
+#   Judgment Type (Default, Plaintiff) -> 
+#     Writ Issued (Yes, No, Ongoing) -> 
+#       Writ Executed (Yes, No, Ongoing)
+writs_categories <- writs %>% 
+  mutate(outcome = "Eviction\nJudgment",
+        # these should take into account time since disposition 
+        writ_issued = case_when(
+            # case is not yet disposed
+            disposition == "Ongoing"  ~ "Ongoing",
+            # case is disposed and writ issued date is present
+            disposition != "Ongoing" & !is.na(writ_iss_date) ~ "Yes", 
+            # case is disposed, writ issue date is absent, but a writ could still happen
+            disposition != "Ongoing" & is.na(writ_iss_date) & dur_disp_date <= 180 ~ "Ongoing",
+            # case is disposed, writ issue date is absent, and it's too late to request a writ
+            disposition != "Ongoing" & is.na(writ_iss_date) & dur_disp_date > 180  ~ "No",
+            # one case with no dur_disp_date
+            TRUE ~ "No"
+            ),
+         # these should take into account time since issued 
+         writ_executed = case_when(
+           # case is not yet disposed
+           disposition == "Ongoing" ~ "Ongoing",
+           # case is disposed, writ is issued, writ execution date is present
+           disposition != "Ongoing" & writ_issued == "Yes" & !is.na(writ_exec_date) ~ "Yes",
+           # case is disposed, writ is issued, writ execution date is absent, but within 30 days
+           disposition != "Ongoing" & writ_issued == "Yes" & is.na(writ_exec_date) & dur_writ_date <= 30  ~ "Ongoing",
+           # case is disposed, writ is issued, writ execution date is absent, but over 30 days
+           disposition != "Ongoing" & writ_issued == "Yes" & is.na(writ_exec_date) & dur_writ_date > 30 ~ "No",
+           # case is disposed, writ is ongoing, writ execution date is absent
+           disposition != "Ongoing" & writ_issued == "Ongoing" ~ "Ongoing",
+           # case is disposed, writ is absent (and can't be requested)
+           disposition != "Ongoing" & writ_issued == "No"  ~ "No",
+           TRUE ~ "No"
+         ),
+         disposition = str_to_title(str_remove(disposition, " judgment")))
+```
+
+### Case Flow (Alluvial)
+
+```{r alluvial, fig.width = 9}
+# ggforce version
+# https://ggforce.data-imaginist.com/reference/geom_parallel_sets.html
+df_wide <- writs_categories %>% 
+  count(outcome, disposition, writ_issued, writ_executed) %>% 
+  mutate(color = c(1,2,3,4,5,1,2,3,4,5),
+         color = factor(color))
+
+df_set <- df_wide %>% 
+  gather_set_data(c("outcome","disposition","writ_issued","writ_executed"))
+
+df_set <- df_set %>% 
+  mutate(y = factor(y, 
+                    levels = c("Eviction\nJudgment", "Default", "Plaintiff",
+                               "Yes", "Ongoing", "No")))
+
+ggplot(df_set, aes(x, id = id, split = y, value = n)) +
+  geom_parallel_sets(aes(fill = color), 
+                     alpha = 0.6, axis.width = 0.1,
+                     show.legend = FALSE) +
+  geom_parallel_sets_axes(axis.width = 0.2, fill = "grey") +
+  geom_parallel_sets_labels(aes(label = after_stat(paste0(label, "\n", "(", value, ")"))),
+                            color = 'black', size = 2, angle = 0) +
+  scale_x_continuous(labels = c("Outcome", "Judgment Type", "Writ Issued", "Writ Executed"),
+                     position = "top") +
+  #scale_fill_manual(values = lacroix_palette(type = "paired")) +
+  scale_fill_manual(values = c("#fed976", "#feb24c", "#fd8d3c", "#e31a1c", "#800026")) +
+  labs(x = "") +
+  theme_sankey()
+```
+
+---
+
+### Case Flow (Sankey)
+
+```{r sankey, fig.width = 9}
+# ggsankey version
+# https://github.com/davidsjoberg/ggsankey
+# https://rpubs.com/oomiwale1/926103
+
+df_long <- writs_categories %>% 
+  make_long(outcome, disposition, writ_issued, writ_executed)
+
+ggplot(df_long, aes(x = x, next_x = next_x,
+                    node = node, next_node = next_node,
+                    fill = node,
+                    label = node)) +
+  geom_sankey(alpha = 0.5,          
+              node.color = "grey20",             
+              show.legend = FALSE,
+              space = NULL,
+              width = .2,
+              smooth = 6) +
+  geom_sankey_text(aes(label = after_stat(paste0(node, "\n", "(", freq, ")"))),
+                   color = "black", size = 3) +
+  scale_fill_viridis_d(option = "cividis") +
+  scale_x_discrete(labels = c("Outcome", "Judgment Type", "Writ Issued", "Writ Executed"),
+                   position = "top") +
+  labs(x = "") +
+  theme_sankey() +
+  theme(legend.position = "none")
+```
+
+---
+
+### Additional Thoughts
+
+In a final version, I could imagine adding some background color to represent informal evictions. That is, extending the overall area of the figure by adding background color below the figure. The size of the background color would be approximately proportionate to an estimated number of non-court evictions, but in a way that acknowledges uncertainty (e.g,  fuzzy edges or fading out).
+
+Currently just playing with possible color themes, but always looking for suggestions on better uses of color. 
+
+Figures could also be oriented vertically to make them bigger.
+
+Finally, we could also begin with a set of cases filed (here all cases filed beginning in January 2023) and include cases that do not result in a formal eviction ruling.  
+
+<br>
+<br>
+<br>
+<br>
+<br>
+
+---
+
+## Judgments and Writs by Area {.tabset}
+
+Below we show the frequency of eviction judgments, writs issued, and writs executed by legal aid service area.
+
+### Eviction Judgment Rates
+
+Among renting households in the area, what percent received an eviction judgement during this period? 
+
+```{r area_judgements}
+# don't have va_localities_sf; maybe
+library(tigris)
+va_localities_sf <- counties(state = "51", cb = TRUE, year = 2022, 
+                             progress_bar = FALSE)
+va_localities_sf <- va_localities_sf %>% 
+  select(GEOID) %>% 
+  left_join(writs_by_county, by = "GEOID") %>% 
+  left_join(legal_aid_service_areas %>% 
+              select(-NAME) %>% mutate(GEOID = as.character(GEOID)), 
+            by = "GEOID")
+
+areas_sf = va_localities_sf %>%
+  group_by(legal_aid_service_area) %>%
+  mutate(geometry = st_union(geometry)) %>%
+  left_join(writs_by_area, by = 'legal_aid_service_area') 
+
+areas_sf %>%
+  ggplot() +
+  geom_sf(aes(fill = judgment_rate)) +
+  theme_void() +
+  scale_fill_viridis_c(labels = scales::label_percent(), name = "Eviction Judgment Rate") +
+  labs(title = "Eviction Judgments per Renting Households",
+       subtitle = "# Judgments / # Renters")
+
+```
+
+### Writ Issuance Rates
+
+Among all eviction judgments in an area, for how many are writs issued? 
+
+```{r area_issuances}
+
+areas_sf %>% 
+  ggplot() +
+  geom_sf(aes(fill = issue_rate)) +
+  theme_void() +
+  scale_fill_viridis_c(labels = scales::label_percent(), name = "Writ Issuance Rate") +
+  labs(title = "Writs Issued per Eviction Judgments",
+       subtitle = "# Writs Issued / # Judgments")
+
+```
+
+### Writ Execution Rates
+
+Among all eviction judgments for which writs are issued, how many are executed?
+
+```{r area_execution}
+
+areas_sf %>% 
+  ggplot() +
+  geom_sf(aes(fill = execution_rate)) +
+  theme_void() +
+  scale_fill_viridis_c(labels = scales::label_percent(), name = "Writ Execution Rate") +
+  labs(title = "Writs Executed per Writs Issued",
+       subtitle = "# Writs Executed / # Writs Issued")
+
+```
+
+## County Explorer
+
+Patterns in the eviction process by county. The table can be sorted by a column (by clicking on the column name) and filtered by key words (by typing a word in the search box).
+
+Derived measures: 
+
+* Rental rate: renting households / total households
+* Judgment rate: eviction judgments / renting households
+* (Writ) Issuance rate: writs of evictions issued / eviction judgments
+* (Writ) Execution rate: writs of evictions executed / writs of evictions issued
+
+Note, several localities report improbably low numbers of executed writs relative to the number of writs issued. For example, Alexandria (0 of 818 issued writs), Arlington (0 of 674), Richmond city (1 of 1903), Prince William (1 of 948), etc.
+
+```{r county_table}
+
+county <- writs_by_county %>%
+  left_join(legal_aid_service_areas, by = c("NAME")) %>%
+  mutate(rental_rate = renthhE / totalhhE, 
+         judgment_rate = county_cases / renthhE,
+         issuance_rate = iss_date_non_miss / county_cases, 
+         execution_rate = exec_date_non_miss / iss_date_non_miss) %>%
+  select(NAME, legal_aid_service_area, totalhhE, renthhE, rental_rate, county_cases, judgment_rate, 
+         iss_date_non_miss, issuance_rate, exec_date_non_miss, execution_rate) %>%
+  rename(county = NAME, estimated_households = totalhhE, renting_households = renthhE,
+         eviction_judgments = county_cases, writs_issued = iss_date_non_miss, writs_executed = exec_date_non_miss) 
+
+county$county <- sub(", Virginia$", "", county$county)
+
+reactable(
+  county,
+  defaultColDef = colDef(
+    header = function(value) str_to_title(gsub("_", " ", value, fixed = TRUE)),
+    align = "center",
+    defaultSortOrder = "desc",
+    headerStyle = list(background = "#f7f7f8")
+  ),
+  columns = list(
+    county = colDef(minWidth = 140),
+    legal_aid_service_area = colDef(minWidth = 140),
+    #eviction_judgments = colDef(),
+    rental_rate = colDef(format = colFormat(percent = TRUE, digits = 1)),
+    judgment_rate = colDef(format = colFormat(percent = TRUE, digits = 1),
+                            minWidth = 130),
+    issuance_rate = colDef(format = colFormat(percent = TRUE, digits = 1)),
+    execution_rate = colDef(format = colFormat(percent = TRUE, digits = 1))
+  ),
+  defaultSorted = c("judgment_rate"),
+  bordered = TRUE,
+  highlight = TRUE,
+  searchable = TRUE
+)
+```
