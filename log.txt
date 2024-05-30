@@ -1,10 +1,10 @@
-run_date: 2024-02-23
-time_finished: 10:54
-n_residential_cases: 667038
-n_cases: 673246
+run_date: 2024-05-30
+time_finished: 15:10
+n_residential_cases: 702499
+n_cases: 709007
 min_year_residential_cases: 2018
-max_year_residential_cases: 2023
-n_serial_residential_cases: 193213
-n_true_duplicates_removed: 646
+max_year_residential_cases: 2024
+n_serial_residential_cases: 204149
+n_true_duplicates_removed: 683
 n_duplicate_case_ids_removed: 5
-duplicate_case_ids_removed: 155_GV22000758-00, 703_GV23015458-00, 703_GV23015456-00, 703_GV23015446-00, 703_GV23015482-00
+duplicate_case_ids_removed: 155_GV22000758-00, 703_GV23015456-00, 703_GV23015482-00, 703_GV23015446-00, 703_GV23015458-00

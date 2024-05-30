@@ -5,7 +5,7 @@
 # Last revised: 2023-09-20                                   #
 ##############################################################
 
-######################### Instructions #######################
+###################### Instructions ##########################
 # When the app is ready for an update, run this from shell:  #
 # Rscript --vanilla VEC.R <arg>                              #
 # <arg> must be one of:                                      #
@@ -16,6 +16,20 @@
 #   - GDaUD = get data and update data only                  #
 #   - UDaDA = update data and deploy app only                #
 #   - GDaUDaDA = get data and update data and deploy app     #
+##############################################################
+
+#################### Troubleshooting #########################
+# Error in console:
+#       Auto-refreshing stale OAuth token.
+#       Error in test_request() : 
+#         Unauthorized (HTTP 401). Failed to connect to box.com API.
+#       Calls: source ... eval -> eval -> box_auth -> test_request -> <Anonymous>
+#         In addition: Warning message:
+#         Unable to refresh token: invalid_grant
+#       Refresh token has expired 
+#       Execution halted
+# Solution: Run the following in RStudio console:
+#           boxr::box_fresh_auth()
 ##############################################################
 
 args <- commandArgs(trailingOnly = TRUE)
