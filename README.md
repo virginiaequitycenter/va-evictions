@@ -1,4 +1,4 @@
-_Last updated: 2023-05-16_
+_Data pipeline + app last updated: 2024-04-19_
 
 The [Virginia Evictors Catalog](https://virginiaequitycenter.shinyapps.io/va-evictors-catalog/) provides data on plaintiffs filing unlawful detainers (evictions) in Virginia's General District Courts.
 

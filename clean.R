@@ -136,6 +136,9 @@ cases$defendant_non_residential <- ifelse(grepl(x = cases$defendant_name, patter
 # Un-flag cases with "ESTATE OF" in the defendant names (likely residential, e.g., "ESTATE OF JANE SMITH")
 cases$defendant_non_residential <- ifelse(grepl(x = cases$defendant_name, pattern = '(?i)\\bestate of?\\b'), FALSE, cases$defendant_non_residential)
 
+# Identify non-residential plaintiffs
+cases$plaintiff_non_residential <- identify_non_residential(cases$plaintiff_name)
+
 # Write out resulting data
 if (dir.exists(output_directory) == FALSE) { dir.create(output_directory) }
 write.csv(cases, file = paste0(output_directory, '/cases.txt'), row.names = FALSE)
