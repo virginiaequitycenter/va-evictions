@@ -5,9 +5,11 @@
 # Folder names on Box can be written as <xyz>.zip or <xyz>
 
 # For error in console: Failed to connect to Box Api / Refresh token has expired - resolved by resetting Client Secret in Box app configuration and updating .Renviron file
+# Solution: Run the following in RStudio console:
+#           boxr::box_fresh_auth()
 
 use-data-through:
-2024-03-31
+2024-06-30
 
 original:
 2023-05-04_all_data.zip
@@ -26,3 +28,6 @@ updates:
 2024-03-18
 2024-04-15
 2024-05-20
+2024-06-17
+2024-07-22
+2024-08-19
