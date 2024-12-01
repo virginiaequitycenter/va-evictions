@@ -1,16 +1,14 @@
 ---
 title: "Writ of Evictions in VA"
-date: "2024-05-08"
-author: Michele Claibourn, Henry DeMarco, and Samantha Toet
+date: "2024-11-04"
 output: 
   html_document:
-    code_folding: hide
     toc: true
     toc_float: true
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 
 library(ggforce)
 library(ggsankey)
@@ -18,42 +16,42 @@ library(reactable)
 library(sf)
 library(tidycensus)
 library(tidyverse)
+library(leaflet)
+library(scales)
 ```
 
-## Background
-
-If a landlord chooses to evict their tenant, they must follow a specific legal process, outlined below. However, not all evictions follow this route. Many tenants are displaced in a form of "informal evictions" that are not documented. The goal of this project is to review the small subset of participants that were evicted through the full legal process to better understand trends in landlord behavior in Virginia. 
-
-This analysis uses the most recent writ data shared by LSC (February 2024), joined with the processed Unlawful Detainer data shared monthly. The below plots explore the relationships between steps in the writ process (such as the timing between issuance and execution) and administrative outcomes (such as default judgment and immediate possession). The information is organized by legal services support area, county, and plaintiff.
-
-![](evictions.png){width="600"}
-
-[*Source: [Virginia Poverty Law Center](https://housing.vplc.org/evictions/)*]{style="float:right"}
-
-<br>
-<br>
-
-We're reviewing Step 4, **Judgement** for possession, Step 6, **Issuing** the writ, and Step 9, **Executing** the eviction, specifically with a focus on where individuals may fall through the cracks. 
+In 2023, Virginia passed legislation ([HB 1836](https://lis.virginia.gov/cgi-bin/legp604.exe?ses=231&typ=bil&val=hb1836), [SB 1089](https://lis.virginia.gov/cgi-bin/legp604.exe?231+sum+SB1089)) that requires a sheriff executing a writ of eviction to return the executed writ to the issuing court to be recorded. The law went into effect on July 1, 2023 and the Office of the Executive Secretary of the Supreme Court of Virginia will report on the number of executed writs during each fiscal year. In anticipation of this measure -- the number of executed eviction writs -- becoming a key metric of eviction in Virginia, we evaluate the place of executed writs in understanding the scale of the involuntary loss of housing that occurs in the larger picture of eviction. Sheriff-executed writs capture only a small slice of evicted households.  
 
 ---
+
+## Placing Writs in Context
+
+The most common way people lose their rental housing through eviction is not by a Sheriff-executed court order, called a writ of possession in Virginia. Instead, most displacement occurs through informal eviction: "landlord-initiated involuntary relocations that occur beyond the purview of the court".[^1] Surveys of renters in other cities, like Milwaukee, Wisconsin have found that nearly half of all forced moves by renters are "informal evictions", meaning renters were forced to move outside of a formal court removal process. In fact, formal eviction via courts comprised only 24% of all forced moves.[^2] The ratio of informal-to-formal evictions for the United States is estimated to be from 5.5 to 2 informal evictions for every formal eviction.[^3] Focusing only on formal court evictions misses a substantial number of forced moves. 
+
+Formal evictions occur through the court system and must follow a standardized procedure. According to the Virginia Poverty Law Center the eviction process consists of nine steps, depicted below. At each step in the process the tenant and landlord may reach resolution or the tenant may move out, ending the formal eviction process. Even within a formal eviction process, then, the number of eviction judgments or the number of executed writs underestimate the true frequency of evictions. For instance, a tenant may choose to move when they first receive a notice of default or once a judge has provided a judgment for possession to the landlord. In neither case would the data reflect that a sheriff performed an eviction. Unfortunately, there is no single piece of data that tells us about all the times when renters are displaced. And neither eviction judgments nor executed writs provide a full accounting of all of the instances in which a household moves in response to a process that begins with a court filing.  
+
+```{r out.width = "600px", fig.align = "center", fig.cap = "*Source: [Virginia Poverty Law Center](https://housing.vplc.org/evictions/)*"}
+knitr::include_graphics("../evictions.png")
+```
+
+---
+
 
 ```{r prep, include=FALSE}
 
 # Get writs data 
-df <- readRDS("../writ_project/writ_matchedto_case.RDS")
+df_writs <- readRDS("../data/writ_matchedto_case.RDS")
 
-df <- df %>% 
+df_writs <- df_writs %>% 
   distinct() %>%
   # Work with dates
-  mutate(county = str_sub(case_key, 12,14),
-         county.x = ifelse(county == '703', '700', county.x), # fix wonky Newport New fips code
-         date_disp = ymd(date_disposed),
-         date_writ = ymd(writ_iss_date),
-         date_exec = ymd(writ_exec_date),
-         dur_disp_writ = interval(date_disp, date_writ) / ddays(1),
-         dur_writ_exec = interval(date_writ, date_exec) / ddays(1),
-         days_since_disp = interval(date_disp, as.Date("2024-02-17")) / ddays(1),
-         days_since_writ = interval(date_writ, as.Date("2024-02-17")) / ddays(1),
+  rename(county_fips = county.x, county_name = county.y, disposition = disposition.x,
+         date_disp = date_disposed, date_writ = writ_iss_date, date_exec = writ_exec_date) %>% 
+  mutate(# Fix wonky Newport New fips code
+         county_fips = ifelse(county_fips == '703', '700', county_fips), 
+         # Generate day counts for legal time requirements
+         days_since_disp = interval(date_disp, as.Date("2024-06-078")) / ddays(1),
+         days_since_writ = interval(date_writ, as.Date("2024-06-08")) / ddays(1),
          # Get writ statuses
          writ_status = case_when(
            is.na(date_writ) ~ "none",
@@ -73,70 +71,96 @@ county_ten <- get_acs(geography = "county",
   mutate(county = substr(GEOID, 3, 5)) # Alter GEOID column to remove first two digits (enabling join with FIPS)
 
 # Get writs info by county
-writs_by_county <- df %>% group_by(county) %>%
+writs_by_county <- df_writs %>% group_by(county_fips) %>%
   summarize(county_cases = as.numeric(n_distinct(case_key)),
-            iss_date_non_miss = as.numeric(n_distinct(case_key[!is.na(writ_iss_date)])),
+            iss_date_non_miss = as.numeric(n_distinct(case_key[!is.na(date_writ)])),
             exec_date_non_miss = as.numeric(n_distinct(case_key[!is.na(date_exec)])))
 
 # Join with tenures
-writs_by_county <- left_join(county_ten, writs_by_county, by = c("county")) 
+writs_by_county <- left_join(county_ten, writs_by_county, by = c("county" = "county_fips")) 
 
 # Get service areas
-source("legalaidarea.R")
-legal_aid_service_areas <- read_csv("legal_aid_service_areas.csv") %>%
+# source("../legalaidarea.R")
+
+legal_aid_service_areas <- read_csv("../data/legal_aid_service_areas.csv") %>%
   mutate(county = substr(GEOID, 3, 5))
+lasa_sf <- readRDS("../data/legal_aid_service_areas_sf.RDS")
+lasa_sf <- st_transform(lasa_sf, crs = 4326)
 
 # Summarize by service area
 writs_by_area <- writs_by_county %>%
   left_join(legal_aid_service_areas, by = c("NAME")) %>%
   group_by(legal_aid_service_area) %>%
   summarize(total_renters = sum(renthhE, na.rm = TRUE),
-         judgement_rate = sum(county_cases, na.rm = TRUE)/total_renters, # % renters that received a judgement
-         issue_rate = sum(iss_date_non_miss, na.rm = TRUE)/sum(county_cases, na.rm = TRUE), # % of judgements that were issued
+         judgment_rate = sum(county_cases, na.rm = TRUE)/total_renters, # % renters that received a judgment
+         total_issued = sum(iss_date_non_miss, na.rm = TRUE),
+         issue_rate = sum(iss_date_non_miss, na.rm = TRUE)/sum(county_cases, na.rm = TRUE), # % of judgments that were issued
+         total_executed = sum(exec_date_non_miss, na.rm = TRUE),
          execution_rate = sum(exec_date_non_miss, na.rm = TRUE)/sum(iss_date_non_miss, na.rm = TRUE), # % of issued that were executed
-         pop_est = sum(pop_est, na.rm = TRUE),
+         total_households = sum(totalhhE, na.rm = TRUE),
          total_cases = sum(county_cases, na.rm = TRUE)) %>% 
-  select(legal_aid_service_area, pop_est, total_renters, total_cases, judgement_rate, issue_rate, execution_rate)
+  select(legal_aid_service_area, total_households, total_renters, total_cases, judgment_rate, total_issued, issue_rate, total_executed, execution_rate)
 
+# Get cases data
+df_cases <- readRDS("../data/case_matchedto_writ.RDS")
+
+df_cases <- df_cases %>% 
+  mutate(dur_disp_date = interval(date_disposed, as.Date("2024-02-01")) / ddays(1),
+         dur_writ_date = interval(writ_iss_date, as.Date("2024-02-01")) / ddays(1),
+         fips = as.character(fips),
+         fips = str_pad(fips, width = 3, side = "left", pad = "0"),
+         fips = ifelse(fips == '703', '700', fips))
+
+# Get writs info by county
+cases_by_county <- df_cases %>% group_by(fips) %>%
+  summarize(county_cases = as.numeric(n_distinct(c2dp_case_id)))
+
+# Join with tenures
+cases_by_county <- left_join(county_ten, cases_by_county, by = c("county" = "fips")) %>% 
+  mutate(filing_rate = county_cases/renthhE)
+
+# Summarize by service area
+cases_by_area <- cases_by_county %>%
+  left_join(legal_aid_service_areas, by = c("NAME")) %>%
+  group_by(legal_aid_service_area) %>%
+  summarize(total_renters = sum(renthhE, na.rm = TRUE),
+            total_filed = sum(county_cases, na.rm = TRUE),
+            filing_rate = total_filed/total_renters) 
 ```
 
-## Visualizing the Flow of Eviction
+## The Flow of Evictions through Virginia Courts 
 
-The below plot shows the flow of eviction cases through each subsequent outcome: type of judgment, whether a writ is issued, and whether a writ is executed. This plot demonstrates that a large proportion (60%) of eviction judgements end up not being executed. That means in 60% of the eviction cases in VA the tenant was removed informally, and not by the sheriff or another legal official.  The plot also shows that a significant proportion (35%) of eviction cases don't yet have an outcome. It is hypothesized that these trends are due to either inconsistent data collection and sharing mechanisms or the result of inconsistent timelines in the eviction process across districts. 
+We use data from the [Civil Court Data Initiative](https://civilcourtdata.lsc.gov/) to examine the number of executed writs relative to the number of eviction judgments.[^5] 
 
-```{r alluvial}
+Below we show the flow of eviction cases that results in a judgment of eviction through each subsequent outcome: type of judgment and whether a writ is executed. While a writ is issued in about 60% of cases that ended with an eviction judgment, the writ was recorded as being executed only 20% of the time. Consequently, only 13% of court-ordered evictions end with the execution of an eviction writ. 
 
-writs <- readRDS("writ_matchedto_case.RDS")
+```{r alluvial_writs}
 
-writs <- writs %>% 
-  mutate(dur_disp_date = interval(date_disposed, as.Date("2024-02-01")) / ddays(1),
-         dur_writ_date = interval(writ_iss_date, as.Date("2024-02-01")) / ddays(1))
-
-writs_categories <- writs %>% 
+writs_categories <- df_writs %>%
   mutate(outcome = "Eviction\nJudgment",
-        # these should take into account time since disposition 
+        # these should take into account time since disposition
         writ_issued = case_when(
             # case is not yet disposed
             disposition == "Ongoing"  ~ "Ongoing",
             # case is disposed and writ issued date is present
-            disposition != "Ongoing" & !is.na(writ_iss_date) ~ "Yes", 
+            disposition != "Ongoing" & !is.na(date_writ) ~ "Yes",
             # case is disposed, writ issue date is absent, but a writ could still happen
-            disposition != "Ongoing" & is.na(writ_iss_date) & dur_disp_date <= 180 ~ "Ongoing",
+            disposition != "Ongoing" & is.na(date_writ) & days_since_disp <= 180 ~ "Ongoing",
             # case is disposed, writ issue date is absent, and it's too late to request a writ
-            disposition != "Ongoing" & is.na(writ_iss_date) & dur_disp_date > 180  ~ "No",
+            disposition != "Ongoing" & is.na(date_writ) & days_since_disp > 180  ~ "No",
             # one case with no dur_disp_date
             TRUE ~ "No"
             ),
-         # these should take into account time since issued 
+         # these should take into account time since issued
          writ_executed = case_when(
            # case is not yet disposed
            disposition == "Ongoing" ~ "Ongoing",
            # case is disposed, writ is issued, writ execution date is present
-           disposition != "Ongoing" & writ_issued == "Yes" & !is.na(writ_exec_date) ~ "Yes",
+           disposition != "Ongoing" & writ_issued == "Yes" & !is.na(date_exec) ~ "Yes",
            # case is disposed, writ is issued, writ execution date is absent, but within 30 days
-           disposition != "Ongoing" & writ_issued == "Yes" & is.na(writ_exec_date) & dur_writ_date <= 30  ~ "Ongoing",
+           disposition != "Ongoing" & writ_issued == "Yes" & is.na(date_exec) & days_since_writ <= 30  ~ "Ongoing",
            # case is disposed, writ is issued, writ execution date is absent, but over 30 days
-           disposition != "Ongoing" & writ_issued == "Yes" & is.na(writ_exec_date) & dur_writ_date > 30 ~ "No",
+           disposition != "Ongoing" & writ_issued == "Yes" & is.na(date_exec) & days_since_writ > 30 ~ "No",
            # case is disposed, writ is ongoing, writ execution date is absent
            disposition != "Ongoing" & writ_issued == "Ongoing" ~ "Ongoing",
            # case is disposed, writ is absent (and can't be requested)
@@ -145,142 +169,275 @@ writs_categories <- writs %>%
          ),
          disposition = str_to_title(str_remove(disposition, " judgment")))
 
-df_wide <- writs_categories %>% 
-  count(outcome, disposition, writ_issued, writ_executed) %>% 
-  mutate(color = c(1,2,3,4,5,1,2,3,4,5),
+# with writs issued (yes/no) as outcome
+# df_wide <- writs_categories %>% 
+#   count(outcome, disposition, writ_issued, writ_executed) %>% 
+#   mutate(color = c(1,2,3,4,5,1,2,3,4,5),
+#          color = factor(color))
+# 
+# df_set <- df_wide %>% 
+#   gather_set_data(c("outcome","disposition","writ_issued","writ_executed"))
+# 
+# df_set <- df_set %>% 
+#   mutate(y = factor(y, 
+#                     levels = c("Eviction\nJudgment", "Default", "Plaintiff",
+#                                "Yes", "Ongoing", "No")))
+# 
+# ggplot(df_set, aes(x, id = id, split = y, value = n)) +
+#   geom_parallel_sets(aes(fill = color), 
+#                      alpha = 0.6, axis.width = 0.1,
+#                      show.legend = FALSE) +
+#   geom_parallel_sets_axes(axis.width = 0.2, fill = "grey") +
+#   geom_parallel_sets_labels(aes(label = after_stat(paste0(label, "\n", "(", value, ")"))),
+#                             color = 'black', size = 2, angle = 0) +
+#   scale_x_continuous(labels = c("Outcome", "Judgment Type", "Writ Issued", "Writ Executed"),
+#                      position = "top") +
+#   #scale_fill_manual(values = lacroix_palette(type = "paired")) +
+#   scale_fill_manual(values = c("#fde725", "#5ec962", "#21918c", "#3b528b", "#440154")) +
+#   labs(x = "") +
+#   theme_sankey() 
+
+# remove writs issued as outcome
+df_writs_wide <- writs_categories %>% 
+  count(outcome, disposition, writ_executed) %>% 
+  mutate(color = c(1,2,3,1,2,3),
          color = factor(color))
 
-df_set <- df_wide %>% 
-  gather_set_data(c("outcome","disposition","writ_issued","writ_executed"))
+df_writs_set <- df_writs_wide %>% 
+  gather_set_data(c("outcome","disposition","writ_executed"))
 
-df_set <- df_set %>% 
+df_writs_set <- df_writs_set %>% 
   mutate(y = factor(y, 
                     levels = c("Eviction\nJudgment", "Default", "Plaintiff",
                                "Yes", "Ongoing", "No")))
 
-ggplot(df_set, aes(x, id = id, split = y, value = n)) +
+ggplot(df_writs_set, aes(x, id = id, split = y, value = n)) +
   geom_parallel_sets(aes(fill = color), 
                      alpha = 0.6, axis.width = 0.1,
                      show.legend = FALSE) +
   geom_parallel_sets_axes(axis.width = 0.2, fill = "grey") +
   geom_parallel_sets_labels(aes(label = after_stat(paste0(label, "\n", "(", value, ")"))),
                             color = 'black', size = 2, angle = 0) +
-  scale_x_continuous(labels = c("Outcome", "Judgment Type", "Writ Issued", "Writ Executed"),
+  scale_x_continuous(labels = c("Outcome", "Judgment Type", "Writ Executed"),
+                     breaks = c(1,2,3),
                      position = "top") +
-  #scale_fill_manual(values = lacroix_palette(type = "paired")) +
-  scale_fill_manual(values = c("#fde725", "#5ec962", "#21918c", "#3b528b", "#440154")) +
+  scale_fill_manual(values = c("#fde725", "#21918c", "#440154")) +
   labs(x = "") +
   theme_sankey() 
 
 ```
 
-## Regional Eviction Rates {.tabset}
+These 15,083 recorded instances of an executed writ. These are not the only evictions that occurred during this period. All 120,070 of these cases involved a judgment in favor of the plaintiff; most of them are likely to have ended with a household feeling forced to move in response to a court process. But only 13% of them involved the intervention of a Sheriffs' office.[^6]
 
-For this report, we created visual representations of rates of writ timelines to see if there were any regional trends. For example, how many judgements actually issue a writ of eviction? How often is the sheriff actually executing the writ and removing people from their homes? 
-
-The data is grouped into the eight [Legal Aid Service Areas](https://evictionhelpline.org/legal-aid-map/) of Virginia. 
-
-### Judgement Rates
-
-Of all the renters in the area, what percentage receive an eviction judgement? 
-
-```{r area_judgements}
-
-areas_sf = va_localities_sf %>%
-  group_by(legal_aid_service_area) %>%
-  mutate(geometry = st_union(geometry)) %>%
-  left_join(writs_by_area, by = 'legal_aid_service_area') 
-
-areas_sf %>%
-  ggplot() +
-  geom_sf(aes(fill = judgement_rate)) +
-  theme_void() +
-  scale_fill_viridis_c(labels = scales::label_percent(), name = "Judgement Rate") +
-  labs(title = "Percent of Eviction Judgements per Renters",
-       subtitle = "# Cases / # Renters")
-
-```
-
-### Issuance Rates
-
-Of all the eviction judgements, how many writs are actually issued? 
-
-```{r area_issuances}
-
-areas_sf %>% 
-  ggplot() +
-  geom_sf(aes(fill = issue_rate)) +
-  theme_void() +
-  scale_fill_viridis_c(labels = scales::label_percent(), name = "Issuance Rate") +
-  labs(title = "Rate of Issuance",
-       subtitle = "# Judgements Issued / # Cases")
-
-```
-
-### Execution Rates
-
-Of all the writs issued, how many are actually executed on?
-
-```{r area_execution}
-
-areas_sf %>% 
-  ggplot() +
-  geom_sf(aes(fill = execution_rate)) +
-  theme_void() +
-  scale_fill_viridis_c(labels = scales::label_percent(), name = "Execution Rate") +
-  labs(title = "Rate of Execution",
-       subtitle = "# Writs Executed / # Writs Issued")
-
-```
 
 ---
 
-## County Explorer
+## Virginia Regional Eviction Rates {.tabset}
 
-Review trends in the eviction process by county.
+Eviction outcomes as processed through the court system vary across the state. Below we use the [Legal Aid Service Areas](https://evictionhelpline.org/legal-aid-map/) of Virginia to summarize elements of this variation:
 
-```{r county}
+* The rate of eviction cases filed as a percent of renting households (Eviction Filing Rates); 
+* The frequency of court-ruled evictions as a percent of renting households (Eviciton Judgment Rates);
+* The likelihood that plaintiffs request a writ of eviction after winning an eviction case (Writ Issuance Rates);
+* The rate at which writs are executed once they have been issued (Writ Execution Rates).
 
+### Eviction Filing Rates
+
+```{r area_filings}
+areas_sf = lasa_sf %>%
+  group_by(legal_aid_service_area) %>%
+  mutate(geometry = st_union(geometry)) %>%
+  left_join(cases_by_area, by = 'legal_aid_service_area') %>%
+  slice(1)
+
+pal <- colorNumeric("viridis", reverse = TRUE, domain = areas_sf$filing_rate*100)
+
+leaflet() %>% 
+  addProviderTiles("CartoDB.Voyager", options = providerTileOptions(minZoom = 6, maxZoom = 9)) %>% 
+  addPolygons(data = areas_sf, 
+              fillColor = ~pal(areas_sf$filing_rate*100),
+              weight = 1,
+              #layerId = 2,
+              opacity = 1,
+              color = "white", 
+              fillOpacity = 0.6,
+              highlight = highlightOptions(
+                weight = 2,
+                fillOpacity = 0.8),
+              popup = paste0("Service Area: ", areas_sf$legal_aid_service_area, "<br>",
+                             "Filing Rate: ", round(areas_sf$filing_rate*100, 1), "<br>",
+                             "# Evictions Filings: ", areas_sf$total_filed, "<br>",
+                             "# Renting Households: ", areas_sf$total_renters)) %>% 
+  addLegend("topleft", pal = pal, values = areas_sf$filing_rate*100, 
+            labFormat = labelFormat(suffix = "%"),
+            title = "Filing Rate", opacity = 0.7)
 ```
 
+The overall rate of eviction judgments is especially high in localities served by the Legal Aid Society of Eastern Virginia (particularly Williamsburg, Portsmouth, Hampton, and Newport News) and by the Central Virginia Legal Aid Society (particularly Petersburg, Chesterfield County, Hopewell, Colonial Heights, Richmond, and Henrico County).
 
-```{r county_table}
+### Eviction Judgment Rates
 
-county <- writs_by_county %>%
-  left_join(legal_aid_service_areas, by = c("NAME")) %>%
-  mutate(rental_rate = renthhE / pop_est, 
-         judgement_rate = county_cases / renthhE,
-         issuance_rate = iss_date_non_miss / county_cases, 
-         execution_rate = exec_date_non_miss / iss_date_non_miss) %>%
-  select(NAME, legal_aid_service_area, pop_est, renthhE, rental_rate, county_cases, judgement_rate, 
-         iss_date_non_miss, issuance_rate, exec_date_non_miss, execution_rate) %>%
-  rename(county = NAME, estimated_population = pop_est, rental_population = renthhE,
-         judgements = county_cases, issued = iss_date_non_miss, executed = exec_date_non_miss) 
+```{r area_judgments}
+areas_sf = lasa_sf %>%
+  group_by(legal_aid_service_area) %>%
+  mutate(geometry = st_union(geometry)) %>%
+  left_join(writs_by_area, by = 'legal_aid_service_area') %>% 
+  slice(1)
 
-county$county <- sub(", Virginia$", "", county$county)
+# areas_sf %>%
+#   ggplot() +
+#   geom_sf(aes(fill = judgment_rate)) +
+#   theme_void() +
+#   scale_fill_viridis_c(labels = scales::label_percent(), name = "Judgment Rate") +
+#   labs(title = "Rate of Eviction Judgments per Renting Households",
+#        subtitle = "# Eviction Judgments / # Renting Households")
 
-reactable(
-  county,
-  defaultColDef = colDef(
-    header = function(value) str_to_title(gsub("_", " ", value, fixed = TRUE)),
-    align = "center",
-    defaultSortOrder = "desc",
-    headerStyle = list(background = "#f7f7f8")
-  ),
-  columns = list(
-    county = colDef(minWidth = 140),
-    legal_aid_service_area = colDef(minWidth = 140),
-    judgements = colDef(),
-    rental_rate = colDef(format = colFormat(percent = TRUE, digits = 1)),
-    judgement_rate = colDef(format = colFormat(percent = TRUE, digits = 1),
-                            minWidth = 130),
-    issuance_rate = colDef(format = colFormat(percent = TRUE, digits = 1)),
-    execution_rate = colDef(format = colFormat(percent = TRUE, digits = 1))
-  ),
-  defaultSorted = c("judgement_rate"),
-  bordered = TRUE,
-  highlight = TRUE,
-  searchable = TRUE
-)
+pal <- colorNumeric("viridis", reverse = TRUE, domain = areas_sf$judgment_rate*100)
 
+leaflet() %>% 
+  addProviderTiles("CartoDB.Voyager", options = providerTileOptions(minZoom = 6, maxZoom = 9)) %>% 
+  addPolygons(data = areas_sf, 
+              fillColor = ~pal(areas_sf$judgment_rate*100),
+              weight = 1,
+              layerId = 2,
+              opacity = 1,
+              color = "white", 
+              fillOpacity = 0.6,
+              highlight = highlightOptions(
+                weight = 2,
+                fillOpacity = 0.8),
+              popup = paste0("Service Area: ", areas_sf$legal_aid_service_area, "<br>",
+                             "Judgment Rate: ", round(areas_sf$judgment_rate*100, 1), "<br>",
+                             "# Evictions Judgments: ", areas_sf$total_cases, "<br>",
+                             "# Renting Households: ", areas_sf$total_renters)) %>% 
+  addLegend("topleft", pal = pal, values = areas_sf$judgment_rate*100, 
+            labFormat = labelFormat(suffix = "%"),
+            title = "Judgment Rate", opacity = 0.7)
 ```
+
+The overall rate of eviction judgments is especially high in localities served by the Legal Aid Society of Eastern Virginia and by the Central Virginia Legal Aid Society. Mirroring the eviction filing rates, eviction judgment rates are highest in the cities of Williamsburg and Petersburg with a 39% eviction judgment rate; followed by the cities of Portsmouth, Hampton, and Newport News (25% to 27%); with Hopewell city, Chesterfield County, Richmond city, Colonial Heights city, and Henrico County experiencing an eviction judgment rate of about 20%.
+
+### Writ Issuance Rates
+
+```{r area_issuances}
+pal <- colorNumeric("viridis", reverse = TRUE, domain = areas_sf$issue_rate*100)
+
+leaflet() %>% 
+  addProviderTiles("CartoDB.Voyager") %>% 
+  addPolygons(data = areas_sf, 
+              fillColor = ~pal(areas_sf$issue_rate*100),
+              weight = 1,
+              layerId = 2,
+              opacity = 1,
+              color = "white", 
+              fillOpacity = 0.6,
+              highlight = highlightOptions(
+                weight = 2,
+                fillOpacity = 0.8),
+              popup = paste0("Service Area: ", areas_sf$legal_aid_service_area, "<br>",
+                             "Issuance Rate: ", round(areas_sf$issue_rate*100, 1), "<br>",
+                             "# Writs Issued: ", areas_sf$total_issued, "<br>",
+                             "# Evictions Judgments: ", areas_sf$total_cases)) %>% 
+  addLegend("topleft", pal = pal, values = areas_sf$issue_rate*100, 
+            labFormat = labelFormat(suffix = "%"),
+            title = "Rate of Writ Issuance", opacity = 0.7)
+```
+
+Writs of possession are issued most often in the region served by the Legal Aid Services of Northern Virginia, though the eviction filing rate and judgment rate are relatively low in this region.
+
+### Writ Execution Rates
+
+```{r area_execution}
+pal <- colorNumeric("viridis", reverse = TRUE, domain = areas_sf$execution_rate*100)
+
+leaflet() %>% 
+  addProviderTiles("CartoDB.Voyager") %>% 
+  addPolygons(data = areas_sf, 
+              fillColor = ~pal(areas_sf$execution_rate*100),
+              weight = 1,
+              layerId = 2,
+              opacity = 1,
+              color = "white", 
+              fillOpacity = 0.6,
+              highlight = highlightOptions(
+                weight = 2,
+                fillOpacity = 0.8),
+              popup = paste0("Service Area: ", areas_sf$legal_aid_service_area, "<br>",
+                             "Execution Rate: ", round(areas_sf$execution_rate*100, 1), "<br>",
+                             "# Writs Executed: ", areas_sf$total_executed, "<br>",
+                             "# Writs Issued: ", areas_sf$total_issued)) %>% 
+  addLegend("topleft", pal = pal, values = areas_sf$execution_rate*100, 
+            labFormat = labelFormat(suffix = "%"),
+            title = "Rate of Writ Execution", opacity = 0.7)
+```
+
+Writs are recorded as executed at the highest rate in the Blue Ridge Legal Services area, though this area has the lowest rate of eviction judgments overall. The region contained in the Central Virginia Legal Aid Services area has the lowest rate of executed writs recorded in the case information, especially in conjunction with the high rate of eviction judgments.
+
+---
+
+## Eviction Writs and Evictions
+
+The results by court jurisdiction highlight several peculiarities. In particular, multiple localities have a high number of eviction judgments but very few, or no, executed writs recorded in the case information in the first year for which the new law has been in effect. Forty localities have zero executed writs reported, including Richmond city, Henrico County, Chesterfield County, and several other localities with some of the largest number of eviction judgments. In all of these cases, writs were issued following 50% to 80% of the eviction judgments. 
+
+In addition, the number of eviction writs executed in this analysis, 15,083, is notably lower than the count reported by the [Office of the Executive Secretary](https://rga.lis.virginia.gov/Published/2024/RD456/PDF) for the Virginia Courts, at 22,177. Given the high number of jurisdictions reporting no executed writs, despite the high number of eviction judgments and writs issued, along with the 7,000 fewer executed writs we observe in the court database, we believe the data as represented in the Virginia court's online case information system is incomplete. This appears inconsistent with the intent of [§ 8.01-471](https://law.lis.virginia.gov/vacode/title8.01/chapter18/section8.01-471/) as amended by SB 1089/HB 1836.
+When enacted, SB 1089/HB 1836 was touted as providing data to clarify the scope of the eviction crisis, providing new information on when and where evictions occur.[^7] But eviction writs capture only a small fraction of displacement due to eviction in the Commonwealth. And court evictions are only a portion of renter displacement. Executed writs of eviction cannot provide an accurate understanding of evictions in Virginia.
+
+
+---
+
+## Why Estimating Eviction Matters
+
+Whether forced to move by a Sheriff, an eviction notice, or because of an unanticipated rent increase, an involuntary move creates significant and lasting burdens for affected households, and casts a much wider net of harm for neighborhoods, local governments, and the broader public.[^8] Each eviction case that does go through the courts affects more than one person. While the typical eviction case only lists a single defendant, renter households have a median of 2.4 members. This frequently includes at least one child under 18; the presence of children in a household is associated with heightened eviction risk. In short, limitations in the data available to estimate eviction means research systematically underestimates the number of people threatened with court-ordered evictions in a given year.[^9] 
+
+The effects of involuntary displacement are wide ranging and serious. For example,
+
+* Health
+
+  - In the first two years after receiving an eviction order the likelihood of homelessness and hospital visits increases.[^10] 
+  - Renters that experience eviction have been found to exhibit increased symptoms of depression and decreased health as eviction leads to increased exposure and vulnerability to diseases.[^11] 
+  - Experiencing eviction also leads to indulging in unhealthy behaviors, such as smoking and eating unhealthy food, higher rates of anxiety, psychological distress and alcohol dependence.[^12] 
+  - Evicted persons have a higher suicide mortality rate than non-evicted individuals.[^13] 
+  - Measures of eviction cases filed and judgments entered against a tenant for rent due, whether or not they ultimately result in a tenant’s removal, are all associated with increased rates of death;[^14] excess mortality in response to eviction filings was amplified during the COVID-19 pandemic.[^15]
+
+* Financial stability
+
+  - Financially, experiencing an eviction can lead to increased material hardship, decreased earnings and access to credit.[^16] 
+  - Evicted adults have also been found to experience job loss and have an increased need to rely on social assistance.[^17] 
+
+* Child well-being
+
+  - Evictions have been linked to increased likelihood of maternal depression as well as increased incidences of adverse birth outcomes, such as low birth weight, premature birth and infant mortality.[^18] 
+  - A 5 year study found that both formal and informal evictions lead to increased odds of
+younger children’s developmental risk and admission to hospitals from the emergency department, due
+to acute health concerns that require inpatient care and poor health in children. 
+  - Informal evictions have been found to lead to loss of social connections due to having to transfer schools and loss of support systems.[^19] 
+  - Eviction has been linked to increased childhood hospitalizations and worse educational outcomes.[^20]
+
+The range of compounding harm following evictions underscores the importance of using multiple measures and approaches to better understand, and prevent, eviction and the wider landscape of forced displacement. Formal evictions that occur through the court process -- after a ruling or an executed writ -- underestimate the number of evictions, and the number of adults and children impacted.
+
+## Notes
+
+[^1]: Matthew Desmond, Carl Gershenson, and Barbara Kiviat. 2015. "Forced Relocation and Residential Instability among Urban Renters." *Social Service Review* 89(2): 227-262.
+[^2]: Matthew Desmond and Tracey Shollenberger. 2015. "Forced displacement from rental housing: Prevalence and neighborhood consequences." *Demography* 52: 1751-1772.
+[^3]: Ashley Gromis and Matthew Desmond. 2021. "Estimating the Prevalence of Eviction in the United States: New Data from the 2017 American Housing Survey." *Cityscape: A Journal of Policy Development and Research* 23(2): 279-289.
+
+[^5]: The data includes eviction filings that resulted in eviction judgments from January 2023 through September 2024. 
+[^6]: Cases that end in dismissal or non-suit often involve a family moving as well, even though a writ will never be issued or executed in such cases. In addition to the 120,000+ cases that ended with an eviction judgment during this period, there were an additional 120,000+ unlawful detainer cases filed -- the majority of these cases ended with dismissed or non-suit.
+[^7]: See, for example, ["Virginia begins collecting data on where evictions occur and when."(https://virginiamercury.com/briefs/virginia-begins-collecting-data-on-where-evictions-occur-and-when/) Virginia Mercury, August 22, 2023. 
+
+[^8]: Mindy Fullilove. 2016. * Root Shock: How Tearing Up City Neighborhoods Hurts America, And What We Can Do About It.* New Village Press.
+[^9]: Nick Graetz, Carl Gershenson, Peter Hepburn, Sonya R. Porter, Danielle H. Sandler and Matthew Desmond. 2023. "A comprehensive demographic profile of the US evicted population." Proceedings of the National Academy of Sciences. 120(41).
+[^10]: Robert Collinson, John Eric Humphries, Nicholas Mader, Davin Reed, Daniel Tannenbaum and Winnie van Dijk. 2024. "Eviction and Poverty in American Cities." *The Quarterly Journal of Economics* 139(1): 57–120.
+[^11]: Morgan K. Hoke and Courtney E. Boen. 2021. "The health impacts of eviction: Evidence from the national longitudinal study of adolescent to adult health." *Social Science & Medicine* 273.
+[^12]: Hugo Vásquez-Vera, Laia Palència, Ingrid Young, Calos Mena, Jaime Neira, and Carme Borrell. 2017. "The threat of home eviction and its effects on health through the equity lens: A systematic review." *Social Science & Medicine* 175. 
+[^13]: Gracie Himmelstein and Matthew Desmond. 2021. "Association of Eviction with Adverse Birth Outcomes among Women in Georgia, 2000 to 2016." *Obstetrical and Gynecological Survey* 76(11): 659-660. 
+[^14]: Nick Graetz, Carl Gershenson, Sonya R. Porter, Danielle H. Sandler, Emily Lemmerman and
+Matthew Desmond. 2024. "The impacts of rent burden and eviction on mortality in the United
+States, 2000–2019." *Social Science & Medicine* 340.
+[^15]: Nick Graetz, Peter Hepburn, Carl Gershenson, Sonya R. Porter, Danielle H. Sandler,
+Emily Lemmerman and Matthew Desmond. 2024. "Examining Excess Mortality Associated With the COVID-19 Pandemic for Renters Threatened With Eviction." *JAMA* 331(7): 592.600.
+[^16]: Matthew Desmond and Rachel Kimbro. 2015. "Eviction's Fallout: Housing, Hardship, and Health." *Social Forces* 94. See also Collinson et al., 2024. 
+[^17]: Himmelstein and Desmond, 2021
+[^18]: Diana B. Cutts, Stephaie Ettinger de Cuba, Allison Bovell-Ammon, Chevaughn Wellington, Sharon M. Coleman, Deborah A. Frank, Maureen M. Black, Eduardo Ochoa, Mariana Chilton, Felie Lê-Scherban, Timothy Heeren, Lindsey J. Rateau and Megan Sandel. 2022. "Eviction and Household Health and Hardships in Families With Very Young Children." *Pediatrics* 150(4). See also Himmelstein and Desmond, 2021.
+[^19]: Cutts et al., 2022
+[^20]: Himmelstein and Desmond, 2021
