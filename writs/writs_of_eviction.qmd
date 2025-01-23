@@ -378,7 +378,7 @@ Writs are recorded as executed at the highest rate in the Blue Ridge Legal Servi
 
 :::
 
-To view these values by Virginia court jurisdictions -- the number and rates of eviction filings, eviction judgments, writs issued, and writs executed -- visit the locality-level table. ADD LINK
+To view these values by Virginia court jurisdictions -- the number and rates of eviction filings, eviction judgments, writs issued, and writs executed -- [visit the locality-level table.](https://virginiaequitycenter.github.io/va-evictions/writs/county_table.html)
 
 ## Eviction Writs and Evictions
 

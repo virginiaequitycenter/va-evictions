@@ -86,7 +86,7 @@ county <- writs_by_county %>%
 
 ```
 
-<p style="text-align:center;">Return to "Writs of Eviction in Virginia" (ADD LINK)</p>
+<p style="text-align:center;">[Return to "Writs of Eviction in Virginia"](https://virginiaequitycenter.github.io/va-evictions/writs/writs_of_eviction.html)</p>
 
 ## Court Jurisdiction/Locality Table
 
@@ -127,4 +127,4 @@ reactable(
 
 TBA
 
-<p style="text-align:center;">Return to "Writs of Eviction in Virginia" (ADD LINK)</p>
+<p style="text-align:center;">[Return to "Writs of Eviction in Virginia"](https://virginiaequitycenter.github.io/va-evictions/writs/writs_of_eviction.html)</p>
