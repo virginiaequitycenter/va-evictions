@@ -29,12 +29,22 @@ In 2023, Virginia passed legislation ([HB 1836](https://lis.virginia.gov/cgi-bin
 
 The most common way people lose their rental housing through eviction is not by a Sheriff-executed court order, called a writ of possession in Virginia. Instead, most displacement occurs through informal eviction: "landlord-initiated involuntary relocations that occur beyond the purview of the court".[^1] Surveys of renters in other cities have found that nearly half of all forced moves by renters are "informal evictions", meaning renters were forced to move outside of a formal court removal process. In fact, formal eviction via courts comprised only 24% of all forced moves.[^2] The ratio of informal-to-formal evictions for the United States is estimated to be from 5.5 to 2 informal evictions for every formal eviction. That is, for every household displaced through a formal court eviction, between two and six additional households are forced to move in response to warnings or threats from their landlord.[^3] Focusing only on formal court evictions misses a substantial number of forced moves. 
 
+```{css}
+/*| echo: false */
+figcaption {
+  margin: auto;
+  text-align: center;
+}
+```
 
 ```{r dukeduck}
 embed_youtube("nuwuuPn_RZ4") %>% 
   use_align("center") %>%
   use_rounded(10)
 ```
+<div style="text-align: center;">Source: Legal Services Corporation's Civil Court Data Initiative (CCDI)</div>
+
+<br>
 
 Formal evictions occur through the court system and must follow a standardized procedure. According to the Virginia Poverty Law Center the eviction process consists of nine steps, depicted below. At each step in the process the tenant and landlord may reach resolution or the tenant may move out, ending the formal eviction process. Even within a formal eviction process, then, the number of eviction judgments or the number of executed writs underestimate the true frequency of evictions. For instance, a tenant may choose to move when they first receive a notice of default or once a judge has provided a judgment for possession to the landlord. In neither case would the data reflect that a sheriff performed an eviction. Unfortunately, there is no single piece of data that tells us about all the times when renters are displaced. And neither eviction judgments nor executed writs provide a full accounting of all of the instances in which a household moves in response to a process that begins with a court filing.  
 
@@ -126,7 +136,7 @@ writs_by_area <- county %>%
 
 ## The Flow of Evictions through Virginia Courts 
 
-Using newly available data on executed writs in Virginia, provided by the [Civil Court Data Initiative](https://civilcourtdata.lsc.gov/), we examine the number of executed writs relative to the number of eviction judgments.[^5] 
+Using newly available data on executed writs in Virginia, provided by the [Civil Court Data Initiative](https://civilcourtdata.lsc.gov/) at Legal Services Corporation, we examine the number of executed writs relative to the number of eviction judgments.[^5] 
 
 Below we show the flow of eviction cases that result in a judgment of eviction through each subsequent outcome: type of judgment and whether a writ is executed. While a writ is issued in about 60% of cases that ended with an eviction judgment, the writ was recorded as being executed only 20% of the time. Overall, only 13% of court-ordered evictions in Virginia end with the execution of an eviction writ. 
 
@@ -423,7 +433,7 @@ The range of compounding harm following evictions underscores the importance of 
 
 This work is a collaboration between [The Equity Center at the University of Virginia](https://www.virginiaequitycenter.org/), [RVA Eviction Lab at the Virginia Commonwealth University](https://rampages.us/rvaevictionlab/), and the [Civil Court Data Initiative at Legal Services Corporation](https://civilcourtdata.lsc.gov/). The analysis was conducted by Michele Claibourn (UVA), Ben Teresa (VCU), and Logan Pratico (LSC) with additional research support from Henry DeMarco (UVA), James Lambert (VCU), Samantha Toet (UVA), and Corey Nolan (VCU).
 
-Suggested citation: The Equity Center, RVA Eviction Lab, and Civil Court Data Initiative. January 2025. "Writs of Eviction in Virginia."UVA Karsh Institute of Democracy Center for the Redress of Inequity Through Community-Engaged Scholarship, RVA Eviction Lab in the Wilder School of Government and Public Affairs at VCU, Civil Court Data Initiative at LSC. https://virginiaequitycenter.github.io/va-evictions/writs/writs_of_eviction.html
+Suggested citation: The Equity Center, RVA Eviction Lab, and Civil Court Data Initiative. January 2025. "Writs of Eviction in Virginia."UVA Karsh Institute of Democracy Center for the Redress of Inequity Through Community-Engaged Scholarship, RVA Eviction Lab in the Wilder School of Government and Public Affairs at VCU, Civil Court Data Initiative at LSC. [https://virginiaequitycenter.github.io/va-evictions/writs/writs_of_eviction.html](https://virginiaequitycenter.github.io/va-evictions/writs/writs_of_eviction.html)
 
 
 [^1]: Matthew Desmond, Carl Gershenson, and Barbara Kiviat. 2015. "Forced Relocation and Residential Instability among Urban Renters." *Social Service Review* 89(2): 227-262.

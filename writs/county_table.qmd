@@ -125,6 +125,10 @@ reactable(
 
 ## Methodology
 
-TBA
+The Civil Court Data Initiative (CCDI) collects court data from Virginia’s General District Court (GDC) system to analyze civil legal trends. The GDC system provides publicly accessible information on case filings, outcomes, and parties across the state. CCDI uses systematic methods to retrieve data from the GDC portal, ensuring comprehensive coverage across jurisdictions and timeframes.
+ 
+After collection, the data undergoes a detailed validation process to ensure its accuracy and reliability. Validation includes cross-referencing key fields with the source system, identifying and resolving discrepancies, and removing incomplete or duplicate records. These steps are performed to maintain the integrity of the dataset and prepare it for subsequent analysis.
+ 
+This validated data is then securely stored in a centralized system for further analysis and reporting. By adhering to standardized collection and validation protocols, CCDI ensures that the data is robust, reliable, and suitable for use by researchers, policymakers, and other stakeholders focused on improving access to justice.
 
 <p style="text-align:center;">[Return to "Writs of Eviction in Virginia"](https://virginiaequitycenter.github.io/va-evictions/writs/writs_of_eviction.html)</p>
