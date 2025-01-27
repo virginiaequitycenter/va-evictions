@@ -398,7 +398,7 @@ In addition, the number of executed eviction writs observed in this analysis is 
 
 Given the high number of jurisdictions reporting no executed writs, despite the high number of eviction judgments and writs issued, along with the more than 10,000 fewer executed writs we observe in the court database compared to the count by OES, we believe the data as represented in the Virginia court's online case information system is incomplete. This appears inconsistent with the intent of [§ 8.01-471](https://law.lis.virginia.gov/vacode/title8.01/chapter18/section8.01-471/) of the Code of Virginia as amended by SB 1089/HB 1836. 
 
-When enacted, SB 1089/HB 1836 was touted as providing data to clarify the scope of the eviction crisis, providing new information on when and where evictions occur.[^7] But eviction writs capture only a small fraction of displacement due to eviction in the Commonwealth. And court evictions are only a portion of renter displacement. Even with full reporting of sheriff-executed writs of possession, the number of executed writs of eviction cannot provide an accurate representation of evictions in Virginia.
+When enacted, SB 1089/HB 1836 was touted as providing data to clarify the scope of the eviction crisis, providing new information on when and where evictions occur.[^7] But eviction writs capture only a small fraction of displacement due to eviction in the Commonwealth. And court evictions are only a portion of renter displacement. Even with full reporting of sheriff-executed writs of possession, the number of executed writs of eviction alone cannot provide an accurate representation of evictions in Virginia.
 
 
 ## Why Estimating Eviction Matters
