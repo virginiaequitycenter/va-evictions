@@ -9,7 +9,7 @@
 #           boxr::box_fresh_auth()
 
 use-data-through:
-2024-09-30
+2024-12-31
 
 original:
 2023-05-04_all_data.zip
@@ -34,3 +34,5 @@ updates:
 2024-09-16
 2024-10-21
 2024-11-18
+2024-12-16
+2025-01-20

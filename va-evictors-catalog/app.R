@@ -3,8 +3,8 @@
 # Author: Jacob Goldstein-Greenwood | jacobgg@virginia.edu | GitHub: jacob-gg  #
 # Author: Michele Claibourn | mclaibourn@virginia.edu | GitHub: mclaibourn     #
 # Author: Elizabeth Mitchell | beth@virginia.edu | GitHub: eam5                #
-# Last revised: 2023-09-08                                                     #
-# Last deployed: 2024-11-22                                                    #
+# Last revised: 2025-01-29 # Added writ note                                                     #
+# Last deployed: 2025-01-29                                                    #
 ################################################################################
 
 # Packages ----
@@ -23,6 +23,7 @@ i18n <- Translator$new(translation_csvs_path = "translations/") # set path to tr
 i18n$set_translation_language("English") # select the default translation to display
 
 # Read in HTML ----
+writ_note <- HTML(readLines("html/writ-note"))
 data_notes <- HTML(readLines("html/app-data-notes"))
 orient_notes <- HTML(readLines("html/app-orient-notes"))
 selection_note_time <- HTML(readLines("html/selection-note-time"))
@@ -32,6 +33,7 @@ header <- HTML(readLines("html/header"))
 footer <- HTML(readLines("html/footer"))
 
 # User notes  Spanish Language ----
+writ_note_sp <- HTML(readLines("html/writ-note-sp"))
 data_notes_sp <- HTML(readLines("html/app-data-notes-sp"))
 orient_notes_sp <- HTML(readLines("html/app-orient-notes-sp"))
 selection_note_time_sp <- HTML(readLines("html/selection-note-time-sp"))
@@ -95,6 +97,7 @@ main_page_panel <-  fluidPage(
           tags$span(paste0(time_span[[2]],". ")),
           tags$span(i18n$t("Each row in the table below represents a plaintiff filing in a specific court jurisdiction."))
         ),
+        tags$div(htmlOutput("writ")),
         bs_button(i18n$t("How to search the catalog"), button_type = "info", class = "collapsible") %>%
           bs_attach_collapse("orient-collapse"),
         bs_collapse(
@@ -200,6 +203,7 @@ server <- function(input, output, session) {
                       selected=input$time)
     # update various html docs in app
     if (input$selected_language == "Español"){
+      output$writ <- renderUI(writ_note_sp)
       output$orient <- renderUI(orient_notes_sp)
       output$selection_note_time <- renderUI(selection_note_time_sp)
       output$notes <- renderUI(data_notes_sp)
@@ -207,6 +211,7 @@ server <- function(input, output, session) {
       output$news <- renderUI(news_page_sp)
       output$footer <- renderUI(footer_sp)
     } else {
+      output$writ <- renderUI(writ_note)
       output$orient <- renderUI(orient_notes)
       output$selection_note_time <- renderUI(selection_note_time)
       output$notes <- renderUI(data_notes)
