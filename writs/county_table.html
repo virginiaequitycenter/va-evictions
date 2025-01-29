@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.57">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Virginia Evictions and Writs by Locality</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="county_table_files/libs/clipboard/clipboard.min.js"></script>
+<script src="county_table_files/libs/quarto-html/quarto.js"></script>
+<script src="county_table_files/libs/quarto-html/popper.min.js"></script>
+<script src="county_table_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="county_table_files/libs/quarto-html/anchor.min.js"></script>
+<link href="county_table_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="county_table_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="county_table_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="county_table_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="county_table_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="county_table_files/libs/core-js-2.5.3/shim.min.js"></script>
+<script src="county_table_files/libs/react-18.2.0/react.min.js"></script>
+<script src="county_table_files/libs/react-18.2.0/react-dom.min.js"></script>
+<script src="county_table_files/libs/reactwidget-2.0.0/react-tools.umd.cjs"></script>
+<link href="county_table_files/libs/htmltools-fill-0.5.8.1/fill.css" rel="stylesheet">
+<script src="county_table_files/libs/htmlwidgets-1.6.4/htmlwidgets.js"></script>
+<link href="county_table_files/libs/reactable-0.4.4/reactable.css" rel="stylesheet">
+<script src="county_table_files/libs/reactable-binding-0.4.4/reactable.js"></script>
+
+
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#court-jurisdictionlocality-table" id="toc-court-jurisdictionlocality-table" class="nav-link active" data-scroll-target="#court-jurisdictionlocality-table">Court Jurisdiction/Locality Table</a></li>
+  <li><a href="#methodology" id="toc-methodology" class="nav-link" data-scroll-target="#methodology">Methodology</a></li>
+  </ul>
+</nav>
+</div>
+<main class="content page-columns page-full" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Virginia Evictions and Writs by Locality</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p style="text-align:center;">
+<a href="https://virginiaequitycenter.github.io/va-evictions/writs/writs_of_eviction.html">Return to “Writs of Eviction in Virginia”</a>
+</p>
+<section id="court-jurisdictionlocality-table" class="level2 page-columns page-full">
+<h2 class="anchored" data-anchor-id="court-jurisdictionlocality-table">Court Jurisdiction/Locality Table</h2>
+<p>The table below provides the number of eviction filings (unlawful detainers), eviction judgments, writs of possession issued, and writs executed along with the rates as recorded in Virginia’s online case information system and analyzed in “Writs of Eviction in Virginia”.</p>
+<p>The table can be sorted by any column (by clicking on the column name) and filtered by key words (by typing a word in the search box to the right).</p>
+<div class="cell page-columns page-full">
+<div class="cell-output-display column-screen-inset">
+<div class="reactable html-widget html-fill-item" id="htmlwidget-35518ea46f0485229a40" style="width:auto;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-35518ea46f0485229a40">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"county":["Accomack County","Albemarle County","Alleghany County","Amelia County","Amherst County","Appomattox County","Arlington County","Augusta County","Bath County","Bedford County","Bland County","Botetourt County","Brunswick County","Buchanan County","Buckingham County","Campbell County","Caroline County","Carroll County","Charles City County","Charlotte County","Chesterfield County","Clarke County","Craig County","Culpeper County","Cumberland County","Dickenson County","Dinwiddie County","Essex County","Fairfax County","Fauquier County","Floyd County","Fluvanna County","Franklin County","Frederick County","Giles County","Gloucester County","Goochland County","Grayson County","Greene County","Greensville County","Halifax County","Hanover County","Henrico County","Henry County","Highland County","Isle of Wight County","James City County","King and Queen County","King George County","King William County","Lancaster County","Lee County","Loudoun County","Louisa County","Lunenburg County","Madison County","Mathews County","Mecklenburg County","Middlesex County","Montgomery County","Nelson County","New Kent County","Northampton County","Northumberland County","Nottoway County","Orange County","Page County","Patrick County","Pittsylvania County","Powhatan County","Prince Edward County","Prince George County","Prince William County","Pulaski County","Rappahannock County","Richmond County","Roanoke County","Rockbridge County","Rockingham County","Russell County","Scott County","Shenandoah County","Smyth County","Southampton County","Spotsylvania County","Stafford County","Surry County","Sussex County","Tazewell County","Warren County","Washington County","Westmoreland County","Wise County","Wythe County","York County","Alexandria city","Bristol city","Buena Vista city","Charlottesville city","Chesapeake city","Colonial Heights city","Covington city","Danville city","Emporia city","Fairfax city","Falls Church city","Franklin city","Fredericksburg city","Galax city","Hampton city","Harrisonburg city","Hopewell city","Lexington city","Lynchburg city","Manassas city","Manassas Park city","Martinsville city","Newport News city","Norfolk city","Norton city","Petersburg city","Poquoson city","Portsmouth city","Radford city","Richmond city","Roanoke city","Salem city","Staunton city","Suffolk city","Virginia Beach city","Waynesboro city","Williamsburg city","Winchester city"],"legal_aid_service_area":["Legal Aid Society of Eastern Virginia","Central Virginia Legal Aid Society","Blue Ridge Legal Services","Virginia Legal Aid Society","Virginia Legal Aid Society","Virginia Legal Aid Society","Legal Services of Northern Virginia","Blue Ridge Legal Services","Blue Ridge Legal Services","Legal Aid Society of Roanoke Valley","Southwest Virginia Legal Aid Society","Legal Aid Society of Roanoke Valley","Virginia Legal Aid Society","Southwest Virginia Legal Aid Society","Virginia Legal Aid Society","Virginia Legal Aid Society","Legal Aid Works","Southwest Virginia Legal Aid Society","Central Virginia Legal Aid Society","Virginia Legal Aid Society","Central Virginia Legal Aid Society","Blue Ridge Legal Services","Legal Aid Society of Roanoke Valley","Legal Aid Works","Virginia Legal Aid Society","Southwest Virginia Legal Aid Society","Central Virginia Legal Aid Society","Legal Aid Works","Legal Services of Northern Virginia","Legal Aid Works","Southwest Virginia Legal Aid Society","Central Virginia Legal Aid Society","Legal Aid Society of Roanoke Valley","Blue Ridge Legal Services","Southwest Virginia Legal Aid Society","Legal Aid Society of Eastern Virginia","Central Virginia Legal Aid Society","Southwest Virginia Legal Aid Society","Central Virginia Legal Aid Society","Virginia Legal Aid Society","Virginia Legal Aid Society","Central Virginia Legal Aid Society","Central Virginia Legal Aid Society","Virginia Legal Aid Society","Blue Ridge Legal Services","Virginia Legal Aid Society","Legal Aid Society of Eastern Virginia","Legal Aid Works","Legal Aid Works","Legal Aid Works","Legal Aid Works","Southwest Virginia Legal Aid Society","Legal Services of Northern Virginia","Central Virginia Legal Aid Society","Virginia Legal Aid Society","Legal Aid Works","Legal Aid Society of Eastern Virginia","Virginia Legal Aid Society","Legal Aid Society of Eastern Virginia","Southwest Virginia Legal Aid Society","Central Virginia Legal Aid Society","Central Virginia Legal Aid Society","Legal Aid Society of Eastern Virginia","Legal Aid Works","Virginia Legal Aid Society","Legal Aid Works","Blue Ridge Legal Services","Virginia Legal Aid Society","Virginia Legal Aid Society","Central Virginia Legal Aid Society","Virginia Legal Aid Society","Central Virginia Legal Aid Society","Legal Services of Northern Virginia","Southwest Virginia Legal Aid Society","Legal Aid Works","Legal Aid Works","Legal Aid Society of Roanoke Valley","Blue Ridge Legal Services","Blue Ridge Legal Services","Southwest Virginia Legal Aid Society","Southwest Virginia Legal Aid Society","Blue Ridge Legal Services","Southwest Virginia Legal Aid Society","Virginia Legal Aid Society","Legal Aid Works","Legal Aid Works","Central Virginia Legal Aid Society","Virginia Legal Aid Society","Southwest Virginia Legal Aid Society","Blue Ridge Legal Services","Southwest Virginia Legal Aid Society","Legal Aid Works","Southwest Virginia Legal Aid Society","Southwest Virginia Legal Aid Society","Legal Aid Society of Eastern Virginia","Legal Services of Northern Virginia","Southwest Virginia Legal Aid Society","Blue Ridge Legal Services","Central Virginia Legal Aid Society","Legal Aid Society of Eastern Virginia","Central Virginia Legal Aid Society","Blue Ridge Legal Services","Virginia Legal Aid Society","Virginia Legal Aid Society","Legal Services of Northern Virginia","Legal Services of Northern Virginia","Virginia Legal Aid Society","Legal Aid Works","Southwest Virginia Legal Aid Society","Legal Aid Society of Eastern Virginia","Blue Ridge Legal Services","Central Virginia Legal Aid Society","Blue Ridge Legal Services","Virginia Legal Aid Society","Legal Services of Northern Virginia","Legal Services of Northern Virginia","Virginia Legal Aid Society","Legal Aid Society of Eastern Virginia","Legal Aid Society of Eastern Virginia","Southwest Virginia Legal Aid Society","Central Virginia Legal Aid Society","Legal Aid Society of Eastern Virginia","Legal Aid Society of Eastern Virginia","Southwest Virginia Legal Aid Society","Central Virginia Legal Aid Society","Legal Aid Society of Roanoke Valley","Legal Aid Society of Roanoke Valley","Blue Ridge Legal Services","Virginia Legal Aid Society","Legal Aid Society of Eastern Virginia","Blue Ridge Legal Services","Legal Aid Society of Eastern Virginia","Blue Ridge Legal Services"],"estimated_households":[14252,44031,6309,5258,12615,6535,110887,30056,1905,32510,2235,12916,6165,7494,5898,22409,11387,12141,2905,4540,134144,5617,1810,18188,4055,5543,10432,4258,410844,26011,6655,10195,22022,33534,6852,14857,9788,6148,7662,3222,13519,41383,134094,20411,1014,15196,30690,2826,9737,6893,5238,8324,138549,14642,4566,5324,3742,13037,4714,36062,6132,8675,5344,5174,5415,14309,9351,7779,24487,11077,7416,12808,152616,14455,2823,2834,39156,9368,31612,10438,8838,17542,12651,6841,49449,50313,2745,3698,15800,15235,22013,7832,14052,12424,25878,74818,7299,2655,19511,91368,7612,2503,18755,2245,9129,5740,3349,11276,2618,57470,17142,9348,1991,28910,13840,5221,5628,75465,93797,1592,14703,4657,38962,5467,101201,42806,10045,11064,36318,178915,9431,4882,11217],"renting_households":[4722,14427,1059,820,3065,1452,64045,6393,550,5120,331,1718,1651,1377,1446,5802,2084,2619,446,1403,30313,1241,345,4683,909,1262,2238,1474,129196,5853,913,1181,4415,7561,1529,3103,1516,1179,1672,977,3693,7023,47524,5470,138,3295,6870,631,2412,958,933,2318,31274,2950,1378,1105,605,3797,738,16248,1285,664,1907,577,1554,3101,2651,1639,5536,978,2896,3726,39458,4298,718,890,9514,2042,7827,2626,1897,4777,3992,1576,10431,10269,606,1130,4324,3935,5465,1835,4170,3070,7207,42885,2703,1122,11249,24380,2555,620,9474,1346,2898,2549,1486,6940,771,25528,10608,4341,940,14826,3604,1910,2559,39534,51796,748,9200,835,17123,2967,57449,20498,3619,4483,10734,63422,4068,2398,6288],"rental_rate":[0.331321919730564,0.327655515432309,0.167855444602948,0.155952833777102,0.242964724534285,0.222188217291507,0.577569958606509,0.212702954484961,0.288713910761155,0.157490003075977,0.148098434004474,0.133013316816352,0.267802108678021,0.183746997598078,0.245167853509664,0.258913829265027,0.183015719680337,0.215715344699778,0.153528399311532,0.309030837004405,0.225973580629771,0.220936442941072,0.19060773480663,0.257477457664394,0.224167694204686,0.227674544470503,0.214532208588957,0.346171911695632,0.314464857707548,0.225020183768406,0.137190082644628,0.115841098577734,0.200481336844973,0.225472654619192,0.223146526561588,0.20885777747863,0.154883530854107,0.191769681197137,0.218219785956669,0.303227808814401,0.27317109253643,0.169707367759708,0.354408101779349,0.267992749007888,0.136094674556213,0.216833377204527,0.223851417399804,0.223283793347488,0.247714901920509,0.138981575511388,0.178121420389462,0.278471888515137,0.225725194696461,0.201475208304876,0.3017958826106,0.207550713749061,0.161678246926777,0.291247986499962,0.156554942723801,0.450557373412456,0.20955642530985,0.0765417867435158,0.35684880239521,0.111519134132199,0.286980609418283,0.216716751694738,0.283499091006309,0.210695462141663,0.226079144035611,0.0882910535343505,0.390507011866235,0.290911930043723,0.258544320385805,0.297336561743341,0.254339355295785,0.314043754410727,0.242976810705894,0.21797608881298,0.247595849677338,0.251580762598199,0.214641321565965,0.272317865693764,0.315548178009644,0.23037567607075,0.210944609597767,0.204102319480055,0.220765027322404,0.305570578691184,0.273670886075949,0.258286839514276,0.248262390405669,0.23429519918284,0.296754910333049,0.247102382485512,0.278499111214159,0.573190943355877,0.370324702013974,0.422598870056497,0.576546563477013,0.266833026880308,0.335654230162901,0.24770275669197,0.50514529458811,0.599554565701559,0.317449884981926,0.444076655052265,0.443714541654225,0.615466477474282,0.29449961802903,0.444196972333391,0.618830941547077,0.464377406931964,0.472124560522351,0.512832929782082,0.260404624277457,0.365830300708677,0.454690831556503,0.523871993639435,0.552213823469834,0.469849246231156,0.625722641637761,0.179299978526949,0.439479492839177,0.542710810316444,0.567672256203002,0.478858104004112,0.360278745644599,0.405187997107737,0.295555922682967,0.354481178213118,0.431343441840738,0.491192134371159,0.560577694570741],"eviction_filings":[365,2319,337,59,450,101,5310,759,13,480,16,186,184,47,96,1177,302,182,39,72,12772,54,36,580,93,64,388,200,14336,423,66,56,462,456,209,486,105,59,159,141,252,835,18811,880,9,991,"NA",33,361,158,110,150,2800,286,112,35,63,370,67,1414,65,69,139,59,219,377,181,80,524,105,450,957,8709,706,20,64,1302,244,2099,118,97,364,345,306,2234,2182,40,94,426,418,404,192,494,291,1358,7692,609,139,607,7498,970,"NA",2258,169,"NA",217,384,1609,86,11226,"NA",1610,"NA",3029,"NA","NA",734,17761,17153,"NA",5723,"NA",7501,490,23419,4651,827,469,2890,19811,722,2051,664],"filing_rate":[0.0772977551884795,0.160740278644209,0.318224740321058,0.0719512195121951,0.146818923327896,0.0695592286501377,0.0829104535873214,0.118723603941811,0.0236363636363636,0.09375,0.0483383685800604,0.108265424912689,0.1114476075106,0.0341321713870733,0.0663900414937759,0.202861082385384,0.144913627639155,0.0694921725849561,0.0874439461883408,0.0513186029935852,0.421337380001979,0.0435132957292506,0.104347826086957,0.12385223147555,0.102310231023102,0.0507131537242472,0.173369079535299,0.135685210312076,0.11096318771479,0.0722706304459252,0.072289156626506,0.0474174428450466,0.104643261608154,0.0603094828726359,0.136690647482014,0.156622623267805,0.0692612137203166,0.0500424088210348,0.0950956937799043,0.14431934493347,0.0682372055239643,0.118895059091556,0.395821058833432,0.160877513711152,0.0652173913043478,0.300758725341426,"NA",0.05229793977813,0.149668325041459,0.164926931106472,0.117899249732047,0.0647109577221743,0.0895312400076741,0.0969491525423729,0.081277213352685,0.0316742081447964,0.104132231404959,0.0974453515933632,0.0907859078590786,0.0870260955194486,0.0505836575875486,0.103915662650602,0.0728893550078658,0.102253032928943,0.140926640926641,0.121573685907772,0.0682761222180309,0.048810250152532,0.0946531791907514,0.107361963190184,0.155386740331492,0.256843800322061,0.220715697703888,0.16426244765007,0.0278551532033426,0.0719101123595506,0.13685095648518,0.11949069539667,0.268174268557557,0.0449352627570449,0.0511333684765419,0.0761984509106133,0.0864228456913828,0.194162436548223,0.214169303039018,0.21248417567436,0.066006600660066,0.0831858407079646,0.0985198889916744,0.106226175349428,0.0739249771271729,0.104632152588556,0.118465227817746,0.0947882736156352,0.188427917302622,0.179363413781042,0.225305216426193,0.123885918003565,0.0539603520312917,0.307547169811321,0.379647749510763,"NA",0.238336499894448,0.12555720653789,"NA",0.0851314240878776,0.258411843876178,0.231844380403458,0.111543450064851,0.439752428705735,"NA",0.370882285187745,"NA",0.204303251045461,"NA","NA",0.286830793278624,0.449258865786412,0.331164568692563,"NA",0.622065217391304,"NA",0.43806575950476,0.165149983147961,0.407648523037825,0.22690018538394,0.228516164686377,0.10461744367611,0.269237935531955,0.312367948030652,0.17748279252704,0.855296080066722,0.10559796437659],"eviction_judgments":[203,929,177,38,234,62,2479,284,6,251,10,95,64,25,33,576,167,119,26,30,6331,26,21,242,44,38,214,106,5948,152,40,42,281,238,91,208,45,43,82,85,117,387,9313,461,6,390,"NA",18,165,71,51,67,1155,165,47,26,32,124,29,730,35,41,63,45,125,211,116,36,308,49,143,429,4136,408,10,39,642,90,617,69,59,213,227,104,1080,992,24,64,232,242,252,84,258,188,539,3571,352,58,331,3743,517,"NA",1232,117,"NA",85,137,848,56,6408,"NA",924,"NA",1705,"NA","NA",304,9818,8539,"NA",3538,"NA",4583,213,11960,2369,375,218,1309,9615,283,946,307],"judgment_rate":[0.0429902583650995,0.0643931517293963,0.1671388101983,0.0463414634146341,0.0763458401305057,0.0426997245179063,0.0387071590288079,0.0444235882997028,0.0109090909090909,0.0490234375,0.0302114803625378,0.0552968568102445,0.0387643852210781,0.0181554103122731,0.0228215767634855,0.0992761116856256,0.0801343570057582,0.0454371897670867,0.0582959641255605,0.0213827512473272,0.208854286939597,0.0209508460918614,0.0608695652173913,0.0516762758915225,0.0484048404840484,0.0301109350237718,0.09562109025916,0.0719131614654003,0.046038577045729,0.0259695882453443,0.0438116100766703,0.0355630821337849,0.0636466591166478,0.0314773178151038,0.0595160235448005,0.0670319046084434,0.0296833773087071,0.0364715860899067,0.0490430622009569,0.0870010235414534,0.0316815597075548,0.055104656129859,0.195964144432287,0.0842778793418647,0.0434782608695652,0.118361153262519,"NA",0.0285261489698891,0.068407960199005,0.0741127348643006,0.0546623794212219,0.0289042277825712,0.0369316365031656,0.0559322033898305,0.0341074020319303,0.0235294117647059,0.0528925619834711,0.0326573610745325,0.0392953929539295,0.0449286065977351,0.0272373540856031,0.0617469879518072,0.0330361824855794,0.0779896013864818,0.0804375804375804,0.0680425669138987,0.043757072802716,0.0219646125686394,0.055635838150289,0.0501022494887526,0.049378453038674,0.115136876006441,0.104820315271935,0.0949278734295021,0.0139275766016713,0.0438202247191011,0.0674795038890057,0.0440744368266405,0.0788296920914782,0.0262757044935263,0.0311017395888245,0.0445886539669249,0.0568637274549098,0.065989847715736,0.103537532355479,0.096601421754796,0.0396039603960396,0.0566371681415929,0.0536540240518039,0.0614993646759848,0.0461116193961574,0.0457765667574932,0.0618705035971223,0.0612377850162866,0.0747884001665048,0.0832692083479072,0.130225675175731,0.0516934046345811,0.0294248377633567,0.153527481542248,0.202348336594912,"NA",0.130040109774119,0.086924219910847,"NA",0.0333464103570027,0.0921938088829071,0.122190201729107,0.072632944228275,0.251018489501724,"NA",0.212854181064271,"NA",0.115000674490759,"NA","NA",0.118796404845643,0.248343198259726,0.164858290215461,"NA",0.384565217391304,"NA",0.267651696548502,0.0717896865520728,0.208184650733694,0.115572250951312,0.103619784470848,0.0486281507918804,0.121948947270356,0.151603544511368,0.0695673549655851,0.394495412844037,0.048823155216285],"writs_issued":[101,613,84,10,124,25,2101,111,4,108,4,43,23,0,10,240,60,38,11,11,3788,12,5,109,6,0,106,30,5026,89,19,13,154,129,26,127,16,15,39,26,55,194,5685,195,0,161,"NA",4,72,23,22,17,906,86,2,5,23,52,16,396,19,22,31,16,68,111,35,14,132,11,69,246,3308,180,1,11,337,48,268,18,3,68,98,65,656,614,1,13,113,141,62,0,49,70,311,3174,159,15,158,2117,255,"NA",678,33,"NA",1,80,564,5,4067,"NA",516,"NA",889,"NA","NA",157,5879,5280,"NA",2382,"NA",2632,83,7388,1380,212,110,705,5138,155,557,158],"issuance_rate":[0.497536945812808,0.659849300322928,0.474576271186441,0.263157894736842,0.52991452991453,0.403225806451613,0.847519160951997,0.390845070422535,0.666666666666667,0.430278884462151,0.4,0.452631578947368,0.359375,0,0.303030303030303,0.416666666666667,0.359281437125749,0.319327731092437,0.423076923076923,0.366666666666667,0.598325698941715,0.461538461538462,0.238095238095238,0.450413223140496,0.136363636363636,0,0.495327102803738,0.283018867924528,0.844989912575656,0.585526315789474,0.475,0.30952380952381,0.548042704626335,0.542016806722689,0.285714285714286,0.610576923076923,0.355555555555556,0.348837209302326,0.475609756097561,0.305882352941176,0.47008547008547,0.501291989664083,0.610437023515516,0.422993492407809,0,0.412820512820513,"NA",0.222222222222222,0.436363636363636,0.323943661971831,0.431372549019608,0.253731343283582,0.784415584415584,0.521212121212121,0.0425531914893617,0.192307692307692,0.71875,0.419354838709677,0.551724137931034,0.542465753424658,0.542857142857143,0.536585365853659,0.492063492063492,0.355555555555556,0.544,0.5260663507109,0.301724137931034,0.388888888888889,0.428571428571429,0.224489795918367,0.482517482517482,0.573426573426573,0.799806576402321,0.441176470588235,0.1,0.282051282051282,0.524922118380062,0.533333333333333,0.434359805510535,0.260869565217391,0.0508474576271186,0.31924882629108,0.431718061674009,0.625,0.607407407407407,0.618951612903226,0.0416666666666667,0.203125,0.487068965517241,0.582644628099174,0.246031746031746,0,0.189922480620155,0.372340425531915,0.576994434137291,0.888826659199104,0.451704545454545,0.258620689655172,0.477341389728097,0.565589099652685,0.493230174081238,"NA",0.550324675324675,0.282051282051282,"NA",0.0117647058823529,0.583941605839416,0.665094339622642,0.0892857142857143,0.634675405742821,"NA",0.558441558441558,"NA",0.521407624633431,"NA","NA",0.516447368421053,0.59879812589122,0.618339384002811,"NA",0.673261729790842,"NA",0.574296312459088,0.389671361502347,0.617725752508361,0.58252427184466,0.565333333333333,0.504587155963303,0.538579067990833,0.534373374934997,0.547703180212014,0.588794926004228,0.514657980456026],"writs_executed":[2,0,49,4,86,9,0,6,4,64,0,21,17,0,5,0,44,27,8,6,0,5,4,35,0,0,50,11,1896,0,6,4,85,0,7,38,11,0,25,19,0,124,0,94,0,130,"NA",2,45,8,9,14,0,58,0,0,15,14,13,159,16,19,16,15,40,47,21,5,85,6,18,0,0,96,0,10,0,28,141,11,1,44,70,37,0,0,0,6,0,94,0,0,26,27,0,0,69,5,0,773,5,"NA",0,22,"NA",0,23,0,0,1380,"NA",229,"NA",0,"NA","NA",85,2881,1768,"NA",742,"NA",1159,6,0,0,105,81,0,1537,101,0,0],"execution_rate":[0.0198019801980198,0,0.583333333333333,0.4,0.693548387096774,0.36,0,0.0540540540540541,1,0.592592592592593,0,0.488372093023256,0.739130434782609,"NaN",0.5,0,0.733333333333333,0.710526315789474,0.727272727272727,0.545454545454545,0,0.416666666666667,0.8,0.321100917431193,0,"NaN",0.471698113207547,0.366666666666667,0.377238360525269,0,0.315789473684211,0.307692307692308,0.551948051948052,0,0.269230769230769,0.299212598425197,0.6875,0,0.641025641025641,0.730769230769231,0,0.639175257731959,0,0.482051282051282,"NaN",0.807453416149068,"NA",0.5,0.625,0.347826086956522,0.409090909090909,0.823529411764706,0,0.674418604651163,0,0,0.652173913043478,0.269230769230769,0.8125,0.401515151515151,0.842105263157895,0.863636363636364,0.516129032258065,0.9375,0.588235294117647,0.423423423423423,0.6,0.357142857142857,0.643939393939394,0.545454545454545,0.260869565217391,0,0,0.533333333333333,0,0.909090909090909,0,0.583333333333333,0.526119402985075,0.611111111111111,0.333333333333333,0.647058823529412,0.714285714285714,0.569230769230769,0,0,0,0.461538461538462,0,0.666666666666667,0,"NaN",0.530612244897959,0.385714285714286,0,0,0.433962264150943,0.333333333333333,0,0.365139348134152,0.0196078431372549,"NA",0,0.666666666666667,"NA",0,0.2875,0,0,0.339316449471355,"NA",0.443798449612403,"NA",0,"NA","NA",0.54140127388535,0.490049328117027,0.334848484848485,"NA",0.311502938706969,"NA",0.440349544072948,0.072289156626506,0,0,0.495283018867925,0.736363636363636,0,0.299143635655897,0.651612903225806,0,0]},"columns":[{"id":"county","name":"county","type":"character","defaultSortDesc":true,"header":"County","align":"center","headerStyle":{"background":"#f7f7f8"},"minWidth":140},{"id":"legal_aid_service_area","name":"legal_aid_service_area","type":"character","defaultSortDesc":true,"header":"Legal Aid Service Area","align":"center","headerStyle":{"background":"#f7f7f8"},"minWidth":140},{"id":"estimated_households","name":"estimated_households","type":"numeric","defaultSortDesc":true,"header":"Estimated Households","align":"center","headerStyle":{"background":"#f7f7f8"}},{"id":"renting_households","name":"renting_households","type":"numeric","defaultSortDesc":true,"header":"Renting Households","align":"center","headerStyle":{"background":"#f7f7f8"}},{"id":"rental_rate","name":"rental_rate","type":"numeric","defaultSortDesc":true,"header":"Rental Rate","align":"center","headerStyle":{"background":"#f7f7f8"},"format":{"cell":{"digits":1,"percent":true},"aggregated":{"digits":1,"percent":true}}},{"id":"eviction_filings","name":"eviction_filings","type":"numeric","defaultSortDesc":true,"header":"Eviction Filings","align":"center","headerStyle":{"background":"#f7f7f8"}},{"id":"filing_rate","name":"filing_rate","type":"numeric","defaultSortDesc":true,"header":"Filing Rate","align":"center","headerStyle":{"background":"#f7f7f8"}},{"id":"eviction_judgments","name":"eviction_judgments","type":"numeric","defaultSortDesc":true,"header":"Eviction Judgments","align":"center","headerStyle":{"background":"#f7f7f8"}},{"id":"judgment_rate","name":"judgment_rate","type":"numeric","defaultSortDesc":true,"header":"Judgment Rate","align":"center","headerStyle":{"background":"#f7f7f8"},"format":{"cell":{"digits":1,"percent":true},"aggregated":{"digits":1,"percent":true}},"minWidth":130},{"id":"writs_issued","name":"writs_issued","type":"numeric","defaultSortDesc":true,"header":"Writs Issued","align":"center","headerStyle":{"background":"#f7f7f8"}},{"id":"issuance_rate","name":"issuance_rate","type":"numeric","defaultSortDesc":true,"header":"Issuance Rate","align":"center","headerStyle":{"background":"#f7f7f8"},"format":{"cell":{"digits":1,"percent":true},"aggregated":{"digits":1,"percent":true}}},{"id":"writs_executed","name":"writs_executed","type":"numeric","defaultSortDesc":true,"header":"Writs Executed","align":"center","headerStyle":{"background":"#f7f7f8"}},{"id":"execution_rate","name":"execution_rate","type":"numeric","defaultSortDesc":true,"header":"Execution Rate","align":"center","headerStyle":{"background":"#f7f7f8"},"format":{"cell":{"digits":1,"percent":true},"aggregated":{"digits":1,"percent":true}}}],"searchable":true,"defaultSorted":[{"id":"judgment_rate","desc":true}],"highlight":true,"bordered":true,"dataKey":"921ec08ee3e1ebbbedef8514b57e654d"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
+</div>
+</div>
+</section>
+<section id="methodology" class="level2">
+<h2 class="anchored" data-anchor-id="methodology">Methodology</h2>
+<p>The Civil Court Data Initiative (CCDI) collects court data from Virginia’s General District Court (GDC) system to analyze civil legal trends. The GDC system provides publicly accessible information on case filings, outcomes, and parties across the state. CCDI uses systematic methods to retrieve data from the GDC portal, ensuring comprehensive coverage across jurisdictions and timeframes.</p>
+<p>After collection, the data undergoes a detailed validation process to ensure its accuracy and reliability. Validation includes cross-referencing key fields with the source system, identifying and resolving discrepancies, and removing incomplete or duplicate records. These steps are performed to maintain the integrity of the dataset and prepare it for subsequent analysis.</p>
+<p>This validated data is then securely stored in a centralized system for further analysis and reporting. By adhering to standardized collection and validation protocols, CCDI ensures that the data is robust, reliable, and suitable for use by researchers, policymakers, and other stakeholders focused on improving access to justice.</p>
+<p style="text-align:center;">
+<a href="https://virginiaequitycenter.github.io/va-evictions/writs/writs_of_eviction.html">Return to “Writs of Eviction in Virginia”</a>
+</p>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

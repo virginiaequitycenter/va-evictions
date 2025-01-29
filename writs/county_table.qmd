@@ -1,0 +1,134 @@
+---
+title: "Virginia Evictions and Writs by Locality"
+format: 
+  html:
+    toc: true
+    theme: sandstone
+    css: style.css
+execute:
+  cache: true
+  echo: false
+  message: false
+  warning: false
+---
+
+```{r setup}
+library(reactable)
+library(tidyverse)
+```
+
+
+```{r prep}
+# Get county tenures 
+county_ten <- readRDS("../data/acs_county_ten.RDS")
+
+# Get writs data 
+df_writs <- readRDS("../data/writ_matchedto_case.RDS")
+
+df_writs <- df_writs %>% 
+  distinct() %>%
+  # Work with dates
+  rename(county_fips = county.x, county_name = county.y, disposition = disposition.x,
+         date_disp = date_disposed, date_writ = writ_iss_date, date_exec = writ_exec_date) %>% 
+  mutate(# Fix wonky Newport New fips code
+         county_fips = ifelse(county_fips == '703', '700', county_fips), 
+         # Generate day counts for legal time requirements
+         days_since_disp = interval(date_disp, as.Date("2024-06-078")) / ddays(1),
+         days_since_writ = interval(date_writ, as.Date("2024-06-08")) / ddays(1),
+         # Get writ statuses
+         writ_status = case_when(
+           is.na(date_writ) ~ "none",
+           is.na(date_exec) & days_since_writ > 30 ~ "expired",
+           is.na(date_exec) & days_since_writ <= 30 ~ "pending",
+           TRUE ~ "executed"))
+
+# Writs info by county
+writs_by_county <- df_writs %>% group_by(county_fips) %>%
+  summarize(county_judgments = as.numeric(n_distinct(case_key)),
+            iss_date_non_miss = as.numeric(n_distinct(case_key[!is.na(date_writ)])),
+            exec_date_non_miss = as.numeric(n_distinct(case_key[!is.na(date_exec)])))
+
+# Get cases data
+df_cases <- readRDS("../data/case_matchedto_writ.RDS")
+
+df_cases <- df_cases %>% 
+  mutate(dur_disp_date = interval(date_disposed, as.Date("2024-02-01")) / ddays(1),
+         dur_writ_date = interval(writ_iss_date, as.Date("2024-02-01")) / ddays(1),
+         fips = as.character(fips),
+         fips = str_pad(fips, width = 3, side = "left", pad = "0"),
+         fips = ifelse(fips == '703', '700', fips))
+
+# Cases by county
+cases_by_county <- df_cases %>% group_by(fips) %>%
+  summarize(county_filing = as.numeric(n_distinct(c2dp_case_id)))
+
+# Get service areas
+legal_aid_service_areas <- read_csv("../data/legal_aid_service_areas.csv") %>%
+  mutate(county = substr(GEOID, 3, 5))
+
+# Join tenure, writs by county, cases by county, legal aid service area
+writs_by_county <- left_join(county_ten, writs_by_county, by = c("county" = "county_fips")) %>% 
+  left_join(cases_by_county, by = c("county" = "fips")) %>% 
+  left_join(legal_aid_service_areas, by = c("NAME"))
+
+# Make county table
+county <- writs_by_county %>%
+  mutate(rental_rate = renthhE / totalhhE, 
+         filing_rate = county_filing/renthhE,
+         judgment_rate = county_judgments / renthhE,
+         issuance_rate = iss_date_non_miss / county_judgments, 
+         execution_rate = exec_date_non_miss / iss_date_non_miss,
+         county = str_remove(NAME, ", Virginia$")) %>%
+  select(county, legal_aid_service_area, totalhhE, renthhE, rental_rate, county_filing, filing_rate, county_judgments, judgment_rate, 
+         iss_date_non_miss, issuance_rate, exec_date_non_miss, execution_rate) %>%
+  rename(estimated_households = totalhhE, renting_households = renthhE,
+         eviction_filings = county_filing, eviction_judgments = county_judgments, writs_issued = iss_date_non_miss, writs_executed = exec_date_non_miss) 
+
+```
+
+<p style="text-align:center;">[Return to "Writs of Eviction in Virginia"](https://virginiaequitycenter.github.io/va-evictions/writs/writs_of_eviction.html)</p>
+
+## Court Jurisdiction/Locality Table
+
+The table below provides the number of eviction filings (unlawful detainers), eviction judgments, writs of possession issued, and writs executed along with the rates as recorded in Virginia's online case information system and analyzed in "Writs of Eviction in Virginia".
+
+The table can be sorted by any column (by clicking on the column name) and filtered by key words (by typing a word in the search box to the right).
+
+```{r county_table}
+#| column: screen-inset
+
+reactable(
+  county,
+  defaultColDef = colDef(
+    header = function(value) str_to_title(gsub("_", " ", value, fixed = TRUE)),
+    align = "center",
+    defaultSortOrder = "desc",
+    headerStyle = list(background = "#f7f7f8")
+  ),
+  columns = list(
+    county = colDef(minWidth = 140),
+    legal_aid_service_area = colDef(minWidth = 140),
+    # eviction_judgments = colDef(),
+    rental_rate = colDef(format = colFormat(percent = TRUE, digits = 1)),
+    judgment_rate = colDef(format = colFormat(percent = TRUE, digits = 1),
+                            minWidth = 130),
+    issuance_rate = colDef(format = colFormat(percent = TRUE, digits = 1)),
+    execution_rate = colDef(format = colFormat(percent = TRUE, digits = 1))
+  ),
+  defaultSorted = c("judgment_rate"),
+  bordered = TRUE,
+  highlight = TRUE,
+  searchable = TRUE
+)
+```
+
+
+## Methodology
+
+The Civil Court Data Initiative (CCDI) collects court data from Virginia’s General District Court (GDC) system to analyze civil legal trends. The GDC system provides publicly accessible information on case filings, outcomes, and parties across the state. CCDI uses systematic methods to retrieve data from the GDC portal, ensuring comprehensive coverage across jurisdictions and timeframes.
+ 
+After collection, the data undergoes a detailed validation process to ensure its accuracy and reliability. Validation includes cross-referencing key fields with the source system, identifying and resolving discrepancies, and removing incomplete or duplicate records. These steps are performed to maintain the integrity of the dataset and prepare it for subsequent analysis.
+ 
+This validated data is then securely stored in a centralized system for further analysis and reporting. By adhering to standardized collection and validation protocols, CCDI ensures that the data is robust, reliable, and suitable for use by researchers, policymakers, and other stakeholders focused on improving access to justice.
+
+<p style="text-align:center;">[Return to "Writs of Eviction in Virginia"](https://virginiaequitycenter.github.io/va-evictions/writs/writs_of_eviction.html)</p>
