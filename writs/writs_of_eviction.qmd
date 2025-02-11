@@ -37,8 +37,8 @@ figcaption {
 }
 ```
 
-```{r dukeduck}
-embed_youtube("nuwuuPn_RZ4") %>% 
+```{r dukeduck, fig.width=7}
+embed_youtube("x4r2vEmeCc8", height = 500) %>% 
   use_align("center") %>%
   use_rounded(10)
 ```
