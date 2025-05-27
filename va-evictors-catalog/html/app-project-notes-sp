@@ -7,26 +7,26 @@
 
 <h2>Equipo del proyecto</h2>
 <div class="project-logos">
-    <a href="https://virginiaequitycenter.org/" target="_blank"><img class="logos ec-logo" src="EquityCenter-Logo_Typed_Black.png" alt="UVA Equity Center" height="65"></img></a>
+    <a href="https://communitypartnerships.virginia.edu/" target="_blank"><img class="logos ec-logo" src="CCP-logo-color.png" alt="UVA Center for Community Partnerships" height="65"></img></a>
     <a href="https://rampages.us/rvaevictionlab/" target="_blank"><img class="logos" src="rvalogo-removebg.png" alt="RVA Eviction Lab" height="60"></img></a>
     <a href="https://data.library.virginia.edu/statlab/" target="_blank"><img class="logos" src="StatLab_logo_white_background.png" alt="UVA Library StatLab" height="65"></img></a>
 </div>
 
-<p>El Virginia Evictors Catalog es parte del proyecto Virginia Housing Justice Atlas, un esfuerzo de colaboración entre el RVA Eviction Lab en la Wilder School of Government and Public Affairs de la Virginia Commonwealth University, el Equity Center de la Universidad de Virginia y el UVA Library StatLab.</p>
+<p>El Virginia Evictors Catalog es parte del proyecto Virginia Housing Justice Atlas, un esfuerzo de colaboración entre el RVA Eviction Lab en la Wilder School of Government and Public Affairs de la Virginia Commonwealth University, el Center for Community Partnerships de la Universidad de Virginia y el UVA Library StatLab.</p>
 
 <p>El Atlas de justicia de vivienda está dirigido por un comité asesor compuesto por representantes de organizaciones de justicia para la vivienda en las áreas de Richmond y Charlottesville. Los miembros del Comité Asesor incluyen Virginia Poverty Law Center, Housing Opportunities Made Equal, Legal Aid Justice Center, Central Virginia Legal Aid Society, Charlottesville Office of Human Rights, Piedmont Housing Alliance, Cultivate Charlottesville, Public Housing Association of Residents, Charlottesville DSA , Richmond Tenants Union, Advocates for Richmond Youth, Virginia Community Voice y Charlottesville Low Income Housing Coalition.</p>
 
 <p>El equipo del proyecto incluye a:</p>
 
 <ul>
-<li>Michele Claibourn, Directora de Análisis Equitativo, The Equity Center y Profesora Asistente, Batten School of Leadership and Public Policy</li>
+<li>Michele Claibourn, Directora, UVA Center for Community Partnerships y Profesora Asistente, Batten School of Leadership and Public Policy</li>
 <li>Kate Howell, codirectora, RVA Eviction Lab y profesora asociada, estudios y planificación urbanos/regionales, Escuela Wilder de Gobierno y Asuntos Públicos</li>
 <li>Jacob Goldstein-Greenwood, científico de datos de investigación, StatLab, servicios de datos de investigación de la biblioteca UVA y ex miembro de datos, The Equity Center</li>
 <li>Atticus Johnson, asistente de investigación, laboratorio de desalojos de RVA</li>
-<li>Elizabeth Mitchell, Científica de datos para Análisis Equitativo, The Equity Center</li>
+<li>Elizabeth Mitchell, Especialista principal en investigación, UVA Center for Community Partnerships</li>
 <li>Ben Teresa, codirector, RVA Eviction Lab y profesor asociado, estudios y planificación urbanos/regionales, Escuela Wilder de Gobierno y Asuntos Públicos</li>
 <li>Connor White, analista de datos Laboratorio de desalojos de RVA</li>
-<li>Barbara Brown Wilson, directora de la facultad, The Equity Center y profesora asociada, Urban + Environmental Planning, University of Virginia School of Architecture</li>
+<li>Barbara Brown Wilson, directora fundadora de la facultad, The Equity Center y profesora asociada, Urban + Environmental Planning, University of Virginia School of Architecture</li>
 <li>Hannah Woehrle, miembro de Wilder, RVA Eviction Lab</li>
 </ul>
 
@@ -49,7 +49,7 @@
 </ul>
 
 <p><em>Citación</em></p>
-<p>The Equity Center, RVA Eviction Lab, and UVA Library StatLab. <em>Virginia Evictors Catalog</em>. UVA Karsh Institute of Democracy Center for the Redress of Inequity Through Community-Engaged Scholarship, RVA Eviction Lab in the Wilder School of Government and Public Affairs at VCU, UVA Library Research Data Services StatLab. https://virginiaequitycenter.shinyapps.io/va-evictors-catalog/. Accessed <span id="date"></span>.</p>
+<p>"Virginia Evictors Catalog." UVA Center for Community Partnerships, RVA Eviction Lab in the Wilder School of Government and Public Affairs at VCU, UVA Library Research Data Services StatLab. https://virginiaequitycenter.shinyapps.io/va-evictors-catalog/. Accessed <span id="date"></span>.</p>
 
 <p><em>Repositorio de código</em></p>
 <p>El trabajo que sustenta el Virginia Evictors Catalog está disponible públicamente en <a href="https://github.com/virginiaequitycenter/va-evictions" target="_blank">GitHub</a>.</p>

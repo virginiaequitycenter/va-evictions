@@ -3,8 +3,8 @@
 # Author: Jacob Goldstein-Greenwood | jacobgg@virginia.edu | GitHub: jacob-gg  #
 # Author: Michele Claibourn | mclaibourn@virginia.edu | GitHub: mclaibourn     #
 # Author: Elizabeth Mitchell | beth@virginia.edu | GitHub: eam5                #
-# Last revised: 2025-01-29 # Added writ note                                                     #
-# Last deployed: 2025-01-29                                                    #
+# Last revised: 2025-05-27  # updated logos, center name                       #
+# Last deployed: 2025-05-27                                                    #
 ################################################################################
 
 # Packages ----
