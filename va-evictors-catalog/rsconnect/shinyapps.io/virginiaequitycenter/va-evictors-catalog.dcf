@@ -5,7 +5,7 @@ account: virginiaequitycenter
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 7503412
-bundleId: 11195808
+bundleId: 12423257
 url: https://virginiaequitycenter.shinyapps.io/va-evictors-catalog/
 asMultiple: FALSE
 asStatic: FALSE

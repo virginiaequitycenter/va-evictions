@@ -3,8 +3,8 @@
 # Author: Jacob Goldstein-Greenwood | jacobgg@virginia.edu | GitHub: jacob-gg  #
 # Author: Michele Claibourn | mclaibourn@virginia.edu | GitHub: mclaibourn     #
 # Author: Elizabeth Mitchell | beth@virginia.edu | GitHub: eam5                #
-# Last revised: 2025-05-27  # updated logos, center name                       #
-# Last deployed: 2026-05-14                                                    #
+# Last revised: 2026-08-17                                                     #
+# Last deployed: 2026-08-17                                                    #
 ################################################################################
 
 # Packages ----
@@ -238,7 +238,7 @@ server <- function(input, output, session) {
     }
   )
 
-  # Render datatable
+  # Render datatable ----
   output$plaintiff_table <- DT::renderDT({
     datatable(df(),
               rownames = FALSE,
@@ -285,7 +285,7 @@ server <- function(input, output, session) {
     )
   }, server = TRUE)
 
-  # Output visuals
+  # Output visuals ----
   output$viz <- renderPlotly({
 
     if (input$time == 'All') {
@@ -408,7 +408,7 @@ server <- function(input, output, session) {
                                     '<br>Number: ', Number,
                                     '<br>Outcome: ', Outcome)))) +
         geom_line(aes(x = Month, y = Number, group = Outcome, color = Outcome)) +
-        scale_x_date(date_breaks = "months", date_labels =  "%b %Y", expand = c(0.01,0.01)) +
+        scale_x_date(date_breaks = "3 months", date_labels =  "%b %Y", expand = c(0.01,0.01)) +
         scale_y_continuous(
           # limits = c(0,10),
                            # breaks = c(0,2,4,6,8,10),
