@@ -5,6 +5,7 @@
 # Author: Elizabeth Mitchell | beth@virginia.edu | GitHub: eam5                #
 # Last revised: 2026-08-17                                                     #
 # Last deployed: 2026-08-17                                                    #
+#   - Deployed to both /va-evictors-catalog and /plaintiff-database-shiny      # 
 ################################################################################
 
 # Packages ----
