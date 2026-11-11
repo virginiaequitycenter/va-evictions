@@ -1,31 +1,40 @@
-rsconnect::deployApp(appName = "va-evictors-catalog", 
-                     appFiles = c("app.R",
-                                  "data-plaintiff-aggregated.txt",
-                                  "data-monthly-plaintiff-aggregated.txt",
-                                  "data-yearly-plaintiff-aggregated.txt",
-                                  "html/app-data-notes",
-                                  "html/app-orient-notes",
-                                  "html/app-project-notes",
-                                  "html/app-news",
-                                  "html/selection-note-time",
-                                  "html/footer",
-                                  "html/app-data-notes-sp",
-                                  "html/app-orient-notes-sp",
-                                  "html/app-project-notes-sp",
-                                  "html/news-sp",
-                                  "html/selection-note-time-sp",
-                                  "html/footer-sp",
-                                  "html/head.html",
-                                  "html/header",
-                                  "translations/translation_sp.csv",
-                                  "www/styles.css",
-                                  "www/plaintiff_courtnamesonly.csv",
-                                  "www/CCP-logo-white.png",
-                                  "www/CCP-logo-color.png",
-                                  "www/GitHub-Mark-Light-64px.png",
-                                  "www/rvalogo-removebg.png",
-                                  "www/rvalogo.jpg",
-                                  "www/va-evictors-preview.png",
-                                  "www/StatLab_logo_dark_background.png",
-                                  "www/StatLab_logo_white_background.png"),
-                     account = "virginiaequitycenter")
+################################################################################
+# Deploy the Virginia Evictors Catalog to shinyapps.io                         #
+# Run from the project folder:  source("deploy.R")                             #
+################################################################################
+
+# Apps to deploy to (names as recorded in rsconnect/shinyapps.io/). Remove one
+# from this list to deploy to only the other.
+app_names <- c("va-evictors-catalog", "plaintiff-database-Shiny")
+account   <- "virginiaequitycenter"
+
+# Files to upload ----
+# Built from the folders, so new html/, www/, or translation files are picked up
+# without editing this script. Hidden files such as .DS_Store are skipped.
+app_files <- c(
+  "app.R",
+  list.files(pattern = "^data-.*[.]txt$"),
+  list.files(c("html", "translations", "www"), recursive = TRUE, full.names = TRUE)
+)
+
+# Safety check ----
+# Every local file app.R names in quotes (e.g. "html/writ-note") must be in the
+# upload, or the live app will crash on startup.
+app_code   <- paste(readLines("app.R", warn = FALSE), collapse = "\n")
+referenced <- unique(regmatches(app_code, gregexpr('"[^"[:space:]]+"', app_code))[[1]])
+referenced <- gsub('"', "", referenced)
+referenced <- referenced[file.exists(referenced) & !dir.exists(referenced)]
+missing    <- setdiff(referenced, app_files)
+if (length(missing) > 0) {
+  stop("app.R uses these files, but they are not in the upload:\n  ",
+       paste(missing, collapse = "\n  "))
+}
+
+message("Uploading ", length(app_files), " files to: ", paste(app_names, collapse = ", "))
+
+# Deploy ----
+for (app_name in app_names) {
+  rsconnect::deployApp(appName  = app_name,
+                       appFiles = app_files,
+                       account  = account)
+}

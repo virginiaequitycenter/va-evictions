@@ -39,7 +39,8 @@ plaintiff_aggregated <- cases %>%
             filing_years = paste0(sort(unique(as.numeric(filed_year))), collapse = ', '),
             defendant_zips = paste0(na.omit(unique(defendant_zip)), collapse = ', ')) %>%
   ungroup() %>% 
-  relocate(filing_years, .after = last_col())
+  relocate(filing_years, .after = last_col()) |> 
+  drop_na(county)
 
 # Summarize by plaintiff and year
 plaintiff_aggregated_yearly <- cases %>%
@@ -49,7 +50,8 @@ plaintiff_aggregated_yearly <- cases %>%
             serial_filings = sum(serial_filing == TRUE, na.rm = TRUE),
             defendant_zips = paste0(na.omit(unique(defendant_zip)), collapse = ', ')) %>%
   ungroup() %>% 
-  relocate(filed_year, .after = last_col())
+  relocate(filed_year, .after = last_col()) |> 
+  drop_na(county)
 
 # Summarize by plaintiff, month, and year
 plaintiff_aggregated_monthly <- cases %>%
@@ -62,7 +64,8 @@ plaintiff_aggregated_monthly <- cases %>%
             serial_filings = sum(serial_filing == TRUE, na.rm = TRUE),
             defendant_zips = paste0(na.omit(unique(defendant_zip)), collapse = ', ')) %>%
   ungroup() %>% 
-  relocate(filing_month, .after = last_col())
+  relocate(filing_month, .after = last_col()) |> 
+  drop_na(county)
 
 # Export for Shiny app
 write.csv(plaintiff_aggregated, file = paste0(output_data_directory, '/data-plaintiff-aggregated.txt'), row.names = FALSE)

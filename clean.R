@@ -76,7 +76,8 @@ cases <- Reduce(function(x, y) merge(x, y, by = case_id_var, all = TRUE), dat_li
 # following: Richmond City General District Court; Richmond-Civil General District Court. For now,
 # we convert all to the former. Note: We currently *do not* update FIPS, which also vary (760 and 763),
 # as we do not use FIPS as a grouping variable in the cleaning, summarizing, or app code.
-cases[cases$county == 'Richmond-Civil General District Court', 'county'] <- 'Richmond City General District Court'
+# cases[cases$county == 'Richmond-Civil General District Court', 'county'] <- 'Richmond City General District Court'
+cases[cases$county %in% 'Richmond-Civil General District Court', 'county'] <- 'Richmond City General District Court'
 ##############################################################
 
 # Extract years of case filings
